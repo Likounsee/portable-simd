@@ -242,3 +242,85 @@ fn contiguous_masked_memory_covers_lane_count_boundaries() {
     check_contiguous_masked_memory_width::<63>();
     check_contiguous_masked_memory_width::<64>();
 }
+
+
+fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
+    let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(23).wrapping_add(7));
+    let values = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
+    let fallback = Simd::from_array(core::array::from_fn(|lane| -10 - lane as i32));
+    let indices = Simd::from_array(core::array::from_fn(|lane| {
+        if lane % 2 == 0 { lane } else { usize::MAX }
+    }));
+    let index_array = indices.to_array();
+    let patterns: [[bool; LANES]; 4] = [
+        core::array::from_fn(|_| false),
+        core::array::from_fn(|_| true),
+        core::array::from_fn(|lane| lane % 2 == 0),
+        core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES),
+    ];
+
+    for len in 0..=LANES {
+        for enabled in patterns {
+            let actual = Simd::gather_select(
+                &source[..len],
+                Mask::from_array(enabled),
+                indices,
+                fallback,
+            )
+            .to_array();
+            let fallback_array = fallback.to_array();
+            let expected = core::array::from_fn(|lane| {
+                if enabled[lane] {
+                    source
+                        .get(index_array[lane])
+                        .copied()
+                        .unwrap_or(fallback_array[lane])
+                } else {
+                    fallback_array[lane]
+                }
+            });
+            assert_eq!(
+                actual,
+                expected,
+                "gather: LANES={LANES}, len={len}, mask={enabled:?}"
+            );
+
+            let mut destination = [-77_i32; LANES];
+            values.scatter_select(
+                &mut destination[..len],
+                Mask::from_array(enabled),
+                indices,
+            );
+            let mut expected = [-77_i32; LANES];
+            for lane in 0..LANES {
+                if enabled[lane] && index_array[lane] < len {
+                    expected[index_array[lane]] = values.to_array()[lane];
+                }
+            }
+            assert_eq!(
+                destination,
+                expected,
+                "scatter: LANES={LANES}, len={len}, mask={enabled:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn gather_scatter_masked_memory_covers_lane_count_boundaries() {
+    check_gather_scatter_masked_memory_width::<1>();
+    check_gather_scatter_masked_memory_width::<2>();
+    check_gather_scatter_masked_memory_width::<3>();
+    check_gather_scatter_masked_memory_width::<4>();
+    check_gather_scatter_masked_memory_width::<7>();
+    check_gather_scatter_masked_memory_width::<8>();
+    check_gather_scatter_masked_memory_width::<9>();
+    check_gather_scatter_masked_memory_width::<15>();
+    check_gather_scatter_masked_memory_width::<16>();
+    check_gather_scatter_masked_memory_width::<17>();
+    check_gather_scatter_masked_memory_width::<31>();
+    check_gather_scatter_masked_memory_width::<32>();
+    check_gather_scatter_masked_memory_width::<33>();
+    check_gather_scatter_masked_memory_width::<63>();
+    check_gather_scatter_masked_memory_width::<64>();
+}
