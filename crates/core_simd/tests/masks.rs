@@ -229,6 +229,12 @@ macro_rules! test_mask_api {
                     check::<63>(bits);
                     check::<64>(bits);
                 }
+
+                // Exhaust every possible 16-lane bit pattern, including combinations that
+                // are easy to miss with a handful of hand-picked examples.
+                for bits in 0..=u16::MAX {
+                    check::<16>(bits as u64);
+                }
             }
 
             #[test]
