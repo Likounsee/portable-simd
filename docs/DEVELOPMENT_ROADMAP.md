@@ -198,3 +198,8 @@ improvement.
       slice length and all-disabled, all-enabled, alternating, and edge-lane masks.
 - [ ] Run the expanded lane-width matrix on the pinned nightly and under Miri where
       supported.
+
+- [x] Extend gather/scatter scalar-oracle checks to the same lane-count boundaries,
+      every slice length, alternating valid and `usize::MAX` indices, and four mask
+      patterns. Scatter destinations are unique so the expected result does not rely
+      on unspecified duplicate-index write ordering.
