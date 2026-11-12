@@ -71,3 +71,41 @@ impl<T: fmt::Debug + SwizzleStrategy, const N: usize> SwizzleStrategy for [T; N]
         Self::Strategy::new(T::swizzled_strategy())
     }
 }
+
+fn check_exhaustive_swizzle_indices<const N: usize>() {
+    let values = core::array::from_fn(|lane| (lane as u8).wrapping_mul(37).wrapping_add(11));
+    let vector = core_simd::simd::Simd::from_array(values);
+
+    // Exercise every possible u8 index in every output lane. This covers all
+    // in-bounds indices as well as every out-of-bounds byte value, independent
+    // of the randomized property-test seed.
+    for start in 0..=u8::MAX {
+        let indices = core::array::from_fn(|lane| start.wrapping_add(lane as u8));
+        let actual = vector
+            .swizzle_dyn(core_simd::simd::Simd::from_array(indices))
+            .to_array();
+        let expected = swizzle_dyn_scalar_ver(values, indices);
+        assert_eq!(actual, expected, "N={N}, start={start}");
+    }
+}
+
+#[test]
+fn swizzle_dyn_exhaustive_indices_at_width_boundaries() {
+    check_exhaustive_swizzle_indices::<1>();
+    check_exhaustive_swizzle_indices::<7>();
+    check_exhaustive_swizzle_indices::<8>();
+    check_exhaustive_swizzle_indices::<9>();
+    check_exhaustive_swizzle_indices::<15>();
+    check_exhaustive_swizzle_indices::<16>();
+    check_exhaustive_swizzle_indices::<17>();
+    check_exhaustive_swizzle_indices::<23>();
+    check_exhaustive_swizzle_indices::<24>();
+    check_exhaustive_swizzle_indices::<31>();
+    check_exhaustive_swizzle_indices::<32>();
+    check_exhaustive_swizzle_indices::<33>();
+    check_exhaustive_swizzle_indices::<47>();
+    check_exhaustive_swizzle_indices::<48>();
+    check_exhaustive_swizzle_indices::<49>();
+    check_exhaustive_swizzle_indices::<63>();
+    check_exhaustive_swizzle_indices::<64>();
+}
