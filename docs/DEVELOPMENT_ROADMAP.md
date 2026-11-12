@@ -28,7 +28,7 @@ The workspace currently contains three crates:
 The workspace uses the nightly toolchain pinned in `rust-toolchain.toml`.
 The CI workflow runs formatting, Clippy, and target-specific test/documentation jobs.
 
-The fork's `main` was compared with `rust-lang:main`: it is 9 commits ahead and
+The fork's `main` was compared with `rust-lang:main`: it is 11 commits ahead and
 0 commits behind at the time of this check. The fork-only files are the diagnostic
 benchmark, this roadmap, and the mask-ordering regression test. This comparison does
 not establish that the code compiles or passes CI.
@@ -82,7 +82,9 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
       (`!a & b`, `!a | b`, `a & !b`, `a | !b`) rather than signed integer comparisons.
 - [x] Add a 64-lane regression test covering all four comparisons plus min/max,
       including the high bit and mixed patterns.
-- [ ] Run the regression test on the pinned nightly and across the CI target matrix.
+- [x] Add exhaustive coverage for all 65,536 pairs of 8-lane mask patterns,
+      checking all four comparisons plus min/max.
+- [ ] Run the regression tests on the pinned nightly and across the CI target matrix.
 
 ### 5. Review API and soundness concerns before proposing changes
 
@@ -143,6 +145,7 @@ For each proposed change:
 
 This remains an investigation, not an optimization claim. The masked load/store call
 chain has been inspected and a broader diagnostic harness has been added, but the
-harness has not yet been compiled or executed. A 64-lane mask-ordering regression test
-has also been added, but has not yet been run locally or through CI. No performance
+harness has not yet been compiled or executed. Mask ordering now has both 64-lane
+high-bit regression cases and exhaustive 8-lane pair coverage; these tests have not
+yet been run locally or through CI. No performance
 results or implementation speedups are claimed.
