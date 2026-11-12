@@ -28,7 +28,7 @@ The workspace currently contains three crates:
 The workspace uses the nightly toolchain pinned in `rust-toolchain.toml`.
 The CI workflow runs formatting, Clippy, and target-specific test/documentation jobs.
 
-The fork's `main` was compared with `rust-lang:main`: it is 8 commits ahead and
+The fork's `main` was compared with `rust-lang:main`: it is 9 commits ahead and
 0 commits behind at the time of this check. The fork-only files are the diagnostic
 benchmark, this roadmap, and the mask-ordering regression test. This comparison does
 not establish that the code compiles or passes CI.
@@ -89,6 +89,7 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 - [ ] Review the stabilization/API concerns in upstream issue #364.
 - [ ] Review the large-vector alignment discussion in upstream issue #495.
 - [ ] Review the visibility/API concern in upstream issue #537.
+- [ ] Review the unresolved Miri floating-point test determinism discussion in issue #463.
 - [ ] Verify the current code and discussion before treating any old issue as unresolved.
 
 Issue #537 is still open. The reported `PrivateMethods` supertrait exposure is present
@@ -98,8 +99,26 @@ trait's accessibility on nightly was unintended and that its previous name was
 `Sealed`. Treat this as an API/visibility review, not as proof of a stable-API break
 or as justification for an unreviewed code change.
 
-### 6. Recent issue triage
+### 6. Floating-point test determinism
 
+Related upstream issue: [#463](https://github.com/rust-lang/portable-simd/issues/463).
+
+- [x] Inspect the issue and its five comments.
+- [x] Confirm the current StdFloat test suite already uses approximate comparisons
+      for transcendental functions such as sin, cos, exp, exp2, ln, log2, and log10,
+      while retaining exact comparisons for several other operations.
+- [ ] Determine whether the remaining Miri failures are still reproducible on the
+      pinned nightly and identify the exact failing test cases.
+- [ ] Discuss a narrowly scoped Miri-only strategy with maintainers before changing
+      exact comparisons, because exact tests intentionally catch implementation regressions.
+
+The discussion in #463 does not support a blanket switch to approximate assertions:
+maintainers explicitly noted the value of exact comparisons for detecting regressions.
+No test policy or tolerance change is made here.
+
+### 7. Recent issue triage
+
+- [x] #499: closed; current StdFloat::round documentation correctly says ties round away from zero.
 - [x] #527: closed; regression coverage exists in this fork.
 - [x] #524: closed (Miri selecting unsupported target intrinsics).
 - [x] #519: closed (missing reliable-f16-math test gate).
