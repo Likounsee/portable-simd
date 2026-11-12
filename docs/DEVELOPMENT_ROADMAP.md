@@ -34,16 +34,18 @@ The CI workflow runs formatting, Clippy, and target-specific test/documentation 
 - [ ] Record the fork's base commit and compare it with upstream `main`.
 - [ ] Run the repository's documented test and formatting commands.
 - [ ] Record the available local target and CPU features.
-- [ ] Build minimal, reproducible benchmark cases for masked load/store.
-- [ ] Save compiler version, target triple, target features, and generated assembly
-      alongside benchmark results.
+- [x] Build a diagnostic benchmark covering slice lengths 0 through 8 and all-enabled,
+      alternating, and sparse masks, with scalar reference loops and semantic assertions.
+- [ ] Run the benchmark on the pinned nightly and save compiler version, target triple,
+      target features, timings, optimized LLVM IR, and generated assembly.
 
 ### 2. Investigate masked load/store code generation
 
 Related upstream issue: [#494](https://github.com/rust-lang/portable-simd/issues/494).
 
-- [ ] Read the current implementations of `load_or_default`, `store_select`,
-      `gather_or_default`, and `scatter`.
+- [x] Read the current implementations of `load_or_default`, `store_select`,
+      `gather_or_default`, and `scatter`. The safe contiguous load/store APIs clamp
+      their masks to the slice length before calling the pointer-level SIMD intrinsics.
 - [ ] Reproduce the reported x86-64 SSE2 behavior using the issue's examples.
 - [ ] Compare the SIMD API implementation with equivalent scalar loops.
 - [ ] Inspect optimized LLVM IR and assembly to identify the actual cost.
@@ -80,5 +82,7 @@ For each proposed change:
 
 ## Status
 
-This is an initial planning document only. No implementation changes, benchmark results,
-or performance claims are recorded yet. Items above remain unchecked until verified.
+This is an initial investigation, not an optimization claim. The masked load/store call
+chain has been inspected and a broader diagnostic harness has been added, but the harness
+has not yet been compiled or executed. No performance results or implementation speedups
+are claimed.
