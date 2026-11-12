@@ -85,7 +85,8 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 - [x] Add exhaustive coverage for all 65,536 pairs of 8-lane mask patterns,
       checking all four comparisons plus min/max.
 - [x] Add bitmask round-trip coverage at every internal width transition (8, 16, 32, 64),
-      plus odd lane counts and all-zero/all-one/patterned inputs.
+      plus odd lane counts and all-zero/all-one/patterned inputs. Expected lanes are
+      constructed independently to avoid a round-trip-only false positive.
 - [ ] Run the regression tests on the pinned nightly and across the CI target matrix.
 
 ### 5. Review API and soundness concerns before proposing changes
