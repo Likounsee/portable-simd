@@ -189,6 +189,36 @@ macro_rules! test_mask_api {
 
 
             #[test]
+            fn bitmask_roundtrip_lane_boundaries() {
+                fn check<const LANES: usize>(bits: u64) {
+                    let mask = Mask::<$type, LANES>::from_bitmask(bits);
+                    let expected = if LANES == 64 {
+                        bits
+                    } else {
+                        bits & ((1u64 << LANES) - 1)
+                    };
+                    assert_eq!(mask.to_bitmask(), expected, "LANES={LANES}, bits={bits:#018x}");
+                }
+
+                // Exercise every internal to_bitmask width transition, plus odd lane counts.
+                for bits in [0, 1, 0xA55A_9669_F00F_33CC, u64::MAX] {
+                    check::<1>(bits);
+                    check::<3>(bits);
+                    check::<7>(bits);
+                    check::<8>(bits);
+                    check::<9>(bits);
+                    check::<15>(bits);
+                    check::<16>(bits);
+                    check::<17>(bits);
+                    check::<31>(bits);
+                    check::<32>(bits);
+                    check::<33>(bits);
+                    check::<63>(bits);
+                    check::<64>(bits);
+                }
+            }
+
+            #[test]
             fn cast() {
                 fn cast_impl<T: core_simd::simd::MaskElement>()
                 where
