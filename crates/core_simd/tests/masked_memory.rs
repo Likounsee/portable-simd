@@ -173,3 +173,69 @@ fn scatter_select_matches_scalar_oracle_for_unique_valid_indices() {
         }
     }
 }
+
+
+fn check_contiguous_masked_memory_width<const LANES: usize>() {
+    let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(17).wrapping_add(5));
+    let values = Simd::from_array(source);
+    let fallback = Simd::from_array(core::array::from_fn(|lane| -1 - lane as i32));
+    let patterns = [
+        core::array::from_fn(|_| false),
+        core::array::from_fn(|_| true),
+        core::array::from_fn(|lane| lane % 2 == 0),
+        core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES),
+    ];
+
+    for len in 0..=LANES {
+        for enabled in patterns {
+            let actual = Simd::<i32, LANES>::load_select(
+                &source[..len],
+                Mask::from_array(enabled),
+                fallback,
+            )
+            .to_array();
+            let fallback_array = fallback.to_array();
+            let expected = core::array::from_fn(|lane| {
+                if enabled[lane] && lane < len {
+                    source[lane]
+                } else {
+                    fallback_array[lane]
+                }
+            });
+            assert_eq!(actual, expected, "load: LANES={LANES}, len={len}, mask={enabled:?}");
+
+            let mut destination = [-99_i32; LANES];
+            values.store_select(&mut destination[..len], Mask::from_array(enabled));
+            let expected = core::array::from_fn(|lane| {
+                if enabled[lane] && lane < len {
+                    source[lane]
+                } else {
+                    -99
+                }
+            });
+            assert_eq!(
+                destination, expected,
+                "store: LANES={LANES}, len={len}, mask={enabled:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn contiguous_masked_memory_covers_lane_count_boundaries() {
+    check_contiguous_masked_memory_width::<1>();
+    check_contiguous_masked_memory_width::<2>();
+    check_contiguous_masked_memory_width::<3>();
+    check_contiguous_masked_memory_width::<4>();
+    check_contiguous_masked_memory_width::<7>();
+    check_contiguous_masked_memory_width::<8>();
+    check_contiguous_masked_memory_width::<9>();
+    check_contiguous_masked_memory_width::<15>();
+    check_contiguous_masked_memory_width::<16>();
+    check_contiguous_masked_memory_width::<17>();
+    check_contiguous_masked_memory_width::<31>();
+    check_contiguous_masked_memory_width::<32>();
+    check_contiguous_masked_memory_width::<33>();
+    check_contiguous_masked_memory_width::<63>();
+    check_contiguous_masked_memory_width::<64>();
+}
