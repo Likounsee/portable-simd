@@ -243,7 +243,6 @@ fn contiguous_masked_memory_covers_lane_count_boundaries() {
     check_contiguous_masked_memory_width::<64>();
 }
 
-
 fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
     let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(23).wrapping_add(7));
     let values = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
