@@ -26,12 +26,36 @@ fn mask_partial_order_matches_bool_ordering_for_64_lanes() {
         let a = Mask::<i8, 64>::from_bitmask(a_bits);
         let b = Mask::<i8, 64>::from_bitmask(b_bits);
 
-        assert_eq!(a.simd_lt(b).to_bitmask(), !a_bits & b_bits, "lt: {a_bits:#018x}, {b_bits:#018x}");
-        assert_eq!(a.simd_le(b).to_bitmask(), !a_bits | b_bits, "le: {a_bits:#018x}, {b_bits:#018x}");
-        assert_eq!(a.simd_gt(b).to_bitmask(), a_bits & !b_bits, "gt: {a_bits:#018x}, {b_bits:#018x}");
-        assert_eq!(a.simd_ge(b).to_bitmask(), a_bits | !b_bits, "ge: {a_bits:#018x}, {b_bits:#018x}");
+        assert_eq!(
+            a.simd_lt(b).to_bitmask(),
+            !a_bits & b_bits,
+            "lt: {a_bits:#018x}, {b_bits:#018x}"
+        );
+        assert_eq!(
+            a.simd_le(b).to_bitmask(),
+            !a_bits | b_bits,
+            "le: {a_bits:#018x}, {b_bits:#018x}"
+        );
+        assert_eq!(
+            a.simd_gt(b).to_bitmask(),
+            a_bits & !b_bits,
+            "gt: {a_bits:#018x}, {b_bits:#018x}"
+        );
+        assert_eq!(
+            a.simd_ge(b).to_bitmask(),
+            a_bits | !b_bits,
+            "ge: {a_bits:#018x}, {b_bits:#018x}"
+        );
 
-        assert_eq!(a.simd_max(b).to_bitmask(), a_bits | b_bits, "max: {a_bits:#018x}, {b_bits:#018x}");
-        assert_eq!(a.simd_min(b).to_bitmask(), a_bits & b_bits, "min: {a_bits:#018x}, {b_bits:#018x}");
+        assert_eq!(
+            a.simd_max(b).to_bitmask(),
+            a_bits | b_bits,
+            "max: {a_bits:#018x}, {b_bits:#018x}"
+        );
+        assert_eq!(
+            a.simd_min(b).to_bitmask(),
+            a_bits & b_bits,
+            "min: {a_bits:#018x}, {b_bits:#018x}"
+        );
     }
 }
