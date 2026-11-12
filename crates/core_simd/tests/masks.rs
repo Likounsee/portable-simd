@@ -192,12 +192,25 @@ macro_rules! test_mask_api {
             fn bitmask_roundtrip_lane_boundaries() {
                 fn check<const LANES: usize>(bits: u64) {
                     let mask = Mask::<$type, LANES>::from_bitmask(bits);
-                    let expected = if LANES == 64 {
+                    // Build expected lanes independently to avoid a round-trip-only false positive.
+                    let expected = Mask::<$type, LANES>::from_array(core::array::from_fn(
+                        |lane| bits & (1u64 << lane) != 0,
+                    ));
+                    assert_eq!(
+                        mask.to_array(),
+                        expected.to_array(),
+                        "from_bitmask: LANES={LANES}, bits={bits:#018x}",
+                    );
+                    let expected_bits = if LANES == 64 {
                         bits
                     } else {
                         bits & ((1u64 << LANES) - 1)
                     };
-                    assert_eq!(mask.to_bitmask(), expected, "LANES={LANES}, bits={bits:#018x}");
+                    assert_eq!(
+                        mask.to_bitmask(),
+                        expected_bits,
+                        "to_bitmask: LANES={LANES}, bits={bits:#018x}",
+                    );
                 }
 
                 // Exercise every internal to_bitmask width transition, plus odd lane counts.
