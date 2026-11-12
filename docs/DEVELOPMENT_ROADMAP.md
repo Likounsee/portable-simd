@@ -191,3 +191,10 @@ Related upstream issue: [#486](https://github.com/rust-lang/portable-simd/issues
 The exhaustive test strengthens confidence in existing semantics. It does not
 implement the optional API proposed in #486 and does not establish a performance
 improvement.
+
+
+- [x] Extend contiguous masked load/store scalar-oracle tests to lane counts around
+      power-of-two boundaries (1–4, 7–9, 15–17, 31–33, 63–64), checking every
+      slice length and all-disabled, all-enabled, alternating, and edge-lane masks.
+- [ ] Run the expanded lane-width matrix on the pinned nightly and under Miri where
+      supported.
