@@ -154,3 +154,14 @@ high-bit regression cases and exhaustive 8-lane pair coverage. Mask bitmask conv
 also has explicit round-trip coverage at the internal width transitions and odd lane
 counts. These tests have not yet been run locally or through CI. No performance
 results or implementation speedups are claimed.
+
+
+## Masked memory semantic regression coverage
+
+- [x] Add scalar-oracle tests for safe masked contiguous loads and stores over every
+      slice length from zero through the vector width.
+- [x] Cover disabled lanes and out-of-bounds gather/scatter indices, including
+      `usize::MAX` and empty slices.
+- [ ] Run these tests under the pinned nightly and Miri where supported.
+- [ ] Continue codegen comparison for SSE2/AVX2; no performance claim until assembly
+      and benchmark results are collected.
