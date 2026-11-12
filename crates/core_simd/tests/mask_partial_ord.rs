@@ -59,3 +59,24 @@ fn mask_partial_order_matches_bool_ordering_for_64_lanes() {
         );
     }
 }
+
+#[test]
+fn mask_partial_order_exhaustive_for_8_lanes() {
+    // Exhaust all 256 x 256 pairs of 8-lane masks. This checks every possible
+    // pair of boolean lane patterns, complementing the 64-lane sign-bit cases.
+    for a_bits in 0..=u8::MAX {
+        for b_bits in 0..=u8::MAX {
+            let a = Mask::<i8, 8>::from_bitmask(a_bits as u64);
+            let b = Mask::<i8, 8>::from_bitmask(b_bits as u64);
+            let a_bits = a_bits as u64;
+            let b_bits = b_bits as u64;
+
+            assert_eq!(a.simd_lt(b).to_bitmask(), !a_bits & b_bits);
+            assert_eq!(a.simd_le(b).to_bitmask(), !a_bits | b_bits);
+            assert_eq!(a.simd_gt(b).to_bitmask(), a_bits & !b_bits);
+            assert_eq!(a.simd_ge(b).to_bitmask(), a_bits | !b_bits);
+            assert_eq!(a.simd_max(b).to_bitmask(), a_bits | b_bits);
+            assert_eq!(a.simd_min(b).to_bitmask(), a_bits & b_bits);
+        }
+    }
+}
