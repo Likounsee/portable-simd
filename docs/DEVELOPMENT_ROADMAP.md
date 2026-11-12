@@ -28,16 +28,16 @@ The workspace currently contains three crates:
 The workspace uses the nightly toolchain pinned in `rust-toolchain.toml`.
 The CI workflow runs formatting, Clippy, and target-specific test/documentation jobs.
 
-The fork's `main` was compared with `rust-lang:main`: it is 14 commits ahead and
-0 commits behind at the time of this check. The fork-only files are the diagnostic
-benchmark, this roadmap, and the mask-ordering regression test. This comparison does
-not establish that the code compiles or passes CI.
+The fork's `main` is compared directly against `rust-lang:main`; see the
+[live comparison](https://github.com/Likounsee/portable-simd/compare/rust-lang:main...main).
+The fork-only work includes the diagnostic benchmark, regression tests, and this roadmap.
+The comparison does not establish that the code compiles or passes CI.
 
 ## Priority work
 
 ### 1. Establish a reproducible baseline
 
-- [x] Compare the fork's `main` with upstream `main`: 8 commits ahead, 0 behind.
+- [x] Compare the fork's `main` with upstream `main` (live comparison linked above).
 - [ ] Run the repository's documented test and formatting commands.
 - [ ] Record the available local target and CPU features.
 - [x] Build a diagnostic benchmark covering slice lengths 0 through 8 and all-enabled,
@@ -93,7 +93,7 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 ### 5. Review API and soundness concerns before proposing changes
 
 - [ ] Review the stabilization/API concerns in upstream issue #364.
-- [ ] Review the large-vector alignment discussion in upstream issue #495.
+- [x] Inspect the large-vector alignment report in #495 and the current `Simd` representation: `#[repr(simd, packed)]`; masked pointer loads/stores request element alignment. The issue remains open, and target layout measurements are still needed.
 - [ ] Review the visibility/API concern in upstream issue #537.
 - [ ] Review the unresolved Miri floating-point test determinism discussion in issue #463.
 - [ ] Verify the current code and discussion before treating any old issue as unresolved.
@@ -129,7 +129,7 @@ No test policy or tolerance change is made here.
 - [x] #524: closed (Miri selecting unsupported target intrinsics).
 - [x] #519: closed (missing reliable-f16-math test gate).
 - [ ] #537: open; review the sealed-trait visibility concern described above.
-- [ ] #494: open; masked memory-operation code generation remains uninvestigated.
+- [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
 - [ ] #472: open; mask operation code generation remains uninvestigated.
 - [ ] #505: open; `Select` naming and prelude question.
 - [ ] #495: open; large-vector alignment constraints.
@@ -148,8 +148,9 @@ For each proposed change:
 ## Status
 
 This remains an investigation, not an optimization claim. The masked load/store call
-chain has been inspected and a broader diagnostic harness has been added, but the
-harness has not yet been compiled or executed. Mask ordering now has both 64-lane
+chain has been inspected, scalar-oracle regression tests now cover short/empty slices
+and masked/out-of-bounds gather/scatter lanes, and a diagnostic benchmark has been added.
+Neither the tests nor the benchmark have yet been compiled or executed. Mask ordering now has both 64-lane
 high-bit regression cases and exhaustive 8-lane pair coverage. Mask bitmask conversion
 also has explicit round-trip coverage at the internal width transitions and odd lane
 counts. These tests have not yet been run locally or through CI. No performance
