@@ -174,12 +174,11 @@ fn scatter_select_matches_scalar_oracle_for_unique_valid_indices() {
     }
 }
 
-
 fn check_contiguous_masked_memory_width<const LANES: usize>() {
     let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(17).wrapping_add(5));
     let values = Simd::from_array(source);
     let fallback = Simd::from_array(core::array::from_fn(|lane| -1 - lane as i32));
-    let patterns = [
+    let patterns: [[bool; LANES]; 4] = [
         core::array::from_fn(|_| false),
         core::array::from_fn(|_| true),
         core::array::from_fn(|lane| lane % 2 == 0),
@@ -202,7 +201,11 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
                     fallback_array[lane]
                 }
             });
-            assert_eq!(actual, expected, "load: LANES={LANES}, len={len}, mask={enabled:?}");
+            assert_eq!(
+                actual,
+                expected,
+                "load: LANES={LANES}, len={len}, mask={enabled:?}"
+            );
 
             let mut destination = [-99_i32; LANES];
             values.store_select(&mut destination[..len], Mask::from_array(enabled));
