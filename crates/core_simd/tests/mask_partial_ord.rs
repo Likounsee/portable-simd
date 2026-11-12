@@ -70,13 +70,14 @@ fn mask_partial_order_exhaustive_for_8_lanes() {
             let b = Mask::<i8, 8>::from_bitmask(b_bits as u64);
             let a_bits = a_bits as u64;
             let b_bits = b_bits as u64;
+            let lane_mask = u8::MAX as u64;
 
-            assert_eq!(a.simd_lt(b).to_bitmask(), !a_bits & b_bits);
-            assert_eq!(a.simd_le(b).to_bitmask(), !a_bits | b_bits);
-            assert_eq!(a.simd_gt(b).to_bitmask(), a_bits & !b_bits);
-            assert_eq!(a.simd_ge(b).to_bitmask(), a_bits | !b_bits);
-            assert_eq!(a.simd_max(b).to_bitmask(), a_bits | b_bits);
-            assert_eq!(a.simd_min(b).to_bitmask(), a_bits & b_bits);
+            assert_eq!(a.simd_lt(b).to_bitmask(), (!a_bits & b_bits) & lane_mask);
+            assert_eq!(a.simd_le(b).to_bitmask(), (!a_bits | b_bits) & lane_mask);
+            assert_eq!(a.simd_gt(b).to_bitmask(), (a_bits & !b_bits) & lane_mask);
+            assert_eq!(a.simd_ge(b).to_bitmask(), (a_bits | !b_bits) & lane_mask);
+            assert_eq!(a.simd_max(b).to_bitmask(), (a_bits | b_bits) & lane_mask);
+            assert_eq!(a.simd_min(b).to_bitmask(), (a_bits & b_bits) & lane_mask);
         }
     }
 }
