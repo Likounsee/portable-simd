@@ -28,7 +28,7 @@ The workspace currently contains three crates:
 The workspace uses the nightly toolchain pinned in `rust-toolchain.toml`.
 The CI workflow runs formatting, Clippy, and target-specific test/documentation jobs.
 
-The fork's `main` was compared with `rust-lang:main`: it is 11 commits ahead and
+The fork's `main` was compared with `rust-lang:main`: it is 13 commits ahead and
 0 commits behind at the time of this check. The fork-only files are the diagnostic
 benchmark, this roadmap, and the mask-ordering regression test. This comparison does
 not establish that the code compiles or passes CI.
