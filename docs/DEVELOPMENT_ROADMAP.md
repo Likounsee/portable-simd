@@ -28,7 +28,7 @@ The workspace currently contains three crates:
 The workspace uses the nightly toolchain pinned in `rust-toolchain.toml`.
 The CI workflow runs formatting, Clippy, and target-specific test/documentation jobs.
 
-The fork's `main` was compared with `rust-lang:main`: it is 13 commits ahead and
+The fork's `main` was compared with `rust-lang:main`: it is 14 commits ahead and
 0 commits behind at the time of this check. The fork-only files are the diagnostic
 benchmark, this roadmap, and the mask-ordering regression test. This comparison does
 not establish that the code compiles or passes CI.
@@ -84,6 +84,8 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
       including the high bit and mixed patterns.
 - [x] Add exhaustive coverage for all 65,536 pairs of 8-lane mask patterns,
       checking all four comparisons plus min/max.
+- [x] Add bitmask round-trip coverage at every internal width transition (8, 16, 32, 64),
+      plus odd lane counts and all-zero/all-one/patterned inputs.
 - [ ] Run the regression tests on the pinned nightly and across the CI target matrix.
 
 ### 5. Review API and soundness concerns before proposing changes
@@ -146,6 +148,7 @@ For each proposed change:
 This remains an investigation, not an optimization claim. The masked load/store call
 chain has been inspected and a broader diagnostic harness has been added, but the
 harness has not yet been compiled or executed. Mask ordering now has both 64-lane
-high-bit regression cases and exhaustive 8-lane pair coverage; these tests have not
-yet been run locally or through CI. No performance
+high-bit regression cases and exhaustive 8-lane pair coverage. Mask bitmask conversion
+also has explicit round-trip coverage at the internal width transitions and odd lane
+counts. These tests have not yet been run locally or through CI. No performance
 results or implementation speedups are claimed.
