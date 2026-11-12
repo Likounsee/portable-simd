@@ -166,3 +166,8 @@ results or implementation speedups are claimed.
 - [ ] Run these tests under the pinned nightly and Miri where supported.
 - [ ] Continue codegen comparison for SSE2/AVX2; no performance claim until assembly
       and benchmark results are collected.
+
+- [x] Extend masked gather coverage to every four-lane index tuple over valid,
+      out-of-bounds, and `usize::MAX` indices, for all 16 enable masks.
+- [x] Check masked scatter against a scalar oracle for every permutation of four
+      distinct destinations and all 16 enable masks.
