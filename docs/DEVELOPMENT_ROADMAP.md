@@ -171,3 +171,23 @@ results or implementation speedups are claimed.
       out-of-bounds, and `usize::MAX` indices, for all 16 enable masks.
 - [x] Check masked scatter against a scalar oracle for every permutation of four
       distinct destinations and all 16 enable masks.
+
+
+### 8. Dynamic byte swizzle correctness
+
+Related upstream issue: [#486](https://github.com/rust-lang/portable-simd/issues/486).
+
+- [x] Inspect the target-specific implementations in `swizzle_dyn.rs`, including
+      x86 SSSE3/AVX2/AVX-512, AArch64 NEON, ARM NEON, WASM SIMD, and LoongArch.
+- [x] Add deterministic scalar-oracle coverage that visits every possible `u8`
+      index in every output lane at representative widths around the implementation
+      boundaries (1, 7–9, 15–17, 23–24, 31–33, 47–49, 63–64).
+- [ ] Run the test on the pinned nightly across the available architecture/feature
+      matrix. The current test addition is not yet compiled or executed.
+- [ ] Evaluate #486's proposed unchecked/implementation-defined out-of-bounds
+      variant separately as an API design and safety-contract question; do not
+      change the existing zeroing semantics.
+
+The exhaustive test strengthens confidence in existing semantics. It does not
+implement the optional API proposed in #486 and does not establish a performance
+improvement.
