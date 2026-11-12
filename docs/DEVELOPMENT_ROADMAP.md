@@ -62,7 +62,7 @@ Related upstream issue: [#472](https://github.com/rust-lang/portable-simd/issues
 - [ ] Identify whether the missed optimization is caused by the API lowering,
       LLVM optimization, or target instruction selection.
 
-### 4. Review API and soundness concerns before proposing changes
+### 4. Mask ordering regression coverage\n\nRelated upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues/527) (closed).\n\n- [x] Confirm the current implementation uses boolean algebra for mask ordering\n      (`!a & b`, `!a | b`, `a & !b`, `a | !b`) rather than signed integer comparisons.\n- [x] Add a 64-lane regression test covering all four comparisons plus min/max,\n      including the high bit and mixed patterns.\n- [ ] Run the regression test on the pinned nightly and across the CI target matrix.\n\n### 5. Review API and soundness concerns before proposing changes
 
 - [ ] Review the stabilization/API concerns in upstream issue #364.
 - [ ] Review the large-vector alignment discussion in upstream issue #495.
