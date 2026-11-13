@@ -237,6 +237,30 @@ macro_rules! test_mask_api {
                 }
             }
 
+            // Exercise first/last-set reductions at every supported lane width,
+            // including the non-power-of-two widths and the 64-lane boundary.
+            test_helpers::test_lanes! {
+                fn first_and_last_set_lane_boundaries<const LANES: usize>() {
+                    fn check<const LANES: usize>(values: [bool; LANES]) {
+                        let mask = Mask::<$type, LANES>::from_array(values);
+                        let expected_first = values.iter().position(|value| *value);
+                        let expected_last = values.iter().rposition(|value| *value);
+                        assert_eq!(mask.first_set(), expected_first, "first_set: LANES={LANES}, values={values:?}");
+                        assert_eq!(mask.last_set(), expected_last, "last_set: LANES={LANES}, values={values:?}");
+                    }
+
+                    check([false; LANES]);
+                    for lane in 0..LANES {
+                        let mut values = [false; LANES];
+                        values[lane] = true;
+                        check(values);
+                    }
+                    check(core::array::from_fn(|lane| lane % 3 == 1));
+                    check(core::array::from_fn(|lane| lane % 3 != 1));
+                    check(core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES));
+                }
+            }
+
             #[test]
             fn cast() {
                 fn cast_impl<T: core_simd::simd::MaskElement>()

@@ -116,3 +116,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - #427: the maintainer recollection narrows the historical trigger to the packed SIMD representation, possibly `i8`; the reporter could not confirm the exact element type. The current tests cover the value classes and lane widths but cannot substitute for the missing compiler reproducer.
 - #341/#343: the discussion distinguishes power-of-two array copies, which can become LLVM vector loads/stores, from non-power-of-two copies that may lower to `memcpy`. The requested guarantee is specifically about vector-typed LLVM IR for SIMD-facing code. No unsafe overread or alignment workaround is justified.
 - #472: the discussion points toward a compiler representation improvement for masks/bits. The fork must preserve the validity invariant and should not weaken it to force code generation.
+
+
+### 2026-11-13 — first/last-set mask reduction boundary coverage
+
+- Added lane-width regression coverage for `Mask::first_set` and `Mask::last_set`.
+- The tests cover every configured lane width, including non-power-of-two widths and 64 lanes, and exercise empty masks, every single-bit position, alternating patterns, and both endpoint lanes.
+- Expected indices are computed independently from the source boolean array. This covers both the x86 bitmask fast path and scalar/vector fallback paths on targets where the fast path is unavailable.
+- Files: `crates/core_simd/tests/masks.rs` (new `first_and_last_set_lane_boundaries` test inside the existing mask-type macro).
+- This is regression coverage, not a claimed implementation fix; the complete CI matrix must validate it.
