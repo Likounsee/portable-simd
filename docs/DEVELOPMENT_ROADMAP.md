@@ -274,7 +274,8 @@ This is a verified existing safeguard, not a new code change.
 - [x] Confirm its `Sealed` trait still declares `valid`, `eq`, `to_usize`, `max_unsigned`, `Unsigned`, `TRUE`, and `FALSE`, and remains a supertrait of `MaskElement`.
 - [x] Reject a rename-only approach: changing `PrivateMethods` to `Sealed` does not remove the downstream-visible associated items described by #537.
 - [x] Identify that PR #483 also changes the generic meaning of `Mask<T, N>` to use `T: SimdElement` and `T::Mask`, changes numerous public bounds and implementations, and is therefore a broad API redesign rather than a safe, isolated patch for #537.
-- [ ] Develop a smaller design that keeps a method-free sealing supertrait and relocates internal operations without adding private bounds to public method signatures or changing the public `Mask<T, N>` API.
-- [ ] Prove the design with a downstream compile-fail test for every leaked associated item category (constant, associated type, and method), plus ordinary internal mask tests.
+- [x] Implement the narrow visibility fix in `crates/core_simd/src/masks.rs`: move `PrivateMethods` into the `masks` module with ordinary private visibility, retain it as the sealing supertrait, and explicitly allow the intentional `private_bounds` lint on `MaskElement`. No public `Mask<T, N>` signature or helper implementation changed.
+- [x] Add three `compile_fail` doctests that attempt to access the helper associated constant, associated type, and method through `MaskElement` from downstream-style code.
+- [ ] Compile the crate and run the three doctests plus the existing mask tests on the pinned nightly. The current environment cannot run `rustc`/`cargo`, so the source change is not yet compiler-verified.
 
-This investigation narrows the solution space but does not yet justify a source edit. In particular, do not rename the trait and call the issue fixed.
+The source-level fix is now committed, but #537 should not be considered fully verified until the compile-fail doctests and ordinary mask tests pass on the repository's pinned nightly. The key distinction is actual private visibility, not a rename to `Sealed`.
