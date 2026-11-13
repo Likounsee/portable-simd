@@ -286,3 +286,29 @@ This is a verified existing safeguard, not a new code change.
 - [ ] Compile the crate and run the three doctests plus the existing mask tests on the pinned nightly. The current environment cannot run `rustc`/`cargo`, so the source change is not yet compiler-verified.
 
 The source-level fix is now committed, but #537 should not be considered fully verified until the compile-fail doctests and ordinary mask tests pass on the repository's pinned nightly. The key distinction is actual private visibility, not a rename to `Sealed`.
+
+
+### 14. Running CI on the fork
+
+The fork's `.github/workflows/ci.yml` supports `push` to `main`, pull requests,
+and manual `workflow_dispatch`.
+
+- [x] Confirm the workflow file is present on the default branch (`main`) and contains both the push trigger and `workflow_dispatch`.
+- [x] Confirm the fork currently has only the `main` branch; all contribution work stays on it.
+- [ ] Enable GitHub Actions for the fork if GitHub has disabled them by default.
+- [ ] Run the `CI` workflow manually from the Actions tab, selecting `main`.
+- [ ] Inspect every job and resolve actual compiler, formatting, test, or documentation failures before treating the accumulated regression tests as validated.
+
+GitHub disables workflows in forked repositories by default. To enable them, open
+the fork's **Actions** tab and accept the enable-workflows prompt if it appears.
+For a manual run, select **CI** in the workflow list, click **Run workflow**, choose
+`main`, and confirm **Run workflow**. The workflow file must exist on the default
+branch for the manual button to be available. See the
+[GitHub manual workflow documentation](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
+and [fork workflow restrictions](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflows-in-forked-repositories).
+
+The GitHub integration available for this work can inspect workflow jobs and logs
+once a run ID is known, but it does not expose a workflow-dispatch action or a
+general list-workflow-runs action. The commit-run helper only returns pull-request
+runs, so an empty response from that helper must not be interpreted as proof that
+a push-triggered run did not happen.
