@@ -206,7 +206,7 @@ improvement.
 
 ### 9. Array/slice conversion code generation
 
-Related upstream issue: [#343](https://github.com/rust-lang/portable-simd/issues/343).
+Related upstream issues: [#343](https://github.com/rust-lang/portable-simd/issues/343) and [#341](https://github.com/rust-lang/portable-simd/issues/341). The older #341 report explains the padding/overread hazard and why a dedicated vector-load intrinsic was proposed; #343 asks for codegen regression tests.
 
 - [x] Trace `Simd::from_array`, `to_array`, `from_slice`, and `copy_to_slice` to the internal `load`/`store` helpers.
 - [x] Confirm the helpers use `ptr::copy_nonoverlapping` rather than a direct transmute or tuple-field access. The source explicitly documents that non-power-of-two `repr(simd)` vectors may contain trailing padding, so copying the full SIMD object from an `[T; N]` could read beyond the array.
@@ -228,3 +228,11 @@ Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues
 
 Do not simply delete `PrivateMethods` from the `MaskElement` supertrait: the current implementation relies on those associated items at several generic call sites. A safe fix needs a deliberate internal-helper design and compile-fail coverage.
 
+
+
+### 11. Additional correctness and API issue triage
+
+- [x] Recheck [#427](https://github.com/rust-lang/portable-simd/issues/427): the report concerns `simd_div` with zero divisors and `simd_rem` with minimum signed values for non-power-of-two vectors on AArch64. The issue still lacks a minimal reproducer; the only follow-up asks about the historical `repr(simd, packed)` layout and element type, and the reporter could not recall the exact type.
+- [ ] Do not add a speculative workaround for #427. First construct a minimal reproducer on AArch64, establish whether the current representation still triggers the LLVM ICE, and preserve the exact compiler/LLVM versions and failing operation.
+- [x] Triage [#539](https://github.com/rust-lang/portable-simd/issues/539): this is an API request for SIMD counterparts to scalar `algebraic_*` float operations, with a possible algebraic reduction. The request does not yet define the exact operation set, semantics, or interaction with the current `StdFloat` trait.
+- [ ] Before implementing #539, compare the scalar algebraic float API and its stability/semantics with the existing `StdFloat` methods, then propose a minimal method set and tests for relaxed floating-point behavior. Do not silently give existing strict operations relaxed semantics.
