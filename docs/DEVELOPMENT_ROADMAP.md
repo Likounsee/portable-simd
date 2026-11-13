@@ -61,7 +61,8 @@ Related upstream issue: [#494](https://github.com/rust-lang/portable-simd/issues
 - [ ] Only then propose a minimal implementation change and regression test.
 
 The current benchmark is diagnostic only. It has not been compiled or executed, so it
-provides no performance evidence and must not be used to claim an optimization.
+provides no performance evidence and must not be used to claim an optimization. The
+masked-memory semantic regression tests have passed the complete green CI run.
 
 ### 3. Investigate mask-operation code generation
 
@@ -106,8 +107,7 @@ supertrait of `MaskElement`, so the built-in
 mask types stay sealed while the helper items are no longer publicly reachable through
 the public trait. The existing generic mask operations continue to use the helper
 inside the same module. Three compile-fail doctests attempt downstream access to
-`TRUE`, `Unsigned`, and `eq`. This is a candidate implementation, not yet validated:
-the doctests and crate have not been compiled locally or by CI. The distinction in the
+`TRUE`, `Unsigned`, and `eq`. The implementation has now passed the complete green CI run, including its downstream compile-fail doctests. Local compilation is still unavailable in this environment. The distinction in the
 upstream discussion remains important: maintainers did not establish an automatic
 stable-API break, but agreed that nightly downstream access was unintended.
 
@@ -119,14 +119,16 @@ Related upstream issue: [#463](https://github.com/rust-lang/portable-simd/issues
 - [x] Confirm the current StdFloat test suite already uses approximate comparisons
       for transcendental functions such as sin, cos, exp, exp2, ln, log2, and log10,
       while retaining exact comparisons for several other operations.
-- [ ] Determine whether the remaining Miri failures are still reproducible on the
-      pinned nightly and identify the exact failing test cases.
+- [x] Determine whether the reported Miri failures are still reproducible on the
+      pinned nightly: the current full Miri CI matrix is green. This does not prove the
+      historical toolchain regression was fixed by portable-simd itself.
 - [ ] Discuss a narrowly scoped Miri-only strategy with maintainers before changing
       exact comparisons, because exact tests intentionally catch implementation regressions.
 
 The discussion in #463 does not support a blanket switch to approximate assertions:
 maintainers explicitly noted the value of exact comparisons for detecting regressions.
-No test policy or tolerance change is made here.
+The current pinned-nightly Miri matrix passes, so no test policy or tolerance change is
+made here.
 
 ### 7. Recent issue triage
 
@@ -153,7 +155,7 @@ No test policy or tolerance change is made here.
       work is to reproduce the original hexadecimal-validation example with the
       pinned nightly, compare optimized IR/assembly, and determine whether current
       rustc/LLVM still exhibits the issue.
-- [x] #505: open upstream, but the prelude concern is already resolved by upstream PR #506. The fork's `simd` module should be checked against that export before any work; the remaining discussion is only whether the generic, SIMD-independent `Select` trait should be renamed to `SimdSelect`. A maintainer explicitly considered the generic name reasonable. No rename is justified without broader API consensus.
+- [x] #505: open upstream, but the prelude concern is already resolved by upstream PR #506. The fork's `simd` module already exports `Select` from the prelude; the remaining discussion is only whether the generic, SIMD-independent `Select` trait should be renamed to `SimdSelect`. A maintainer explicitly considered the generic name reasonable. No rename is justified without broader API consensus.
 - [ ] #495: open; large-vector alignment constraints.
 
 ## Contribution checklist
@@ -204,8 +206,8 @@ Related upstream issue: [#486](https://github.com/rust-lang/portable-simd/issues
 - [x] Add deterministic scalar-oracle coverage that visits every possible `u8`
       index in every output lane at representative widths around the implementation
       boundaries (1, 7–9, 15–17, 23–24, 31–33, 47–49, 63–64).
-- [ ] Run the test on the pinned nightly across the available architecture/feature
-      matrix. The test addition has passed the latest green CI run.
+- [x] Run the test on the pinned nightly across the available architecture/feature
+      matrix; the latest complete CI run is green.
 - [ ] Evaluate #486's proposed unchecked/implementation-defined out-of-bounds
       variant separately as an API design and safety-contract question; do not
       change the existing zeroing semantics.
@@ -296,11 +298,11 @@ This is a verified existing safeguard, not a new code change.
 - [x] Confirm its `Sealed` trait still declares `valid`, `eq`, `to_usize`, `max_unsigned`, `Unsigned`, `TRUE`, and `FALSE`, and remains a supertrait of `MaskElement`.
 - [x] Reject a rename-only approach: changing `PrivateMethods` to `Sealed` does not remove the downstream-visible associated items described by #537.
 - [x] Identify that PR #483 also changes the generic meaning of `Mask<T, N>` to use `T: SimdElement` and `T::Mask`, changes numerous public bounds and implementations, and is therefore a broad API redesign rather than a safe, isolated patch for #537.
-- [x] Implement the narrow visibility fix in `crates/core_simd/src/masks.rs`: move `PrivateMethods` into the `masks` module with ordinary private visibility, retain it as the sealing supertrait, and explicitly allow the intentional `private_bounds` lint on `MaskElement`. No public `Mask<T, N>` signature or helper implementation changed.
+- [x] Implement the narrow visibility fix in `crates/core_simd/src/masks.rs`: declare `PrivateMethods` in the `masks` module with `pub(crate)` visibility, retain it as the sealing supertrait, and explicitly allow the intentional `private_bounds` lint on `MaskElement`. No public `Mask<T, N>` signature or helper implementation changed.
 - [x] Add three `compile_fail` doctests that attempt to access the helper associated constant, associated type, and method through `MaskElement` from downstream-style code.
 - [x] Compile the crate and run the three doctests plus the existing mask tests on the pinned nightly through CI; the latest complete CI run is green. Local compilation remains unavailable in this environment.
 
-The source-level fix is now committed, but #537 should not be considered fully verified until the compile-fail doctests and ordinary mask tests pass on the repository's pinned nightly. The key distinction is actual private visibility, not a rename to `Sealed`.
+The source-level fix is committed and validated by the green CI run, including the compile-fail doctests and ordinary mask tests. The key distinction is crate-private visibility, not a rename to `Sealed`.
 
 
 ### 14. Running CI on the fork
@@ -309,7 +311,7 @@ The fork's `.github/workflows/ci.yml` supports `push` to `main`, pull requests,
 and manual `workflow_dispatch`.
 
 - [x] Confirm the workflow file is present on the default branch (`main`) and contains both the push trigger and `workflow_dispatch`.
-- [x] Confirm the fork currently has only the `main` branch; all contribution work stays on it.
+- [x] Confirm development work targets `main`; the generated `gh-pages` branch is not used for development.
 - [x] Enable GitHub Actions for the fork.
 - [x] Run the `CI` workflow on `main`.
 - [x] Inspect the complete run: all CI jobs are green.
