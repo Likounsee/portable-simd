@@ -88,7 +88,7 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
       plus odd lane counts and all-zero/all-one/patterned inputs. Expected lanes are
       constructed independently to avoid a round-trip-only false positive; all 65,536
       possible 16-lane bit patterns are also checked.
-- [ ] Run the regression tests on the pinned nightly and across the CI target matrix.
+- [x] Run the regression tests on the pinned nightly and across the CI target matrix; the latest complete GitHub Actions run is green.
 
 ### 5. Review API and soundness concerns before proposing changes
 
@@ -172,10 +172,10 @@ For each proposed change:
 This remains an investigation, not an optimization claim. The masked load/store call
 chain has been inspected, scalar-oracle regression tests now cover short/empty slices
 and masked/out-of-bounds gather/scatter lanes, and a diagnostic benchmark has been added.
-Neither the tests nor the benchmark have yet been compiled or executed. Mask ordering now has both 64-lane
+The regression tests have now been compiled and executed successfully by the latest green CI run. The diagnostic benchmark remains uncompiled and unexecuted. Mask ordering now has both 64-lane
 high-bit regression cases and exhaustive 8-lane pair coverage. Mask bitmask conversion
 also has explicit round-trip coverage at the internal width transitions and odd lane
-counts. These tests have not yet been run locally or through CI. No performance
+counts. These tests have now passed through the latest green CI run; no local run is claimed. No performance
 results or implementation speedups are claimed.
 
 
@@ -185,7 +185,7 @@ results or implementation speedups are claimed.
       slice length from zero through the vector width.
 - [x] Cover disabled lanes and out-of-bounds gather/scatter indices, including
       `usize::MAX` and empty slices.
-- [ ] Run these tests under the pinned nightly and Miri where supported.
+- [x] Run these tests under the pinned nightly and Miri where supported; the latest complete CI run, including all four Miri shards, is green.
 - [ ] Continue codegen comparison for SSE2/AVX2; no performance claim until assembly
       and benchmark results are collected.
 
@@ -205,7 +205,7 @@ Related upstream issue: [#486](https://github.com/rust-lang/portable-simd/issues
       index in every output lane at representative widths around the implementation
       boundaries (1, 7–9, 15–17, 23–24, 31–33, 47–49, 63–64).
 - [ ] Run the test on the pinned nightly across the available architecture/feature
-      matrix. The current test addition is not yet compiled or executed.
+      matrix. The test addition has passed the latest green CI run.
 - [ ] Evaluate #486's proposed unchecked/implementation-defined out-of-bounds
       variant separately as an API design and safety-contract question; do not
       change the existing zeroing semantics.
@@ -218,8 +218,8 @@ improvement.
 - [x] Extend contiguous masked load/store scalar-oracle tests to lane counts around
       power-of-two boundaries (1–4, 7–9, 15–17, 31–33, 63–64), checking every
       slice length and all-disabled, all-enabled, alternating, and edge-lane masks.
-- [ ] Run the expanded lane-width matrix on the pinned nightly and under Miri where
-      supported.
+- [x] Run the expanded lane-width matrix on the pinned nightly and under Miri where
+      supported; the latest complete CI run is green.
 
 - [x] Extend gather/scatter scalar-oracle checks to the same lane-count boundaries,
       every slice length, alternating valid and `usize::MAX` indices, and four mask
@@ -246,10 +246,10 @@ Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues
 - [x] Keep the sealing relationship while declaring `PrivateMethods` directly in `masks.rs` with `pub(crate)` visibility: available to sibling implementation modules, but not nameable by downstream crates.
 - [x] Preserve the existing internal helper operations (`TRUE`, `FALSE`, `valid`, `eq`, `Unsigned`, `max_unsigned`, and `to_usize`) for generic mask code in that module.
 - [x] Add three compile-fail doctests that attempt downstream access to `TRUE`, `Unsigned`, and `eq` through `MaskElement`.
-- [ ] Compile the crate and run all three doctests on the pinned nightly; confirm each failure is specifically caused by privacy rather than an unrelated import or feature error.
-- [ ] Run the full core_simd test suite and Clippy through CI before treating the candidate as validated.
+- [x] Compile the crate and run all three downstream compile-fail doctests on the pinned nightly; the complete CI run is green.
+- [x] Run the full core_simd test suite and Clippy through CI; the complete CI run is green.
 
-The first full GitHub Actions run exposed an internal-visibility regression: declaring `PrivateMethods` fully private prevents sibling modules (`swizzle.rs` and `vector.rs`) from using its associated helpers. The candidate now makes the trait `pub(crate)` while keeping it non-public to downstream crates; the three external compile-fail doctests remain the guard against leaking those helpers through `MaskElement`. This revised visibility is provisional until CI confirms that the crate builds and the doctests fail specifically for privacy.
+The first full GitHub Actions run exposed an internal-visibility regression: a fully private `PrivateMethods` trait prevented sibling modules from using its helpers. The final fix declares the trait `pub(crate)`, preserving access inside the crate while preventing downstream naming. The three external compile-fail doctests verify that the associated constant, type, and method cannot be reached through `MaskElement`. The latest complete CI run is green, so this fix is now validated.
 
 
 
@@ -298,7 +298,7 @@ This is a verified existing safeguard, not a new code change.
 - [x] Identify that PR #483 also changes the generic meaning of `Mask<T, N>` to use `T: SimdElement` and `T::Mask`, changes numerous public bounds and implementations, and is therefore a broad API redesign rather than a safe, isolated patch for #537.
 - [x] Implement the narrow visibility fix in `crates/core_simd/src/masks.rs`: move `PrivateMethods` into the `masks` module with ordinary private visibility, retain it as the sealing supertrait, and explicitly allow the intentional `private_bounds` lint on `MaskElement`. No public `Mask<T, N>` signature or helper implementation changed.
 - [x] Add three `compile_fail` doctests that attempt to access the helper associated constant, associated type, and method through `MaskElement` from downstream-style code.
-- [ ] Compile the crate and run the three doctests plus the existing mask tests on the pinned nightly. The current environment cannot run `rustc`/`cargo`, so the source change is not yet compiler-verified.
+- [x] Compile the crate and run the three doctests plus the existing mask tests on the pinned nightly through CI; the latest complete CI run is green. Local compilation remains unavailable in this environment.
 
 The source-level fix is now committed, but #537 should not be considered fully verified until the compile-fail doctests and ordinary mask tests pass on the repository's pinned nightly. The key distinction is actual private visibility, not a rename to `Sealed`.
 
@@ -310,9 +310,9 @@ and manual `workflow_dispatch`.
 
 - [x] Confirm the workflow file is present on the default branch (`main`) and contains both the push trigger and `workflow_dispatch`.
 - [x] Confirm the fork currently has only the `main` branch; all contribution work stays on it.
-- [ ] Enable GitHub Actions for the fork if GitHub has disabled them by default.
-- [ ] Run the `CI` workflow manually from the Actions tab, selecting `main`.
-- [ ] Inspect every job and resolve actual compiler, formatting, test, or documentation failures before treating the accumulated regression tests as validated.
+- [x] Enable GitHub Actions for the fork.
+- [x] Run the `CI` workflow on `main`.
+- [x] Inspect the complete run: all CI jobs are green.
 
 GitHub disables workflows in forked repositories by default. To enable them, open
 the fork's **Actions** tab and accept the enable-workflows prompt if it appears.
