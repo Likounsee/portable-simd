@@ -138,7 +138,9 @@ made here.
       `MIN / -1` and `MIN % -1` overflow cases at the non-power-of-two lane widths.
       Added the missing exact reported remainder input: positive and negative dividends
       with `Scalar::MIN` as the divisor, including `MIN`, `MAX`, -1, and zero dividends.
-      This expands regression coverage but does not
+      All three boundary tests are now explicitly registered through `test_lanes!`,
+      so the generated 3- and 6-lane AArch64/Miri cases actually execute. This expands
+      regression coverage but does not
       establish that the historical AArch64 LLVM ICE is fixed; a minimal compiler
       reproducer and the original toolchain details are still missing.
 - [x] #499: closed; current StdFloat::round documentation correctly says ties round away from zero.

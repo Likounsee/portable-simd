@@ -311,45 +311,6 @@ macro_rules! impl_signed_tests {
                     )
                 }
 
-                // Regression coverage for issue #427: test_lanes! includes the
-                // non-power-of-two widths 3 and 6 on AArch64, including Miri.
-                fn div_min_may_overflow<const LANES: usize>() {
-                    let a = Vector::<LANES>::splat(Scalar::MIN);
-                    let b = Vector::<LANES>::splat(-1);
-                    assert_eq!(a / b, a);
-                }
-
-                fn rem_min_may_overflow<const LANES: usize>() {
-                    let a = Vector::<LANES>::splat(Scalar::MIN);
-                    let b = Vector::<LANES>::splat(-1);
-                    assert_eq!(a % b, Vector::<LANES>::splat(0));
-                }
-
-                // Issue #427 specifically reported simd_rem failing when the
-                // divisor (rhs), not the dividend, is Scalar::MIN.
-                fn rem_by_min_divisor<const LANES: usize>() {
-                    let divisor = Vector::<LANES>::splat(Scalar::MIN);
-
-                    // Exercise ordinary values and the signed boundaries. In
-                    // particular, MIN % MIN and MAX % MIN cover the cases that
-                    // are easy to miss when only testing small dividends.
-                    for (dividend, expected) in [
-                        (42, 42),
-                        (-42, -42),
-                        (Scalar::MIN, 0),
-                        (Scalar::MAX, -1),
-                        (-1, -1),
-                        (0, 0),
-                    ] {
-                        let lhs = Vector::<LANES>::splat(dividend);
-                        assert_eq!(
-                            lhs % divisor,
-                            Vector::<LANES>::splat(expected),
-                            "dividend={dividend:?}, divisor=MIN",
-                        );
-                    }
-                }
-
                 fn abs_diff<const LANES: usize>() {
                     test_helpers::test_binary_elementwise(
                         &Vector::<LANES>::abs_diff,
@@ -424,6 +385,44 @@ macro_rules! impl_signed_tests {
                     let a = Vector::<LANES>::splat(42);
                     let b = Vector::<LANES>::splat(-1);
                     let _ = a % b;
+                }
+
+                // Issue #427: exercise the overflow boundary cases on every
+                // generated lane width, including non-power-of-two widths 3
+                // and 6 on AArch64 and under Miri.
+                fn div_min_may_overflow<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(Scalar::MIN);
+                    let b = Vector::<LANES>::splat(-1);
+                    assert_eq!(a / b, a);
+                }
+
+                fn rem_min_may_overflow<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(Scalar::MIN);
+                    let b = Vector::<LANES>::splat(-1);
+                    assert_eq!(a % b, Vector::<LANES>::splat(0));
+                }
+
+                // The original report specifically identifies Scalar::MIN as
+                // the divisor (rhs), not the dividend.
+                fn rem_by_min_divisor<const LANES: usize>() {
+                    let divisor = Vector::<LANES>::splat(Scalar::MIN);
+
+                    // Exercise ordinary values and the signed boundaries.
+                    for (dividend, expected) in [
+                        (42, 42),
+                        (-42, -42),
+                        (Scalar::MIN, 0),
+                        (Scalar::MAX, -1),
+                        (-1, -1),
+                        (0, 0),
+                    ] {
+                        let lhs = Vector::<LANES>::splat(dividend);
+                        assert_eq!(
+                            lhs % divisor,
+                            Vector::<LANES>::splat(expected),
+                            "dividend={dividend:?}, divisor=MIN",
+                        );
+                    }
                 }
             }
 
