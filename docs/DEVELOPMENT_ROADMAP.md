@@ -98,17 +98,17 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 - [ ] Review the unresolved Miri floating-point test determinism discussion in issue #463.
 - [ ] Verify the current code and discussion before treating any old issue as unresolved.
 
-Issue #537 is still open. The reported `PrivateMethods` supertrait exposure is present
-in `masks.rs`. The full discussion narrows the concern: automatic stable-API exposure
-is not established, because stabilization would require explicit stability annotations;
-however, maintainers agree that the helper trait being callable downstream on nightly
-is unintended. The issue author also clarified that the trait was previously named
-`Sealed`. The implementation currently depends on its associated items from generic
-`T: MaskElement` call sites (`TRUE`, `FALSE`, `valid`, `eq`, `Unsigned`, and conversion
-helpers), so merely removing the supertrait would break internal code. A fix needs to
-separate the sealing mechanism from implementation-only operations without re-exposing
-them through the public trait, plus a downstream compile-fail test. No safe minimal
-refactor has yet been established; do not change the trait hierarchy speculatively.
+Issue #537 remains open upstream. The fork now contains a focused candidate fix
+in `crates/core_simd/src/masks.rs`: `PrivateMethods` is declared as an ordinary
+module-private trait directly in `masks.rs`, rather than as a `pub` trait inside a
+private child module. It remains a private supertrait of `MaskElement`, so the built-in
+mask types stay sealed while the helper items are no longer publicly reachable through
+the public trait. The existing generic mask operations continue to use the helper
+inside the same module. Three compile-fail doctests attempt downstream access to
+`TRUE`, `Unsigned`, and `eq`. This is a candidate implementation, not yet validated:
+the doctests and crate have not been compiled locally or by CI. The distinction in the
+upstream discussion remains important: maintainers did not establish an automatic
+stable-API break, but agreed that nightly downstream access was unintended.
 
 ### 6. Floating-point test determinism
 
@@ -133,7 +133,9 @@ No test policy or tolerance change is made here.
 - [x] #527: closed; regression coverage exists in this fork.
 - [x] #524: closed after the reporter retested `swizzle_dyn` successfully on newer nightly for AArch64 macOS, x86-64 Linux, and RISC-V Linux. This was a toolchain/Miri-intrinsic support resolution, not a portable-simd source fix; AVX-512 and other Miri target coverage still need separate validation.
 - [x] #519: closed; verified the fork's `crates/std_float/tests/float.rs` gates the `f16` test module with `#[cfg(target_has_reliable_f16_math)]`. The issue discussion attributes the original Windows GNU failure to missing f16 math symbols/ABI support, so retain the target gate unless compiler-builtins support changes.
-- [x] #537: open; source and full discussion reviewed. A deliberate helper/sealing redesign and compile-fail test are still needed.
+- [x] #537: open; source and full discussion reviewed. A focused private-supertrait
+      candidate fix and three downstream compile-fail doctests are now present on the
+      fork's `main`; execution under the pinned nightly is still pending.
 - [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
 - [ ] #472: open; mask operation code generation remains uninvestigated.
 - [ ] #505: open; API ergonomics request to rename `Select` to `SimdSelect` and consider prelude inclusion. This is a naming/export design question, not a demonstrated correctness bug; inspect the actual public export surface and naming conventions before proposing an API change.
@@ -225,13 +227,14 @@ The implementation already contains the relevant safety rationale and an explici
 
 Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues/537).
 
-- [x] Confirm `private_methods::PrivateMethods` is declared with parent-module visibility and is a supertrait of public `MaskElement`.
-- [x] Trace its current internal use: mask construction and validation use `TRUE`/`FALSE` and `valid`; mask indexing uses `eq`; bitmask conversion uses `Unsigned`, `max_unsigned`, `eq`, and `to_usize`.
-- [x] Read the issue discussion: the reported concern is unintended nightly accessibility through the public subtrait, not an established stable-API break. A maintainer notes stabilization would require explicit stability annotations, but agrees nightly accessibility should be fixed.
-- [ ] Determine a design that keeps the sealing contract while making implementation-only helpers inaccessible downstream. Any split must preserve the generic helper operations currently available under a `T: MaskElement` bound.
-- [ ] Add a compile-fail/UI regression test demonstrating that downstream code cannot call the helper items, while internal mask operations continue to compile.
+- [x] Read the full issue discussion and distinguish the nightly visibility concern from the unproven stable-API compatibility concern.
+- [x] Keep the sealing relationship while changing `PrivateMethods` from a publicly reachable child-module trait to an ordinary private trait declared directly in `masks.rs`.
+- [x] Preserve the existing internal helper operations (`TRUE`, `FALSE`, `valid`, `eq`, `Unsigned`, `max_unsigned`, and `to_usize`) for generic mask code in that module.
+- [x] Add three compile-fail doctests that attempt downstream access to `TRUE`, `Unsigned`, and `eq` through `MaskElement`.
+- [ ] Compile the crate and run all three doctests on the pinned nightly; confirm each failure is specifically caused by privacy rather than an unrelated import or feature error.
+- [ ] Run the full core_simd test suite and Clippy through CI before treating the candidate as validated.
 
-Do not simply delete `PrivateMethods` from the `MaskElement` supertrait: the current implementation relies on those associated items at several generic call sites. A safe fix needs a deliberate internal-helper design and compile-fail coverage.
+The source-level candidate is committed on the fork's `main`, but no compiler has validated it yet. Do not describe #537 as fixed upstream or claim the regression tests pass until CI results are available.
 
 
 
