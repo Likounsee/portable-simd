@@ -81,8 +81,7 @@ fn check_exhaustive_swizzle_indices<const N: usize>() {
     // in-bounds indices as well as every out-of-bounds byte value, independent
     // of the randomized property-test seed.
     for start in 0..=u8::MAX {
-        let indices: [u8; N] =
-            core::array::from_fn(|lane| start.wrapping_add(lane as u8));
+        let indices: [u8; N] = core::array::from_fn(|lane| start.wrapping_add(lane as u8));
         let actual = vector
             .swizzle_dyn(core_simd::simd::Simd::from_array(indices))
             .to_array();

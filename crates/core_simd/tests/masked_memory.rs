@@ -271,7 +271,7 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
             let fallback_array = fallback.to_array();
             let expected = core::array::from_fn(|lane| {
                 if enabled[lane] {
-                    source
+                    source[..len]
                         .get(index_array[lane])
                         .copied()
                         .unwrap_or(fallback_array[lane])
