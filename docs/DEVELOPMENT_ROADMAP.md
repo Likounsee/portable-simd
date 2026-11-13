@@ -203,3 +203,28 @@ improvement.
       every slice length, alternating valid and `usize::MAX` indices, and four mask
       patterns. Scatter destinations are unique so the expected result does not rely
       on unspecified duplicate-index write ordering.
+
+### 9. Array/slice conversion code generation
+
+Related upstream issue: [#343](https://github.com/rust-lang/portable-simd/issues/343).
+
+- [x] Trace `Simd::from_array`, `to_array`, `from_slice`, and `copy_to_slice` to the internal `load`/`store` helpers.
+- [x] Confirm the helpers use `ptr::copy_nonoverlapping` rather than a direct transmute or tuple-field access. The source explicitly documents that non-power-of-two `repr(simd)` vectors may contain trailing padding, so copying the full SIMD object from an `[T; N]` could read beyond the array.
+- [ ] Inspect optimized LLVM IR for representative power-of-two and non-power-of-two lane counts, and verify that the element transfer becomes vector `load`/`store` operations without reading or writing padding as array elements.
+- [ ] Add compiler-version-pinned codegen regression tests once the appropriate test harness and expected IR patterns are established.
+- [ ] Check more than one element type and target; avoid brittle assembly assertions when an LLVM IR-level property is sufficient.
+
+The implementation already contains the relevant safety rationale and an explicit FIXME about the current pointer-copy approach. The open question is whether the compiler consistently optimizes that approach as intended. No implementation rewrite is justified until IR is inspected.
+
+### 10. `MaskElement` helper-trait visibility review
+
+Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues/537).
+
+- [x] Confirm `private_methods::PrivateMethods` is declared with parent-module visibility and is a supertrait of public `MaskElement`.
+- [x] Trace its current internal use: mask construction and validation use `TRUE`/`FALSE` and `valid`; mask indexing uses `eq`; bitmask conversion uses `Unsigned`, `max_unsigned`, `eq`, and `to_usize`.
+- [x] Read the issue discussion: the reported concern is unintended nightly accessibility through the public subtrait, not an established stable-API break. A maintainer notes stabilization would require explicit stability annotations, but agrees nightly accessibility should be fixed.
+- [ ] Determine a design that keeps the sealing contract while making implementation-only helpers inaccessible downstream. Any split must preserve the generic helper operations currently available under a `T: MaskElement` bound.
+- [ ] Add a compile-fail/UI regression test demonstrating that downstream code cannot call the helper items, while internal mask operations continue to compile.
+
+Do not simply delete `PrivateMethods` from the `MaskElement` supertrait: the current implementation relies on those associated items at several generic call sites. A safe fix needs a deliberate internal-helper design and compile-fail coverage.
+
