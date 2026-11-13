@@ -60,9 +60,11 @@ Related upstream issue: [#494](https://github.com/rust-lang/portable-simd/issues
 - [ ] Determine whether the fix belongs in this crate, LLVM, or rustc codegen.
 - [ ] Only then propose a minimal implementation change and regression test.
 
-The current benchmark is diagnostic only. It has not been compiled or executed, so it
-provides no performance evidence and must not be used to claim an optimization. The
-masked-memory semantic regression tests have passed the complete green CI run.
+The benchmark is now compiled and executed by the dedicated
+`masked-memory-benchmark` CI job. Its semantic assertions are therefore checked on
+every push to `main`. CI execution is not a controlled performance study: timings are
+not persisted, and no optimized LLVM IR or assembly has yet been compared. Do not claim
+an optimization from this job alone.
 
 ### 3. Investigate mask-operation code generation
 
@@ -143,9 +145,10 @@ made here.
       `simd_masked_load` / `simd_masked_store` using element alignment. Scalar-oracle
       semantic tests pass the green CI matrix. The diagnostic SSE2 benchmark now includes
       the exact `load_or_default` and all-enabled `store_select` paths plus the zip-based
-      scalar load/store loops from the report, alongside masked cases. It still needs to
-      be compiled and measured, with optimized IR/assembly compared before changing
-      implementation or claiming an improvement. Gather/scatter remain secondary,
+      scalar load/store loops from the report, alongside masked cases. A dedicated CI
+      job now compiles and runs it, checking its semantic assertions on every push.
+      Controlled timings and optimized IR/assembly comparison are still required before
+      changing implementation or claiming an improvement. Gather/scatter remain secondary,
       matching the issue author's stated priority.
 - [x] #472: open; reviewed the full discussion. A maintainer traced the poor codegen
       to the validity `assume` emitted for full-width mask values and suggested compiler
@@ -175,7 +178,7 @@ For each proposed change:
 This remains an investigation, not an optimization claim. The masked load/store call
 chain has been inspected, scalar-oracle regression tests now cover short/empty slices
 and masked/out-of-bounds gather/scatter lanes, and a diagnostic benchmark has been added.
-The regression tests have now been compiled and executed successfully by the latest green CI run. The diagnostic benchmark has been expanded to mirror the #494 scalar and SIMD examples, but remains uncompiled and unexecuted. Mask ordering now has both 64-lane
+The regression tests have been compiled and executed successfully by CI. The #494 diagnostic benchmark is also now compiled and executed by its dedicated CI job, including its semantic assertions; controlled performance measurements and IR/assembly inspection remain outstanding. Mask ordering now has both 64-lane
 high-bit regression cases and exhaustive 8-lane pair coverage. Mask bitmask conversion
 also has explicit round-trip coverage at the internal width transitions and odd lane
 counts. These tests have now passed through the latest green CI run; no local run is claimed. No performance
@@ -231,15 +234,16 @@ improvement.
 
 ### 9. Array/slice conversion code generation
 
-Related upstream issues: [#343](https://github.com/rust-lang/portable-simd/issues/343) and [#341](https://github.com/rust-lang/portable-simd/issues/341). The older #341 report explains the padding/overread hazard and why a dedicated vector-load intrinsic was proposed; #343 asks for codegen regression tests.
+Related upstream issues: [#343](https://github.com/rust-lang/portable-simd/issues/343) and [#341](https://github.com/rust-lang/portable-simd/issues/341). The original #341 padding/overread concern predates the closure of #319. The latest #341 discussion still asks for guaranteed vector-typed LLVM loads/stores, including for non-power-of-two lane counts; #343 asks for codegen regression tests.
 
 - [x] Trace `Simd::from_array`, `to_array`, `from_slice`, and `copy_to_slice` to the internal `load`/`store` helpers.
-- [x] Confirm the helpers use `ptr::copy_nonoverlapping` rather than a direct transmute or tuple-field access. The source explicitly documents that non-power-of-two `repr(simd)` vectors may contain trailing padding, so copying the full SIMD object from an `[T; N]` could read beyond the array.
-- [ ] Inspect optimized LLVM IR for representative power-of-two and non-power-of-two lane counts, and verify that the element transfer becomes vector `load`/`store` operations without reading or writing padding as array elements.
+- [x] Confirm the helpers use `ptr::copy_nonoverlapping` rather than a direct transmute or tuple-field access. This copies exactly one `[T; N]` worth of elements and avoids reading or writing beyond the array.
+- [ ] Reconcile the stale padding rationale in the source comments with the closure of #319; verify the current layout guarantee on the pinned compiler before changing those comments or the representation.
+- [ ] Inspect optimized LLVM IR for representative power-of-two and non-power-of-two lane counts, and verify that the element transfer becomes vector `load`/`store` operations.
 - [ ] Add compiler-version-pinned codegen regression tests once the appropriate test harness and expected IR patterns are established.
 - [ ] Check more than one element type and target; avoid brittle assembly assertions when an LLVM IR-level property is sufficient.
 
-The implementation already contains the relevant safety rationale and an explicit FIXME about the current pointer-copy approach. The open question is whether the compiler consistently optimizes that approach as intended. No implementation rewrite is justified until IR is inspected.
+The current copy helpers are memory-safe and deliberately copy only the array's element bytes. The remaining #341/#343 question is code generation: whether rustc/LLVM preserve vector-typed loads and stores for both power-of-two and non-power-of-two widths. The latest maintainer discussion suggests a compiler intrinsic may be needed to guarantee that property. This crate cannot safely emulate a missing compiler intrinsic by weakening the copy's bounds or alignment. No implementation rewrite is justified until IR is inspected.
 
 ### 10. `MaskElement` helper-trait visibility review
 
