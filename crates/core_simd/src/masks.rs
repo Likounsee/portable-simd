@@ -29,38 +29,60 @@ macro_rules! impl_fix_endianness {
 
 impl_fix_endianness! { u8, u16, u32, u64 }
 
-mod private_methods {
-    use super::*;
+/// Implementation-only operations for the built-in mask element types.
+///
+/// This trait is deliberately private to this module. Keeping it as a private
+/// supertrait seals `MaskElement` without making these associated items callable
+/// from downstream crates.
+trait PrivateMethods {
+    fn valid<const N: usize>(values: Simd<Self, N>) -> bool
+    where
+        Self: SimdElement;
 
-    /// Not only does this seal the `MaskElement` trait, but these functions prevent other traits
-    /// from bleeding into the parent bounds.
-    ///
-    /// For example, `eq` could be provided by requiring `MaskElement: PartialEq`, but that would
-    /// prevent us from ever removing that bound, or from implementing `MaskElement` on
-    /// non-`PartialEq` types in the future.
-    pub impl(super) trait PrivateMethods {
-        fn valid<const N: usize>(values: Simd<Self, N>) -> bool
-        where
-            Self: SimdElement;
+    fn eq(self, other: Self) -> bool;
 
-        fn eq(self, other: Self) -> bool;
+    fn to_usize(self) -> usize;
+    fn max_unsigned() -> u64;
 
-        fn to_usize(self) -> usize;
-        fn max_unsigned() -> u64;
+    type Unsigned: SimdElement;
 
-        type Unsigned: SimdElement;
+    const TRUE: Self;
 
-        const TRUE: Self;
-
-        const FALSE: Self;
-    }
+    const FALSE: Self;
 }
-use private_methods::PrivateMethods;
 
 /// Marker trait for types that may be used as SIMD mask elements.
 ///
+/// The private supertrait also prevents downstream code from calling
+/// implementation-only helpers through this public trait.
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>() {
+///     let _ = <T as MaskElement>::TRUE;
+/// }
+/// ```
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>() {
+///     let _: <T as MaskElement>::Unsigned;
+/// }
+/// ```
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>(value: T) {
+///     let _ = <T as MaskElement>::eq(value, value);
+/// }
+/// ```
+///
 /// # Safety
 /// Type must be a signed integer.
+#[allow(private_bounds)]
 pub impl(self) unsafe trait MaskElement:
     SimdElement<Mask = Self> + SimdCast + PrivateMethods
 {
