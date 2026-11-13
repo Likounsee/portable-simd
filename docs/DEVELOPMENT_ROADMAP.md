@@ -351,3 +351,15 @@ a push-triggered run did not happen.
 - Corrected the #427 signed remainder regression expectation: for a positive signed maximum and a minimum signed divisor, the remainder is the positive maximum (the divisor's magnitude is larger), not `-1`. This was the common failure across Miri, Windows, WebAssembly, and cross-target test jobs.
 - Corrected the standalone #494 benchmark to import the nightly portable SIMD API through `std::simd`; `core` is not available as an extern-prelude path in this standalone `rustc` binary.
 - These changes address the failures observed in CI run `43494021345`; a new run is required to confirm all targets.
+
+### 15. Integer unchecked-operation API inventory
+
+Related upstream issue: [#481](https://github.com/rust-lang/portable-simd/issues/481).
+
+- [x] Verify the scalar stabilization referenced by the issue: Rust PR [#122520](https://github.com/rust-lang/rust/pull/122520) stabilized exactly `unchecked_add`, `unchecked_sub`, and `unchecked_mul`.
+- [x] Distinguish these from `unchecked_neg` and `unchecked_shr`, which the stabilization PR explicitly did not include.
+- [x] Check the current SIMD integer traits: neither `SimdInt` nor `SimdUint` exposes corresponding unchecked arithmetic methods.
+- [ ] Discuss whether SIMD unchecked arithmetic belongs in the portable API and what compiler intrinsic/lowering should express the no-overflow precondition.
+- [ ] Add methods and safety documentation only after the compiler contract and API design are agreed; add boundary tests that never violate the unsafe preconditions.
+
+This is an API-inventory/design gap, not a demonstrated implementation bug. The scalar stabilization does not automatically imply that a SIMD wrapper can safely be implemented by calling the existing wrapping vector operators: the compiler must be able to rely on the documented no-overflow precondition. No unsafe SIMD API is added as part of this triage.
