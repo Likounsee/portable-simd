@@ -132,11 +132,11 @@ No test policy or tolerance change is made here.
 - [x] #499: closed; current StdFloat::round documentation correctly says ties round away from zero.
 - [x] #527: closed; regression coverage exists in this fork.
 - [x] #524: closed after the reporter retested `swizzle_dyn` successfully on newer nightly for AArch64 macOS, x86-64 Linux, and RISC-V Linux. This was a toolchain/Miri-intrinsic support resolution, not a portable-simd source fix; AVX-512 and other Miri target coverage still need separate validation.
-- [x] #519: closed (missing reliable-f16-math test gate).
+- [x] #519: closed; verified the fork's `crates/std_float/tests/float.rs` gates the `f16` test module with `#[cfg(target_has_reliable_f16_math)]`. The issue discussion attributes the original Windows GNU failure to missing f16 math symbols/ABI support, so retain the target gate unless compiler-builtins support changes.
 - [x] #537: open; source and full discussion reviewed. A deliberate helper/sealing redesign and compile-fail test are still needed.
 - [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
 - [ ] #472: open; mask operation code generation remains uninvestigated.
-- [ ] #505: open; `Select` naming and prelude question.
+- [ ] #505: open; API ergonomics request to rename `Select` to `SimdSelect` and consider prelude inclusion. This is a naming/export design question, not a demonstrated correctness bug; inspect the actual public export surface and naming conventions before proposing an API change.
 - [ ] #495: open; large-vector alignment constraints.
 
 ## Contribution checklist
@@ -254,3 +254,15 @@ Related upstream issue: [#524](https://github.com/rust-lang/portable-simd/issues
 - [ ] If Miri coverage is expanded, first test the repository's actual target/configuration matrix; do not add a broad `cfg(miri)` fallback solely on the basis of this closed report.
 
 This closes the original reproducer as reported, but it does not establish universal Miri support for every architecture-specific `swizzle_dyn` implementation.
+
+
+### 13. Float16 test-target gate verification
+
+Related upstream issue: [#519](https://github.com/rust-lang/portable-simd/issues/519) (closed).
+
+- [x] Read the full issue discussion, including the explanation that Windows GNU lacked the relevant reliable f16 math support/symbols.
+- [x] Inspect the fork's current `crates/std_float/tests/float.rs`: the `f16` test instantiation is guarded by `#[cfg(target_has_reliable_f16_math)]`, while `f32` and `f64` remain unconditional.
+- [x] Confirm the expected target gate is already present; no duplicate test workaround is needed.
+- [ ] Revisit only if the compiler target capability or compiler-builtins support changes and the gate can safely be narrowed/removed.
+
+This is a verified existing safeguard, not a new code change.
