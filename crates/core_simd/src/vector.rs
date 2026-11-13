@@ -70,19 +70,26 @@ use crate::simd::{
 /// Care must be taken to respect differences between `Simd` and other types it may be transformed into or derived from.
 /// In particular, the layout of `Simd<T, N>` may be similar to `[T; N]`, and may allow some transmutations,
 /// but references to `[T; N]` are not interchangeable with those to `Simd<T, N>`.
-/// Thus, when using `unsafe` Rust to read and write `Simd<T, N>` through [raw pointers], it is a good idea to first try with
-/// [`read_unaligned`] and [`write_unaligned`]. This is because:
-/// - [`read`] and [`write`] require full alignment (in this case, `Simd<T, N>`'s alignment)
-/// - `Simd<T, N>` is often read from or written to [`[T]`](slice) and other types aligned to `T`
-/// - combining these actions violates the `unsafe` contract and explodes the program into
-///   a puff of **undefined behavior**
-/// - the compiler can implicitly adjust layouts to make unaligned reads or writes fully aligned
-///   if it sees the optimization
-/// - most contemporary processors with "aligned" and "unaligned" read and write instructions
-///   exhibit no performance difference if the "unaligned" variant is aligned at runtime
+/// When using `unsafe` Rust to read or write `Simd<T, N>` through [raw pointers], alignment
+/// is only one part of the safety requirements. [`read_unaligned`] and [`write_unaligned`]
+/// remove the alignment requirement, but they still read or write exactly
+/// `size_of::<Simd<T, N>>()` bytes and require that the entire range belongs to valid storage.
 ///
-/// Less obligations mean unaligned reads and writes are less likely to make the program unsound,
-/// and may be just as fast as stricter alternatives.
+/// **Do not cast a pointer to `[T; N]` (or its first element) to a pointer to `Simd<T, N>`
+/// and then call `read_unaligned` or `write_unaligned`.** For some non-power-of-two lane
+/// counts, `Simd<T, N>` can have trailing padding and be larger than `[T; N]`; such a read
+/// can extend past the array, and such a write can overwrite memory beyond it. Unaligned access
+/// does not make either operation safe.
+///
+/// Prefer the safe conversions `Simd::from_array`, `Simd::from_slice`,
+/// `Simd::to_array`, and `Simd::copy_to_slice` when moving between arrays or slices and SIMD
+/// values. Use `read_unaligned` or `write_unaligned` only when the pointer actually refers to
+/// storage large enough for a complete `Simd<T, N>` value and the value's validity requirements
+/// are met.
+///
+/// For an actual `Simd<T, N>` object stored at an address that does not meet its alignment,
+/// unaligned access can avoid the alignment requirement. It is not a substitute for checking
+/// the allocation's extent, initialization, or aliasing requirements.
 /// When trying to guarantee alignment, [`[T]::as_simd`][as_simd] is an option for
 /// converting `[T]` to `[Simd<T, N>]`, and allows soundly operating on an aligned SIMD body,
 /// but it may cost more time when handling the scalar head and tail.

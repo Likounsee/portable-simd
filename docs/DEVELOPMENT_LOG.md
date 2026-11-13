@@ -132,3 +132,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added explicit `check::<LANES>` arguments for every test pattern so the helper's const parameter is unambiguous on all targets.
 - This is a test-compilation correction; it does not change the mask implementation.
 - CI run [43521947560](https://github.com/Likounsee/portable-simd/actions/runs/43521947560) exposed the error on AArch64 and SPARC64 Clippy jobs. The corrected commit must pass the complete matrix before this coverage is considered validated.
+
+
+### 2026-11-13 — clarify unaligned SIMD pointer safety (#341)
+
+- Updated the `Simd<T, N>` unsafe-pointer documentation in `crates/core_simd/src/vector.rs`.
+- Explicitly distinguishes alignment from access size: `read_unaligned` and `write_unaligned` still access `size_of::<Simd<T, N>>()` bytes.
+- Warns against casting an array pointer to a SIMD pointer when non-power-of-two lane counts may give the SIMD type trailing padding, and directs users to the safe array/slice conversion APIs.
+- This is a safety-documentation correction only. It does not change the implementation or claim to resolve the compiler intrinsic/codegen requests in #341/#343.
