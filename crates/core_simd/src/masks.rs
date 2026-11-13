@@ -92,8 +92,7 @@ macro_rules! impl_element {
     { $ty:ty, $unsigned:ty } => {
         impl PrivateMethods for $ty {
             #[inline]
-            fn valid<const N: usize>(value: Simd<Self, N>) -> bool
-            {
+            fn valid<const N: usize>(value: Simd<Self, N>) -> bool {
                 // We can't use `Simd` directly, because `Simd`'s functions call this function and
                 // we will end up with an infinite loop.
                 // Safety: `value` is an integer vector
