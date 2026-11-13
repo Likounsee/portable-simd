@@ -111,7 +111,7 @@ fn run_default_case(source: &[f32; LANES], len: usize) {
     scalar_store_all(value, &mut scalar_output[..len]);
     assert_eq!(simd_output, scalar_output, "all-enabled store mismatch: len={len}");
 
-    println!("\\nlen={len}, mode=all-enabled/default");
+    println!("\nlen={len}, mode=all-enabled/default");
     measure("SIMD load_or_default", || {
         black_box(simd_load_or_default(black_box(slice)));
     });

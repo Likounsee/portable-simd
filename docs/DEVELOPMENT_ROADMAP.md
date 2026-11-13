@@ -136,9 +136,9 @@ made here.
 - [x] #527: closed; regression coverage exists in this fork.
 - [x] #524: closed after the reporter retested `swizzle_dyn` successfully on newer nightly for AArch64 macOS, x86-64 Linux, and RISC-V Linux. This was a toolchain/Miri-intrinsic support resolution, not a portable-simd source fix; AVX-512 and other Miri target coverage still need separate validation.
 - [x] #519: closed; verified the fork's `crates/std_float/tests/float.rs` gates the `f16` test module with `#[cfg(target_has_reliable_f16_math)]`. The issue discussion attributes the original Windows GNU failure to missing f16 math symbols/ABI support, so retain the target gate unless compiler-builtins support changes.
-- [x] #537: open; source and full discussion reviewed. A focused private-supertrait
-      candidate fix and three downstream compile-fail doctests are now present on the
-      fork's `main`; execution under the pinned nightly is still pending.
+- [x] #537: open upstream; source and full discussion reviewed. The fork's
+      crate-private `PrivateMethods` fix and all three downstream compile-fail doctests
+      pass the latest complete green CI run.
 - [x] #494: open; traced safe contiguous `load_select` and `store_select` to
       `simd_masked_load` / `simd_masked_store` using element alignment. Scalar-oracle
       semantic tests pass the green CI matrix. The diagnostic SSE2 benchmark now includes
