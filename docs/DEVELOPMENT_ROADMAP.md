@@ -136,8 +136,22 @@ No test policy or tolerance change is made here.
 - [x] #537: open; source and full discussion reviewed. A focused private-supertrait
       candidate fix and three downstream compile-fail doctests are now present on the
       fork's `main`; execution under the pinned nightly is still pending.
-- [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
-- [ ] #472: open; mask operation code generation remains uninvestigated.
+- [x] #494: open; traced safe contiguous `load_select` and `store_select` to
+      `simd_masked_load` / `simd_masked_store` using element alignment. The fork has
+      scalar-oracle semantic tests and a diagnostic SSE2 benchmark, but neither has
+      been compiled or run. The benchmark must be executed and optimized IR/assembly
+      compared against the scalar loops before changing implementation or claiming
+      an improvement. Gather/scatter remain secondary, matching the issue author's
+      stated priority.
+- [x] #472: open; reviewed the full discussion. A maintainer traced the poor codegen
+      to the validity `assume` emitted for full-width mask values and suggested compiler
+      range metadata as a cleaner representation. The discussion also points to LLVM
+      work on dropping useless assumptions. The fork's `Mask::from_simd_unchecked`
+      currently emits `core::intrinsics::assume(<T as PrivateMethods>::valid(value))`;
+      do not remove this safety invariant merely to improve codegen. The remaining
+      work is to reproduce the original hexadecimal-validation example with the
+      pinned nightly, compare optimized IR/assembly, and determine whether current
+      rustc/LLVM still exhibits the issue.
 - [x] #505: open upstream, but the prelude concern is already resolved by upstream PR #506. The fork's `simd` module should be checked against that export before any work; the remaining discussion is only whether the generic, SIMD-independent `Select` trait should be renamed to `SimdSelect`. A maintainer explicitly considered the generic name reasonable. No rename is justified without broader API consensus.
 - [ ] #495: open; large-vector alignment constraints.
 
