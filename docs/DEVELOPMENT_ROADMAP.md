@@ -137,7 +137,8 @@ made here.
 - [x] #427: open; the test suite already covers division by zero and the
       `MIN / -1` and `MIN % -1` overflow cases at the non-power-of-two lane widths.
       Added the missing exact reported remainder input: positive and negative dividends
-      with `Scalar::MIN` as the divisor. This expands regression coverage but does not
+      with `Scalar::MIN` as the divisor, including `MIN`, `MAX`, -1, and zero dividends.
+      This expands regression coverage but does not
       establish that the historical AArch64 LLVM ICE is fixed; a minimal compiler
       reproducer and the original toolchain details are still missing.
 - [x] #499: closed; current StdFloat::round documentation correctly says ties round away from zero.
