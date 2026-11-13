@@ -99,9 +99,10 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 - [ ] Verify the current code and discussion before treating any old issue as unresolved.
 
 Issue #537 remains open upstream. The fork now contains a focused candidate fix
-in `crates/core_simd/src/masks.rs`: `PrivateMethods` is declared as an ordinary
-module-private trait directly in `masks.rs`, rather than as a `pub` trait inside a
-private child module. It remains a private supertrait of `MaskElement`, so the built-in
+in `crates/core_simd/src/masks.rs`: `PrivateMethods` is declared directly in
+`masks.rs` with `pub(crate)` visibility, rather than as a `pub` trait inside a
+private child module. It remains inaccessible to downstream crates and is a crate-visible
+supertrait of `MaskElement`, so the built-in
 mask types stay sealed while the helper items are no longer publicly reachable through
 the public trait. The existing generic mask operations continue to use the helper
 inside the same module. Three compile-fail doctests attempt downstream access to
@@ -242,7 +243,7 @@ The implementation already contains the relevant safety rationale and an explici
 Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues/537).
 
 - [x] Read the full issue discussion and distinguish the nightly visibility concern from the unproven stable-API compatibility concern.
-- [x] Keep the sealing relationship while changing `PrivateMethods` from a publicly reachable child-module trait to an ordinary private trait declared directly in `masks.rs`.
+- [x] Keep the sealing relationship while declaring `PrivateMethods` directly in `masks.rs` with `pub(crate)` visibility: available to sibling implementation modules, but not nameable by downstream crates.
 - [x] Preserve the existing internal helper operations (`TRUE`, `FALSE`, `valid`, `eq`, `Unsigned`, `max_unsigned`, and `to_usize`) for generic mask code in that module.
 - [x] Add three compile-fail doctests that attempt downstream access to `TRUE`, `Unsigned`, and `eq` through `MaskElement`.
 - [ ] Compile the crate and run all three doctests on the pinned nightly; confirm each failure is specifically caused by privacy rather than an unrelated import or feature error.
