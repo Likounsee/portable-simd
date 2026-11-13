@@ -99,6 +99,7 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The benchmark has a dedicated CI job that compiles and executes its semantic assertions.
 - The signed remainder expected-value correction addressed failures observed in earlier CI jobs.
 - Run [43509125858](https://github.com/Likounsee/portable-simd/actions/runs/43509125858), attempt 3, completed successfully across the full matrix. Both macOS x86_64 and ARM64 passed debug, release, and documentation generation; Windows, Linux, WASM, Miri, Clippy, and the masked-memory benchmark job also passed.
+- Run [43519315714](https://github.com/Likounsee/portable-simd/actions/runs/43519315714) completed all 30 jobs successfully for `55e04c0`.
 - No local Rust compilation is claimed; a Rust toolchain is unavailable in the working environment.
 
 ## Remaining evidence needed
@@ -122,3 +123,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Rechecked `crates/std_float/tests/float.rs` and `crates/test_helpers/src/lib.rs` against upstream #463.
 - Confirmed the transcendental functions implicated by platform-dependent libm results already use ULP-based approximate comparisons, while deterministic rounding operations retain exact assertions. The binary `log` test uses a 32-ULP allowance for its two-logarithm-plus-division implementation.
 - The full pre-integration CI run completed green on attempt 3. The mixed-lane regression was added in commit `55e04c0`; its push-triggered CI must finish green before treating that test as validated.
+
+
+### 2026-11-13 — fix lane-generic inference in mask reduction tests
+
+- Commit: pending CI.
+- The first full CI run for the new `first_set` / `last_set` lane-boundary test found that `core::array::from_fn` could not infer the const array length through the nested generic helper.
+- Added explicit `check::<LANES>` arguments for every test pattern so the helper's const parameter is unambiguous on all targets.
+- This is a test-compilation correction; it does not change the mask implementation.
+- CI run [43521947560](https://github.com/Likounsee/portable-simd/actions/runs/43521947560) exposed the error on AArch64 and SPARC64 Clippy jobs. The corrected commit must pass the complete matrix before this coverage is considered validated.

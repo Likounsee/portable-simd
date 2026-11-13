@@ -249,15 +249,15 @@ macro_rules! test_mask_api {
                         assert_eq!(mask.last_set(), expected_last, "last_set: LANES={LANES}, values={values:?}");
                     }
 
-                    check([false; LANES]);
+                    check::<LANES>([false; LANES]);
                     for lane in 0..LANES {
                         let mut values = [false; LANES];
                         values[lane] = true;
-                        check(values);
+                        check::<LANES>(values);
                     }
-                    check(core::array::from_fn(|lane| lane % 3 == 1));
-                    check(core::array::from_fn(|lane| lane % 3 != 1));
-                    check(core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES));
+                    check::<LANES>(core::array::from_fn(|lane| lane % 3 == 1));
+                    check::<LANES>(core::array::from_fn(|lane| lane % 3 != 1));
+                    check::<LANES>(core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES));
                 }
             }
 
