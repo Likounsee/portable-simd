@@ -31,9 +31,9 @@ impl_fix_endianness! { u8, u16, u32, u64 }
 
 /// Implementation-only operations for the built-in mask element types.
 ///
-/// This trait is deliberately private to this module. Keeping it as a private
-/// supertrait seals `MaskElement` without making these associated items callable
-/// from downstream crates.
+/// This trait is visible only inside this crate so sibling implementation modules
+/// can use its helpers. As a crate-private supertrait, it does not expose these
+/// associated items to downstream crates.
 pub(crate) trait PrivateMethods {
     fn valid<const N: usize>(values: Simd<Self, N>) -> bool
     where
