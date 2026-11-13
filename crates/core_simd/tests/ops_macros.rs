@@ -439,9 +439,9 @@ macro_rules! impl_signed_tests {
                             _ => 0,
                         }
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
-                        0 => Scalar::MIN,
-                        1 => 7,
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 | 1 | 4 => Scalar::MIN,
+                        2 | 5 => 7,
                         _ => -7,
                     });
                     let expected: [Scalar; LANES] =

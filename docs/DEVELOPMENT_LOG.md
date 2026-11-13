@@ -77,7 +77,7 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 ### 2026-11-13 — mixed-lane signed remainder regression
 
 - Included in this commit: mixed-lane coverage is added directly to the signed-integer `test_lanes!` block.
-- Adds `rem_by_min_divisor_mixed_lanes`, mixing `Scalar::MIN`, ordinary positive/negative divisors, and signed boundary dividends in the same vector. Expected values are calculated lane by lane with scalar `wrapping_rem`.
+- Adds `rem_by_min_divisor_mixed_lanes`, mixing `Scalar::MIN`, ordinary positive/negative divisors, and signed boundary dividends in the same vector. The lane pattern deliberately includes `Scalar::MAX % Scalar::MIN` and `-1 % Scalar::MIN` alongside ordinary divisors. Expected values are calculated lane by lane with scalar `wrapping_rem`.
 - File: `crates/core_simd/tests/ops_macros.rs:431-458`, inside the existing `test_lanes!` expansion; it therefore generates the configured lane-width tests.
 - This is additional regression coverage, not a claim that the upstream compiler ICE is fixed.
 
