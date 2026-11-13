@@ -61,6 +61,27 @@ macro_rules! impl_tests {
             unary_test! { $scalar, sqrt, ceil, floor, round, trunc, round_ties_even }
             ternary_test! { $scalar, mul_add }
 
+            // Regression coverage for halfway cases: `round` rounds away from zero,
+            // while `round_ties_even` selects the even integer.
+            #[test]
+            fn round_halfway_cases() {
+                let input = core_simd::simd::Simd::<$scalar, 4>::from_array([
+                    1.5 as $scalar,
+                    2.5 as $scalar,
+                    -1.5 as $scalar,
+                    -2.5 as $scalar,
+                ]);
+
+                assert_eq!(
+                    input.round().to_array(),
+                    [2.0 as $scalar, 3.0 as $scalar, -2.0 as $scalar, -3.0 as $scalar],
+                );
+                assert_eq!(
+                    input.round_ties_even().to_array(),
+                    [2.0 as $scalar, 2.0 as $scalar, -2.0 as $scalar, -2.0 as $scalar],
+                );
+            }
+
             // https://github.com/rust-lang/miri/issues/3555
             unary_approx_test! { $scalar, sin, cos, exp, exp2, ln, log2, log10 }
 
