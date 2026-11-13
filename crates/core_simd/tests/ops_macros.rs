@@ -424,6 +424,34 @@ macro_rules! impl_signed_tests {
                         );
                     }
                 }
+
+                // Mix the minimum signed divisor with ordinary divisors in one
+                // vector, so the regression also exercises lane-wise
+                // remainder selection rather than only splatted operands.
+                fn rem_by_min_divisor_mixed_lanes<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| {
+                        match lane % 6 {
+                            0 => Scalar::MIN,
+                            1 => Scalar::MAX,
+                            2 => -42,
+                            3 => 42,
+                            4 => -1,
+                            _ => 0,
+                        }
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
+                        0 => Scalar::MIN,
+                        1 => 7,
+                        _ => -7,
+                    });
+                    let expected: [Scalar; LANES] =
+                        core::array::from_fn(|lane| lhs[lane].wrapping_rem(rhs[lane]));
+
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs) % Vector::<LANES>::from_array(rhs),
+                        Vector::<LANES>::from_array(expected),
+                    );
+                }
             }
 
             impl_binary_op_test!(Scalar, Add::add, AddAssign::add_assign, Scalar::wrapping_add);
