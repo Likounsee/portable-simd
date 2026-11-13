@@ -98,7 +98,7 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 - The benchmark has a dedicated CI job that compiles and executes its semantic assertions.
 - The signed remainder expected-value correction addressed failures observed in earlier CI jobs.
-- On the log-preparation snapshot, run [43509125858](https://github.com/Likounsee/portable-simd/actions/runs/43509125858) is still in progress on attempt 2: most jobs succeeded, x86_64 macOS is running, and aarch64 macOS is cancelled. Therefore the complete matrix is **not recorded as green**.
+- Run [43509125858](https://github.com/Likounsee/portable-simd/actions/runs/43509125858) is on attempt 3. All jobs except the macOS ARM64 retry have completed successfully; x86_64 macOS passed debug, release, and documentation generation. The ARM64 job is queued after its previous attempt was cancelled, so this retry is **not yet recorded as fully green**.
 - No local Rust compilation is claimed; a Rust toolchain is unavailable in the working environment.
 
 ## Remaining evidence needed
