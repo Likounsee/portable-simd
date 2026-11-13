@@ -311,6 +311,8 @@ macro_rules! impl_signed_tests {
                     )
                 }
 
+                // Regression coverage for issue #427: test_lanes! includes the
+                // non-power-of-two widths 3 and 6 on AArch64, including Miri.
                 fn div_min_may_overflow<const LANES: usize>() {
                     let a = Vector::<LANES>::splat(Scalar::MIN);
                     let b = Vector::<LANES>::splat(-1);

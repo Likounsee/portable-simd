@@ -33,6 +33,20 @@ fn simd_load(slice: &[f32], enabled: [bool; LANES]) -> Simd<f32, LANES> {
 }
 
 #[inline(never)]
+fn simd_load_or_default(slice: &[f32]) -> Simd<f32, LANES> {
+    Simd::load_or_default(slice)
+}
+
+#[inline(never)]
+fn scalar_load_or_default(slice: &[f32]) -> Simd<f32, LANES> {
+    let mut result = [0.0; LANES];
+    for (&source, destination) in slice.iter().zip(result.iter_mut()) {
+        *destination = source;
+    }
+    Simd::from_array(result)
+}
+
+#[inline(never)]
 fn scalar_load(slice: &[f32], enabled: [bool; LANES]) -> Simd<f32, LANES> {
     let mut result = [FALLBACK; LANES];
     for lane in 0..LANES {
@@ -61,6 +75,13 @@ fn scalar_store(value: Simd<f32, LANES>, slice: &mut [f32], enabled: [bool; LANE
     }
 }
 
+#[inline(never)]
+fn scalar_store_all(value: Simd<f32, LANES>, slice: &mut [f32]) {
+    for (destination, &source) in slice.iter_mut().zip(value.as_array()) {
+        *destination = source;
+    }
+}
+
 fn measure(label: &str, mut operation: impl FnMut()) -> Duration {
     let start = Instant::now();
     for _ in 0..ITERATIONS {
@@ -72,6 +93,39 @@ fn measure(label: &str, mut operation: impl FnMut()) -> Duration {
         elapsed.as_nanos() as f64 / f64::from(ITERATIONS)
     );
     elapsed
+}
+
+fn run_default_case(source: &[f32; LANES], len: usize) {
+    let slice = &source[..len];
+    let value = Simd::from_array([10.0_f32, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+
+    // Match the exact load_or_default API and zip-based scalar loop from issue #494.
+    let simd_loaded = simd_load_or_default(slice);
+    let scalar_loaded = scalar_load_or_default(slice);
+    assert_eq!(simd_loaded, scalar_loaded, "default load mismatch: len={len}");
+
+    // Compare all-enabled store_select with the scalar zip loop from issue #494.
+    let mut simd_output = [SENTINEL; LANES];
+    let mut scalar_output = [SENTINEL; LANES];
+    simd_store(value, &mut simd_output[..len], [true; LANES]);
+    scalar_store_all(value, &mut scalar_output[..len]);
+    assert_eq!(simd_output, scalar_output, "all-enabled store mismatch: len={len}");
+
+    println!("\\nlen={len}, mode=all-enabled/default");
+    measure("SIMD load_or_default", || {
+        black_box(simd_load_or_default(black_box(slice)));
+    });
+    measure("scalar zip load", || {
+        black_box(scalar_load_or_default(black_box(slice)));
+    });
+    measure("SIMD store_select (all)", || {
+        simd_store(black_box(value), black_box(&mut simd_output[..len]), [true; LANES]);
+        black_box(&simd_output);
+    });
+    measure("scalar zip store", || {
+        scalar_store_all(black_box(value), black_box(&mut scalar_output[..len]));
+        black_box(&scalar_output);
+    });
 }
 
 fn run_case(source: &[f32; LANES], len: usize, enabled: [bool; LANES], mask_name: &str) {
@@ -121,6 +175,7 @@ fn main() {
     println!("portable-simd masked load/store diagnostic");
     println!("lanes={LANES}, iterations={ITERATIONS}, fallback={FALLBACK}");
     for len in 0..=LANES {
+        run_default_case(&source, len);
         for &(mask_name, enabled) in &masks {
             run_case(&source, len, enabled, mask_name);
         }
