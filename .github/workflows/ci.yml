@@ -30,6 +30,18 @@ jobs:
       - name: Run rustfmt
         run: cargo fmt --all -- --check
 
+  masked-memory-benchmark:
+    name: "masked memory benchmark (compile and semantic checks)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Compile masked memory benchmark
+        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 benchmarks/masked_load_store.rs -o /tmp/masked-load-store
+      - name: Run masked memory benchmark and semantic assertions
+        run: /tmp/masked-load-store
+
   clippy:
     name: "clippy on ${{ matrix.target }}"
     runs-on: ubuntu-latest
