@@ -325,6 +325,16 @@ macro_rules! impl_signed_tests {
                     assert_eq!(a % b, Vector::<LANES>::splat(0));
                 }
 
+                // Issue #427 specifically reported simd_rem failing when the
+                // divisor (rhs), not the dividend, is Scalar::MIN.
+                fn rem_by_min_divisor<const LANES: usize>() {
+                    let positive = Vector::<LANES>::splat(42);
+                    let negative = Vector::<LANES>::splat(-42);
+                    let divisor = Vector::<LANES>::splat(Scalar::MIN);
+                    assert_eq!(positive % divisor, positive);
+                    assert_eq!(negative % divisor, negative);
+                }
+
                 fn abs_diff<const LANES: usize>() {
                     test_helpers::test_binary_elementwise(
                         &Vector::<LANES>::abs_diff,
