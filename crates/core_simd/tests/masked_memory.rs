@@ -114,13 +114,8 @@ fn gather_select_matches_scalar_oracle_for_small_index_space() {
             encoded /= 5;
             digit
         });
-        let indices = Simd::from_array(indices.map(|index| {
-            if index == 4 {
-                usize::MAX
-            } else {
-                index
-            }
-        }));
+        let indices =
+            Simd::from_array(indices.map(|index| if index == 4 { usize::MAX } else { index }));
 
         for mask_bits in 0..(1 << LANES) {
             let enabled = core::array::from_fn(|lane| mask_bits & (1 << lane) != 0);
@@ -212,8 +207,7 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
                 }
             });
             assert_eq!(
-                actual,
-                expected,
+                actual, expected,
                 "load: LANES={LANES}, len={len}, mask={enabled:?}"
             );
 
@@ -226,7 +220,8 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
                     -99
                 }
             });
-            assert_eq!(destination, expected,
+            assert_eq!(
+                destination, expected,
                 "store: LANES={LANES}, len={len}, mask={enabled:?}"
             );
         }
@@ -285,8 +280,7 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
                 }
             });
             assert_eq!(
-                actual,
-                expected,
+                actual, expected,
                 "gather: LANES={LANES}, len={len}, mask={enabled:?}"
             );
 
@@ -299,8 +293,7 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
                 }
             }
             assert_eq!(
-                destination,
-                expected,
+                destination, expected,
                 "scatter: LANES={LANES}, len={len}, mask={enabled:?}"
             );
         }

@@ -73,14 +73,16 @@ impl<T: fmt::Debug + SwizzleStrategy, const N: usize> SwizzleStrategy for [T; N]
 }
 
 fn check_exhaustive_swizzle_indices<const N: usize>() {
-    let values = core::array::from_fn(|lane| (lane as u8).wrapping_mul(37).wrapping_add(11));
+    let values: [u8; N] =
+        core::array::from_fn(|lane| (lane as u8).wrapping_mul(37).wrapping_add(11));
     let vector = core_simd::simd::Simd::from_array(values);
 
     // Exercise every possible u8 index in every output lane. This covers all
     // in-bounds indices as well as every out-of-bounds byte value, independent
     // of the randomized property-test seed.
     for start in 0..=u8::MAX {
-        let indices = core::array::from_fn(|lane| start.wrapping_add(lane as u8));
+        let indices: [u8; N] =
+            core::array::from_fn(|lane| start.wrapping_add(lane as u8));
         let actual = vector
             .swizzle_dyn(core_simd::simd::Simd::from_array(indices))
             .to_array();
