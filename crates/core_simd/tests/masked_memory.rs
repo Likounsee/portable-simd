@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+
 //! Regression coverage for safe masked SIMD memory operations.
 //!
 //! These tests compare the safe APIs with scalar slice semantics, including empty
@@ -52,10 +54,7 @@ fn store_select_never_writes_disabled_or_out_of_bounds_lanes() {
     for len in 0..=LANES {
         for enabled in masks {
             let mut destination = [-1_i32; LANES];
-            values.store_select(
-                &mut destination[..len],
-                Mask::from_array(enabled),
-            );
+            values.store_select(&mut destination[..len], Mask::from_array(enabled));
 
             let expected = core::array::from_fn(|lane| {
                 if lane < len && enabled[lane] {
@@ -116,7 +115,11 @@ fn gather_select_matches_scalar_oracle_for_small_index_space() {
             digit
         });
         let indices = Simd::from_array(indices.map(|index| {
-            if index == 4 { usize::MAX } else { index }
+            if index == 4 {
+                usize::MAX
+            } else {
+                index
+            }
         }));
 
         for mask_bits in 0..(1 << LANES) {
@@ -126,12 +129,18 @@ fn gather_select_matches_scalar_oracle_for_small_index_space() {
             let index_array = indices.to_array();
             let expected = core::array::from_fn(|lane| {
                 if enabled[lane] {
-                    source.get(index_array[lane]).copied().unwrap_or(fallback.to_array()[lane])
+                    source
+                        .get(index_array[lane])
+                        .copied()
+                        .unwrap_or(fallback.to_array()[lane])
                 } else {
                     fallback.to_array()[lane]
                 }
             });
-            assert_eq!(actual, expected, "indices={index_array:?}, mask={enabled:?}");
+            assert_eq!(
+                actual, expected,
+                "indices={index_array:?}, mask={enabled:?}"
+            );
         }
     }
 }
@@ -175,7 +184,8 @@ fn scatter_select_matches_scalar_oracle_for_unique_valid_indices() {
 }
 
 fn check_contiguous_masked_memory_width<const LANES: usize>() {
-    let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(17).wrapping_add(5));
+    let source: [i32; LANES] =
+        core::array::from_fn(|lane| (lane as i32).wrapping_mul(17).wrapping_add(5));
     let values = Simd::from_array(source);
     let fallback = Simd::from_array(core::array::from_fn(|lane| -1 - lane as i32));
     let patterns: [[bool; LANES]; 4] = [
@@ -216,8 +226,7 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
                     -99
                 }
             });
-            assert_eq!(
-                destination, expected,
+            assert_eq!(destination, expected,
                 "store: LANES={LANES}, len={len}, mask={enabled:?}"
             );
         }
@@ -244,7 +253,8 @@ fn contiguous_masked_memory_covers_lane_count_boundaries() {
 }
 
 fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
-    let source = core::array::from_fn(|lane| (lane as i32).wrapping_mul(23).wrapping_add(7));
+    let source: [i32; LANES] =
+        core::array::from_fn(|lane| (lane as i32).wrapping_mul(23).wrapping_add(7));
     let values = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
     let fallback = Simd::from_array(core::array::from_fn(|lane| -10 - lane as i32));
     let indices = Simd::from_array(core::array::from_fn(|lane| {
@@ -260,13 +270,9 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
 
     for len in 0..=LANES {
         for enabled in patterns {
-            let actual = Simd::gather_select(
-                &source[..len],
-                Mask::from_array(enabled),
-                indices,
-                fallback,
-            )
-            .to_array();
+            let actual =
+                Simd::gather_select(&source[..len], Mask::from_array(enabled), indices, fallback)
+                    .to_array();
             let fallback_array = fallback.to_array();
             let expected = core::array::from_fn(|lane| {
                 if enabled[lane] {
@@ -285,11 +291,7 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
             );
 
             let mut destination = [-77_i32; LANES];
-            values.scatter_select(
-                &mut destination[..len],
-                Mask::from_array(enabled),
-                indices,
-            );
+            values.scatter_select(&mut destination[..len], Mask::from_array(enabled), indices);
             let mut expected = [-77_i32; LANES];
             for lane in 0..LANES {
                 if enabled[lane] && index_array[lane] < len {

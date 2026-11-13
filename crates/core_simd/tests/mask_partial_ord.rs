@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+
 //! Regression tests for the boolean ordering semantics of SIMD masks.
 //!
 //! See https://github.com/rust-lang/portable-simd/issues/527.
