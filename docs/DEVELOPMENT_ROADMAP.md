@@ -248,7 +248,7 @@ Related upstream issue: [#537](https://github.com/rust-lang/portable-simd/issues
 - [ ] Compile the crate and run all three doctests on the pinned nightly; confirm each failure is specifically caused by privacy rather than an unrelated import or feature error.
 - [ ] Run the full core_simd test suite and Clippy through CI before treating the candidate as validated.
 
-The source-level candidate is committed on the fork's `main`, but no compiler has validated it yet. Do not describe #537 as fixed upstream or claim the regression tests pass until CI results are available.
+The first full GitHub Actions run exposed an internal-visibility regression: declaring `PrivateMethods` fully private prevents sibling modules (`swizzle.rs` and `vector.rs`) from using its associated helpers. The candidate now makes the trait `pub(crate)` while keeping it non-public to downstream crates; the three external compile-fail doctests remain the guard against leaking those helpers through `MaskElement`. This revised visibility is provisional until CI confirms that the crate builds and the doctests fail specifically for privacy.
 
 
 
