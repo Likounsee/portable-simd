@@ -138,7 +138,7 @@ No test policy or tolerance change is made here.
       fork's `main`; execution under the pinned nightly is still pending.
 - [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
 - [ ] #472: open; mask operation code generation remains uninvestigated.
-- [ ] #505: open; API ergonomics request to rename `Select` to `SimdSelect` and consider prelude inclusion. This is a naming/export design question, not a demonstrated correctness bug; inspect the actual public export surface and naming conventions before proposing an API change.
+- [x] #505: open upstream, but the prelude concern is already resolved by upstream PR #506. The fork's `simd` module should be checked against that export before any work; the remaining discussion is only whether the generic, SIMD-independent `Select` trait should be renamed to `SimdSelect`. A maintainer explicitly considered the generic name reasonable. No rename is justified without broader API consensus.
 - [ ] #495: open; large-vector alignment constraints.
 
 ## Contribution checklist
