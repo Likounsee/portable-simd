@@ -266,3 +266,15 @@ Related upstream issue: [#519](https://github.com/rust-lang/portable-simd/issues
 - [ ] Revisit only if the compiler target capability or compiler-builtins support changes and the gate can safely be narrowed/removed.
 
 This is a verified existing safeguard, not a new code change.
+
+
+#### Design check: upstream PR #483 is not a narrow visibility fix
+
+- [x] Inspect the full diff and discussion of [PR #483](https://github.com/rust-lang/portable-simd/pull/483), "Mask element v2".
+- [x] Confirm its `Sealed` trait still declares `valid`, `eq`, `to_usize`, `max_unsigned`, `Unsigned`, `TRUE`, and `FALSE`, and remains a supertrait of `MaskElement`.
+- [x] Reject a rename-only approach: changing `PrivateMethods` to `Sealed` does not remove the downstream-visible associated items described by #537.
+- [x] Identify that PR #483 also changes the generic meaning of `Mask<T, N>` to use `T: SimdElement` and `T::Mask`, changes numerous public bounds and implementations, and is therefore a broad API redesign rather than a safe, isolated patch for #537.
+- [ ] Develop a smaller design that keeps a method-free sealing supertrait and relocates internal operations without adding private bounds to public method signatures or changing the public `Mask<T, N>` API.
+- [ ] Prove the design with a downstream compile-fail test for every leaked associated item category (constant, associated type, and method), plus ordinary internal mask tests.
+
+This investigation narrows the solution space but does not yet justify a source edit. In particular, do not rename the trait and call the issue fixed.
