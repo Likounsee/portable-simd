@@ -34,7 +34,7 @@ impl_fix_endianness! { u8, u16, u32, u64 }
 /// This trait is deliberately private to this module. Keeping it as a private
 /// supertrait seals `MaskElement` without making these associated items callable
 /// from downstream crates.
-trait PrivateMethods {
+pub(crate) trait PrivateMethods {
     fn valid<const N: usize>(values: Simd<Self, N>) -> bool
     where
         Self: SimdElement;
