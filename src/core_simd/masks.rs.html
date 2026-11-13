@@ -31,9 +31,9 @@
 <a href=#31 id=31 data-nosnippet>31</a>
 <a href=#32 id=32 data-nosnippet>32</a><span class="doccomment">/// Implementation-only operations for the built-in mask element types.
 <a href=#33 id=33 data-nosnippet>33</a>///
-<a href=#34 id=34 data-nosnippet>34</a>/// This trait is deliberately private to this module. Keeping it as a private
-<a href=#35 id=35 data-nosnippet>35</a>/// supertrait seals `MaskElement` without making these associated items callable
-<a href=#36 id=36 data-nosnippet>36</a>/// from downstream crates.
+<a href=#34 id=34 data-nosnippet>34</a>/// This trait is visible only inside this crate so sibling implementation modules
+<a href=#35 id=35 data-nosnippet>35</a>/// can use its helpers. As a crate-private supertrait, it does not expose these
+<a href=#36 id=36 data-nosnippet>36</a>/// associated items to downstream crates.
 <a href=#37 id=37 data-nosnippet>37</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>PrivateMethods {
 <a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">fn </span>valid&lt;<span class="kw">const </span>N: usize&gt;(values: Simd&lt;<span class="self">Self</span>, N&gt;) -&gt; bool
 <a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">where
