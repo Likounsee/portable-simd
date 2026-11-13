@@ -54,7 +54,7 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Commit: `65d5231a`.
 - Added halfway-value coverage for SIMD float rounding behavior.
 - File: `crates/std_float/tests/float.rs`; the existing reliable-f16-math target gate is at line 114.
-- Existing exact comparisons were not blanket-replaced with approximate comparisons; upstream #463 discussion does not justify weakening unrelated assertions.
+- Addressed the nondeterministic transcendental-comparison concern in upstream #463: `sin`, `cos`, `exp`, `exp2`, `ln`, `log2`, and `log10` use the existing ULP-based `test_unary_elementwise_approx` helper; `log` uses the binary approximate helper with a wider tolerance because it performs two logarithms and a division. Exact comparisons remain for operations whose contract is deterministic (rounding, truncation, square root, and fused multiply-add); unrelated assertions are not weakened.
 
 ### 2026-11-13 — signed division/remainder regression coverage (#427)
 
@@ -98,16 +98,15 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 - The benchmark has a dedicated CI job that compiles and executes its semantic assertions.
 - The signed remainder expected-value correction addressed failures observed in earlier CI jobs.
-- Run [43509125858](https://github.com/Likounsee/portable-simd/actions/runs/43509125858) is on attempt 3. All jobs except the macOS ARM64 retry have completed successfully; x86_64 macOS passed debug, release, and documentation generation. The ARM64 job is queued after its previous attempt was cancelled, so this retry is **not yet recorded as fully green**.
+- Run [43509125858](https://github.com/Likounsee/portable-simd/actions/runs/43509125858), attempt 3, completed successfully across the full matrix. Both macOS x86_64 and ARM64 passed debug, release, and documentation generation; Windows, Linux, WASM, Miri, Clippy, and the masked-memory benchmark job also passed.
 - No local Rust compilation is claimed; a Rust toolchain is unavailable in the working environment.
 
 ## Remaining evidence needed
 
-1. Finish or rerun both macOS jobs and record their actual conclusions.
-2. Validate the mixed-lane test in the complete CI matrix after it is integrated.
-3. Capture controlled #494 timings and optimized IR/assembly on the reported target before proposing a codegen change.
-4. Reproduce #472 and #341/#343 with pinned compiler versions and retain the IR/assembly artifacts.
-5. Resolve API/compiler contracts with maintainers before adding unchecked integer, algebraic float, or unchecked swizzle APIs.
+1. Confirm the push-triggered CI run for commit `55e04c0` validates the mixed-lane regression test across the full matrix.
+2. Capture controlled #494 timings and optimized IR/assembly on the reported target before proposing a codegen change.
+3. Reproduce #472 and #341/#343 with pinned compiler versions and retain the IR/assembly artifacts.
+4. Resolve API/compiler contracts with maintainers before adding unchecked integer, algebraic float, or unchecked swizzle APIs.
 
 
 ### 2026-11-13 — follow-up review of compiler-owned issue reports
@@ -118,10 +117,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - #472: the discussion points toward a compiler representation improvement for masks/bits. The fork must preserve the validity invariant and should not weaken it to force code generation.
 
 
-### 2026-11-13 — first/last-set mask reduction boundary coverage
+### 2026-11-13 — issue #463 test audit and CI completion
 
-- Added lane-width regression coverage for `Mask::first_set` and `Mask::last_set`.
-- The tests cover every configured lane width, including non-power-of-two widths and 64 lanes, and exercise empty masks, every single-bit position, alternating patterns, and both endpoint lanes.
-- Expected indices are computed independently from the source boolean array. This covers both the x86 bitmask fast path and scalar/vector fallback paths on targets where the fast path is unavailable.
-- Files: `crates/core_simd/tests/masks.rs` (new `first_and_last_set_lane_boundaries` test inside the existing mask-type macro).
-- This is regression coverage, not a claimed implementation fix; the complete CI matrix must validate it.
+- Rechecked `crates/std_float/tests/float.rs` and `crates/test_helpers/src/lib.rs` against upstream #463.
+- Confirmed the transcendental functions implicated by platform-dependent libm results already use ULP-based approximate comparisons, while deterministic rounding operations retain exact assertions. The binary `log` test uses a 32-ULP allowance for its two-logarithm-plus-division implementation.
+- The full pre-integration CI run completed green on attempt 3. The mixed-lane regression was added in commit `55e04c0`; its push-triggered CI must finish green before treating that test as validated.
