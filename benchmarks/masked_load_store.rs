@@ -18,7 +18,7 @@
 //! Record rustc --version --verbose, target triple, CPU model, and flags with results.
 //! This is a microbenchmark for code-generation diagnosis, not an end-to-end benchmark.
 
-use core::simd::{Mask, Simd};
+use std::simd::{Mask, Simd};
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 

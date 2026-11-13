@@ -344,3 +344,10 @@ once a run ID is known, but it does not expose a workflow-dispatch action or a
 general list-workflow-runs action. The commit-run helper only returns pull-request
 runs, so an empty response from that helper must not be interpreted as proof that
 a push-triggered run did not happen.
+
+
+### CI correction — 2026-11-13
+
+- Corrected the #427 signed remainder regression expectation: for a positive signed maximum and a minimum signed divisor, the remainder is the positive maximum (the divisor's magnitude is larger), not `-1`. This was the common failure across Miri, Windows, WebAssembly, and cross-target test jobs.
+- Corrected the standalone #494 benchmark to import the nightly portable SIMD API through `std::simd`; `core` is not available as an extern-prelude path in this standalone `rustc` binary.
+- These changes address the failures observed in CI run `43494021345`; a new run is required to confirm all targets.

@@ -412,7 +412,7 @@ macro_rules! impl_signed_tests {
                         (42, 42),
                         (-42, -42),
                         (Scalar::MIN, 0),
-                        (Scalar::MAX, -1),
+                        (Scalar::MAX, Scalar::MAX),
                         (-1, -1),
                         (0, 0),
                     ] {
