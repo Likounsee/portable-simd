@@ -94,16 +94,21 @@ Related upstream issue: [#527](https://github.com/rust-lang/portable-simd/issues
 
 - [ ] Review the stabilization/API concerns in upstream issue #364.
 - [x] Inspect the large-vector alignment report in #495 and the current `Simd` representation: `#[repr(simd, packed)]`; masked pointer loads/stores request element alignment. The issue remains open, and target layout measurements are still needed.
-- [ ] Review the visibility/API concern in upstream issue #537.
+- [x] Review the visibility/API concern in upstream issue #537, including the full maintainer discussion.
 - [ ] Review the unresolved Miri floating-point test determinism discussion in issue #463.
 - [ ] Verify the current code and discussion before treating any old issue as unresolved.
 
 Issue #537 is still open. The reported `PrivateMethods` supertrait exposure is present
-in `masks.rs`. Discussion narrows the concern: maintainers questioned whether it would
-automatically stabilize those items, while the original author acknowledged that the
-trait's accessibility on nightly was unintended and that its previous name was
-`Sealed`. Treat this as an API/visibility review, not as proof of a stable-API break
-or as justification for an unreviewed code change.
+in `masks.rs`. The full discussion narrows the concern: automatic stable-API exposure
+is not established, because stabilization would require explicit stability annotations;
+however, maintainers agree that the helper trait being callable downstream on nightly
+is unintended. The issue author also clarified that the trait was previously named
+`Sealed`. The implementation currently depends on its associated items from generic
+`T: MaskElement` call sites (`TRUE`, `FALSE`, `valid`, `eq`, `Unsigned`, and conversion
+helpers), so merely removing the supertrait would break internal code. A fix needs to
+separate the sealing mechanism from implementation-only operations without re-exposing
+them through the public trait, plus a downstream compile-fail test. No safe minimal
+refactor has yet been established; do not change the trait hierarchy speculatively.
 
 ### 6. Floating-point test determinism
 
@@ -126,9 +131,9 @@ No test policy or tolerance change is made here.
 
 - [x] #499: closed; current StdFloat::round documentation correctly says ties round away from zero.
 - [x] #527: closed; regression coverage exists in this fork.
-- [x] #524: closed (Miri selecting unsupported target intrinsics).
+- [x] #524: closed after the reporter retested `swizzle_dyn` successfully on newer nightly for AArch64 macOS, x86-64 Linux, and RISC-V Linux. This was a toolchain/Miri-intrinsic support resolution, not a portable-simd source fix; AVX-512 and other Miri target coverage still need separate validation.
 - [x] #519: closed (missing reliable-f16-math test gate).
-- [ ] #537: open; review the sealed-trait visibility concern described above.
+- [x] #537: open; source and full discussion reviewed. A deliberate helper/sealing redesign and compile-fail test are still needed.
 - [ ] #494: open; safe masked-memory semantics now have regression tests, but SSE2/AVX2 code generation remains unmeasured.
 - [ ] #472: open; mask operation code generation remains uninvestigated.
 - [ ] #505: open; `Select` naming and prelude question.
@@ -236,3 +241,16 @@ Do not simply delete `PrivateMethods` from the `MaskElement` supertrait: the cur
 - [ ] Do not add a speculative workaround for #427. First construct a minimal reproducer on AArch64, establish whether the current representation still triggers the LLVM ICE, and preserve the exact compiler/LLVM versions and failing operation.
 - [x] Triage [#539](https://github.com/rust-lang/portable-simd/issues/539): this is an API request for SIMD counterparts to scalar `algebraic_*` float operations, with a possible algebraic reduction. The request does not yet define the exact operation set, semantics, or interaction with the current `StdFloat` trait.
 - [ ] Before implementing #539, compare the scalar algebraic float API and its stability/semantics with the existing `StdFloat` methods, then propose a minimal method set and tests for relaxed floating-point behavior. Do not silently give existing strict operations relaxed semantics.
+
+
+### 12. Miri target-intrinsic issue follow-up
+
+Related upstream issue: [#524](https://github.com/rust-lang/portable-simd/issues/524) (closed).
+
+- [x] Read the full issue discussion, including the reporter's closing retest and maintainer comments.
+- [x] Confirm the reporter retested `swizzle_dyn` successfully on newer nightly for `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, and `riscv64a23-unknown-linux-gnu`.
+- [x] Record that the resolution came from newer Miri/intrinsic support and not from a source change in this fork.
+- [ ] Keep AVX-512 and other target configurations separate: a maintainer noted that some AVX-512 paths may still require Miri shims, particularly with `-Zbuild-std`.
+- [ ] If Miri coverage is expanded, first test the repository's actual target/configuration matrix; do not add a broad `cfg(miri)` fallback solely on the basis of this closed report.
+
+This closes the original reproducer as reported, but it does not establish universal Miri support for every architecture-specific `swizzle_dyn` implementation.
