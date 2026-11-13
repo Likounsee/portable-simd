@@ -63,7 +63,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Registered the tests inside `test_helpers::test_lanes!`, which generates non-power-of-two widths 3 and 6 as well as the other configured widths.
 - Corrected the scalar expected result for `Scalar::MAX % Scalar::MIN` from `-1` to `Scalar::MAX`.
 - File: `crates/core_simd/tests/ops_macros.rs:377-429` (registered signed boundary cases; the mixed-lane addition below extends this block).
-- These tests exercise the reported value classes but do not prove the historical AArch64 LLVM ICE is fixed. The original compiler versions and a minimal compiler-only reproducer are still needed.
+- Follow-up on the upstream discussion: maintainers recalled that the ICE occurred with `#[repr(simd, packed)]`; the original reporter thought it may have been `i8` but was not certain. The issue still has no compiler-only reproducer or pinned affected rustc/LLVM version.
+- These tests exercise the reported value classes, including the likely narrow integer case and non-power-of-two widths, but do not prove the historical AArch64 LLVM ICE is fixed. A minimal compiler-only reproducer is still needed.
 
 ### 2026-11-13 — unchecked integer SIMD API inventory (#481)
 
@@ -83,8 +84,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 ## Investigations and conclusions (no source fix claimed)
 
 - **#494 — masked load/store code generation:** safe contiguous APIs were traced to masked pointer intrinsics using element alignment. The diagnostic benchmark is present, but controlled target-specific timings and optimized LLVM IR/assembly are still missing. Do not change implementation based on CI benchmark execution alone.
-- **#472 — mask code generation:** `Mask::from_simd_unchecked` retains the validity `assume` at `crates/core_simd/src/masks.rs:223`. Removing a soundness invariant to chase codegen is not acceptable. Reproduce the original hexadecimal-validation example and inspect current IR/assembly first.
-- **#341/#343 — array/slice conversion code generation:** current copy helpers use bounded element copies; the unresolved question is whether the compiler emits vector-typed loads/stores for non-power-of-two widths. Inspect IR before changing memory operations or alignment.
+- **#472 — mask code generation:** `Mask::from_simd_unchecked` retains the validity `assume` at `crates/core_simd/src/masks.rs:223`. The upstream discussion also explored a compiler-level bit-sized representation (`Bits<N>`) as a longer-term direction; it is not a library-side patch available to this fork. Removing a soundness invariant to chase codegen is not acceptable. Reproduce the original hexadecimal-validation example and inspect current IR/assembly first.
+- **#341/#343 — array/slice conversion code generation:** current copy helpers use bounded element copies. Upstream discussion confirms that ordinary array assignment can produce vector-typed LLVM loads/stores for power-of-two widths, while non-power-of-two widths may intentionally fall back to `memcpy`; maintainers still want an intrinsic or equivalent guarantee that SIMD-facing operations emit vector-typed IR. Inspect current IR for both width classes before changing memory operations or alignment.
 - **#495 — large-vector alignment:** likely involves compiler `repr(simd, packed)` layout; no library-side workaround is justified without target layout evidence.
 - **#486 — dynamic swizzle:** exhaustive tests cover current semantics. An unchecked/out-of-range variant remains an API and safety-contract question.
 - **#539 — algebraic float operations:** scalar algebraic intrinsics do not automatically provide SIMD semantics. A SIMD intrinsic/API contract is needed; existing strict operations must not silently change.
@@ -107,3 +108,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 3. Capture controlled #494 timings and optimized IR/assembly on the reported target before proposing a codegen change.
 4. Reproduce #472 and #341/#343 with pinned compiler versions and retain the IR/assembly artifacts.
 5. Resolve API/compiler contracts with maintainers before adding unchecked integer, algebraic float, or unchecked swizzle APIs.
+
+
+### 2026-11-13 — follow-up review of compiler-owned issue reports
+
+- Re-read the upstream maintainer comments for #427, #341, and #472 after the regression-test review.
+- #427: the maintainer recollection narrows the historical trigger to the packed SIMD representation, possibly `i8`; the reporter could not confirm the exact element type. The current tests cover the value classes and lane widths but cannot substitute for the missing compiler reproducer.
+- #341/#343: the discussion distinguishes power-of-two array copies, which can become LLVM vector loads/stores, from non-power-of-two copies that may lower to `memcpy`. The requested guarantee is specifically about vector-typed LLVM IR for SIMD-facing code. No unsafe overread or alignment workaround is justified.
+- #472: the discussion points toward a compiler representation improvement for masks/bits. The fork must preserve the validity invariant and should not weaken it to force code generation.
