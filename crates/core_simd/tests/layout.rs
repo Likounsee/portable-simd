@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(f16)]
 
 macro_rules! layout_tests {
     { $($mod:ident, $ty:ty,)* } => {
@@ -18,6 +19,7 @@ macro_rules! layout_tests {
 }
 
 layout_tests! {
+    f16, f16,
     i8, i8,
     i16, i16,
     i32, i32,

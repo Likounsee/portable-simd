@@ -74,18 +74,15 @@ use crate::simd::{
 /// is only one part of the safety requirements. [`read_unaligned`] and [`write_unaligned`]
 /// remove the alignment requirement, but they still read or write exactly
 /// `size_of::<Simd<T, N>>()` bytes and require that the entire range belongs to valid storage.
-///
-/// **Do not cast a pointer to `[T; N]` (or its first element) to a pointer to `Simd<T, N>`
-/// and then call `read_unaligned` or `write_unaligned`.** For some non-power-of-two lane
-/// counts, `Simd<T, N>` can have trailing padding and be larger than `[T; N]`; such a read
-/// can extend past the array, and such a write can overwrite memory beyond it. Unaligned access
-/// does not make either operation safe.
+/// The layout tests verify that supported `Simd<T, N>` types have the same size as `[T; N]`,
+/// but equal size alone does not make references interchangeable or remove validity,
+/// initialization, aliasing, and provenance requirements.
 ///
 /// Prefer the safe conversions `Simd::from_array`, `Simd::from_slice`,
 /// `Simd::to_array`, and `Simd::copy_to_slice` when moving between arrays or slices and SIMD
-/// values. Use `read_unaligned` or `write_unaligned` only when the pointer actually refers to
-/// storage large enough for a complete `Simd<T, N>` value and the value's validity requirements
-/// are met.
+/// values. Use raw-pointer reads or writes only when the pointer refers to a complete
+/// `Simd<T, N>` value, the operation's alignment requirements are met (or an unaligned
+/// operation is used), and all other pointer and value-validity requirements are satisfied.
 ///
 /// For an actual `Simd<T, N>` object stored at an address that does not meet its alignment,
 /// unaligned access can avoid the alignment requirement. It is not a substitute for checking
@@ -174,9 +171,9 @@ where
     /// ```
     #[inline]
     pub const fn as_array(&self) -> &[T; N] {
-        // SAFETY: `Simd<T, N>` is just an overaligned `[T; N]` with
-        // potential padding at the end, so pointer casting to a
-        // `&[T; N]` is safe.
+        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have
+        // equal sizes for every supported lane count, so this reference covers
+        // exactly the vector's element storage.
         //
         // NOTE: This deliberately doesn't just use `&self.0`, see the comment
         // on the struct definition for details.
@@ -188,9 +185,9 @@ where
     /// For updating a single element, prefer [`Self::set`], which may optimize better.
     #[inline]
     pub const fn as_mut_array(&mut self) -> &mut [T; N] {
-        // SAFETY: `Simd<T, N>` is just an overaligned `[T; N]` with
-        // potential padding at the end, so pointer casting to a
-        // `&mut [T; N]` is safe.
+        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have
+        // equal sizes for every supported lane count, so this reference covers
+        // exactly the vector's element storage.
         //
         // NOTE: This deliberately doesn't just use `&mut self.0`, see the comment
         // on the struct definition for details.
@@ -270,8 +267,8 @@ where
 
     /// Loads a vector from an array of `T`.
     ///
-    /// This function is necessary since `repr(simd)` has padding for non-power-of-2 vectors (at the time of writing).
-    /// With padding, `read_unaligned` will read past the end of an array of N elements.
+    /// This copies an array into SIMD storage without requiring the array to have SIMD alignment.
+    /// The layout tests verify that supported SIMD vectors have the same size as their arrays.
     ///
     /// # Safety
     /// Reading `ptr` must be safe, as if by `<*const [T; N]>::read`.
@@ -281,9 +278,8 @@ where
         // LLVM `load <N x T>`
 
         let mut tmp = core::mem::MaybeUninit::<Self>::uninit();
-        // SAFETY: `Simd<T, N>` always contains `N` elements of type `T`.  It may have padding
-        // which does not need to be initialized.  The safety of reading `ptr` is ensured by the
-        // caller.
+        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have equal sizes
+        // for every supported lane count. The caller guarantees that `ptr` is safe to read.
         unsafe {
             core::ptr::copy_nonoverlapping(ptr, tmp.as_mut_ptr().cast(), 1);
             tmp.assume_init()
@@ -303,8 +299,8 @@ where
 
         // Creating a temporary helps LLVM turn the memcpy into a store.
         let tmp = self;
-        // SAFETY: `Simd<T, N>` always contains `N` elements of type `T`.  The safety of writing
-        // `ptr` is ensured by the caller.
+        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have equal sizes
+        // for every supported lane count. The caller guarantees that `ptr` is safe to write.
         unsafe { core::ptr::copy_nonoverlapping(tmp.as_array(), ptr, 1) }
     }
 
@@ -312,9 +308,6 @@ where
     #[inline]
     pub const fn from_array(array: [T; N]) -> Self {
         // SAFETY: `&array` is safe to read.
-        //
-        // FIXME: We currently use a pointer load instead of `transmute_copy` because `repr(simd)`
-        // results in padding for non-power-of-2 vectors (so vectors are larger than arrays).
         //
         // NOTE: This deliberately doesn't just use `Self(array)`, see the comment
         // on the struct definition for details.
@@ -326,9 +319,6 @@ where
     pub const fn to_array(self) -> [T; N] {
         let mut tmp = core::mem::MaybeUninit::uninit();
         // SAFETY: writing to `tmp` is safe and initializes it.
-        //
-        // FIXME: We currently use a pointer store instead of `transmute_copy` because `repr(simd)`
-        // results in padding for non-power-of-2 vectors (so vectors are larger than arrays).
         //
         // NOTE: This deliberately doesn't just use `self.0`, see the comment
         // on the struct definition for details.

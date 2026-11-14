@@ -154,3 +154,18 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Removed repeated documentation builds from every x86 feature/OS matrix entry and both macOS entries. A dedicated documentation job now builds on pull requests and manual CI runs with `RUSTDOCFLAGS=-Dwarnings`; main pushes use the documentation deployment workflow for that same warning-checked build, avoiding a duplicate.
 - Kept the full x86 feature sweep on x86_64 Linux and Windows MSVC, plus ABI smoke coverage on Windows GNU and 32-bit Windows. This trims the x86 matrix from 31 jobs to 20 without dropping the primary OS/feature combinations; debug/release coverage remains for every retained entry. WASM, Clippy, Miri, cross-architecture, and masked-memory checks remain intact.
 - This is a workflow-efficiency change; its cache hit rate and elapsed-time improvement must be measured from the next completed Actions runs.
+
+
+### 2026-11-14 — correct SIMD layout safety documentation
+
+- Corrected the earlier raw-pointer documentation: the crate's `layout.rs` regression tests verify that every supported `Simd<T, N>` has the same size as its corresponding `[T; N]`, including non-power-of-two lane counts. The previous warning that these vectors may be larger because of trailing padding was inaccurate for this implementation.
+- Updated the `as_array` / `as_mut_array` safety comments and the `load` / `store` safety comments, and removed obsolete `from_array` / `to_array` FIXME text that attributed the copies to non-power-of-two padding.
+- Kept the important distinction that matching sizes do not make references interchangeable and do not waive pointer validity, initialization, aliasing, or provenance requirements.
+- Documentation and safety-comment correction only; no runtime behavior changed.
+
+
+### 2026-11-14 — cover f16 in SIMD layout regression tests
+
+- Added `f16` to the existing no-padding layout test matrix, which already checks every supported lane count for the other SIMD element types.
+- This closes a small coverage gap in the assertion used to support the array/SIMD size documentation: `f16` is also a `SimdElement` and should be checked explicitly.
+- Test-only change; no implementation behavior changed.
