@@ -40,6 +40,8 @@ jobs:
 
   docs:
     name: "documentation (warnings denied)"
+    # Main pushes use the separately permission-scoped deployment job below.
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -62,13 +64,6 @@ jobs:
         run: cargo +nightly doc --no-deps
         env:
           RUSTDOCFLAGS: -Dwarnings
-      - name: Deploy documentation
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@373f7f263a76c20808c831209c920827a82a2847 # v3.9.3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./target/doc
 
   deploy-docs:
     name: "build and deploy documentation"

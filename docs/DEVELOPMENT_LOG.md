@@ -193,3 +193,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Follow-up hardening for the consolidated workflow: kept the pull-request/manual documentation check read-only and moved the GitHub Pages publishing step into a separate job that runs only for pushes to `main`.
 - Only the deployment job receives `contents: write`; untrusted pull-request builds do not receive write permissions.
 - The deployment job performs the same nightly documentation build with warnings denied before publishing. No documentation validation or deployment behavior was dropped.
+
+### 2026-11-14 — avoid duplicate documentation builds after workflow consolidation
+
+- Restricted the read-only documentation-check job to pull requests and manual runs.
+- Main pushes now use only the dedicated `deploy-docs` job, which builds with warnings denied and deploys after that build succeeds. This avoids running the documentation build twice on pushes while keeping write permissions isolated to the trusted deployment job.
