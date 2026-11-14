@@ -187,3 +187,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The workflow now launches one fewer job and one fewer Actions workflow per main push. The documentation build is not duplicated, and the quality checks still execute on every CI event.
 - No test suite, target, target-feature combination, debug/release run, Clippy target, Miri shard, WASM configuration, or cross-target job was removed.
 - This change consolidates orchestration; the next completed run should be used to compare elapsed time and verify the deployment step.
+
+### 2026-11-14 — scope documentation deployment permissions to trusted pushes
+
+- Follow-up hardening for the consolidated workflow: kept the pull-request/manual documentation check read-only and moved the GitHub Pages publishing step into a separate job that runs only for pushes to `main`.
+- Only the deployment job receives `contents: write`; untrusted pull-request builds do not receive write permissions.
+- The deployment job performs the same nightly documentation build with warnings denied before publishing. No documentation validation or deployment behavior was dropped.
