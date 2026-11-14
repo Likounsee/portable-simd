@@ -198,3 +198,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 - Restricted the read-only documentation-check job to pull requests and manual runs.
 - Main pushes now use only the dedicated `deploy-docs` job, which builds with warnings denied and deploys after that build succeeds. This avoids running the documentation build twice on pushes while keeping write permissions isolated to the trusted deployment job.
+
+
+### 2026-11-14 — share the Cross host-tool cache across target jobs
+
+- Replaced the per-target cache of `~/.cargo/bin` with one cache for the two Cross executables (`cross` and `cross-util`), shared by all cross-test matrix entries.
+- Cross is a host-side tool: the same Ubuntu executable is used to test every emulated target. The previous key included the target and feature, causing up to eight independent Cross builds and cache copies.
+- The shared cache key includes the pinned Cross Git revision (`CROSS_REV`), so changing the tool revision naturally invalidates the cached binaries. Target-specific Cargo registry, Git, and build-artifact caches remain separate.
+- All seven default cross targets and the additional PowerPC64LE `+vsx` configuration still run both debug and release tests. No tests or target configurations were removed.
+- Validation: the workflow syntax and resulting Actions run must be checked after this commit; cache reuse and elapsed-time gains require at least one subsequent warm-cache run to measure.
