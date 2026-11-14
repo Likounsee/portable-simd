@@ -140,3 +140,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Explicitly distinguishes alignment from access size: `read_unaligned` and `write_unaligned` still access `size_of::<Simd<T, N>>()` bytes.
 - Warns against casting an array pointer to a SIMD pointer when non-power-of-two lane counts may give the SIMD type trailing padding, and directs users to the safe array/slice conversion APIs.
 - This is a safety-documentation correction only. It does not change the implementation or claim to resolve the compiler intrinsic/codegen requests in #341/#343.
+
+## 2026-11-14 — correct last-set implementation comment
+
+- Corrected the internal `Mask::last_set` explanation: it selects the maximum matching lane index, not the first one.
+- Documentation/comment-only cleanup; no behavior or generated code changed.

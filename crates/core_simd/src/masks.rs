@@ -457,7 +457,7 @@ where
             return self.to_bitmask().highest_one().map(|i| i as usize);
         }
 
-        // To find the first set index:
+        // To find the last set index:
         // * create a vector 0..N
         // * replace unset mask elements in that vector with -1
         // * perform _signed_ reduce-max
