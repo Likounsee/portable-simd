@@ -129,33 +129,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Run the complete feature sweep on Linux and Windows MSVC. The GNU
-        # Windows and 32-bit Windows targets retain ABI-specific smoke coverage
-        # without repeating every feature combination already covered above.
+        target: [x86_64-pc-windows-msvc, x86_64-pc-windows-gnu, i686-pc-windows-msvc, x86_64-unknown-linux-gnu]
+        # `default` means the default target config, `native` uses -Ctarget-cpu=native,
+        # and the remaining entries are passed to -Ctarget-feature.
+        target_feature: [default, native, +sse3, +ssse3, +sse4.1, +sse4.2, +avx, +avx2]
+        exclude:
+          # -Ctarget-cpu=native is not meaningful for a cross-target build.
+          - { target: i686-pc-windows-msvc, target_feature: native }
         include:
-          - { target: x86_64-unknown-linux-gnu, target_feature: default, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: native, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +sse3, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +ssse3, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +sse4.1, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +sse4.2, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +avx, os: ubuntu-latest }
-          - { target: x86_64-unknown-linux-gnu, target_feature: +avx2, os: ubuntu-latest }
-
-          - { target: x86_64-pc-windows-msvc, target_feature: default, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: native, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +sse3, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +ssse3, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +sse4.1, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +sse4.2, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +avx, os: windows-latest }
-          - { target: x86_64-pc-windows-msvc, target_feature: +avx2, os: windows-latest }
-
-          - { target: x86_64-pc-windows-gnu, target_feature: default, os: windows-latest }
-
-          - { target: i686-pc-windows-msvc, target_feature: default, os: windows-latest }
-          - { target: i686-pc-windows-msvc, target_feature: +sse3, os: windows-latest }
-          - { target: i686-pc-windows-msvc, target_feature: +avx2, os: windows-latest }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest }
+          - { target: x86_64-pc-windows-gnu, os: windows-latest }
+          - { target: i686-pc-windows-msvc, os: windows-latest }
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

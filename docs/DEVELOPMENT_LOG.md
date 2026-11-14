@@ -152,7 +152,8 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added ref-scoped concurrency cancellation so a newer push or update supersedes an obsolete run instead of allowing multiple stale runs to consume runners.
 - Added Cargo dependency/build caches to the compile-heavy CI jobs, including cross-target jobs (and the installed Cross binary).
 - Removed repeated documentation builds from every x86 feature/OS matrix entry and both macOS entries. A dedicated documentation job now builds on pull requests and manual CI runs with `RUSTDOCFLAGS=-Dwarnings`; main pushes use the documentation deployment workflow for that same warning-checked build, avoiding a duplicate.
-- Kept the full x86 feature sweep on x86_64 Linux and Windows MSVC, plus ABI smoke coverage on Windows GNU and 32-bit Windows. This trims the x86 matrix from 31 jobs to 20 without dropping the primary OS/feature combinations; debug/release coverage remains for every retained entry. WASM, Clippy, Miri, cross-architecture, and masked-memory checks remain intact.
+- Preserved the complete original x86 target/feature matrix: all 31 combinations (four targets, eight feature settings, excluding only the original i686 `native` cross-target case) still run in debug and release. No test target or feature combination was removed.
+- Removed the repeated documentation build from every x86 and macOS matrix entry. Pull requests/manual CI build docs once in the dedicated docs job; main pushes use the separate documentation deployment workflow. Cargo caches and stale-run cancellation improve repeat-run efficiency without reducing test coverage.
 - This is a workflow-efficiency change; its cache hit rate and elapsed-time improvement must be measured from the next completed Actions runs.
 
 
