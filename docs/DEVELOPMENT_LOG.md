@@ -145,3 +145,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 - Corrected the internal `Mask::last_set` explanation: it selects the maximum matching lane index, not the first one.
 - Documentation/comment-only cleanup; no behavior or generated code changed.
+
+
+### 2026-11-14 — streamline CI workflows
+
+- Added ref-scoped concurrency cancellation so a newer push or update supersedes an obsolete run instead of allowing multiple stale runs to consume runners.
+- Added Cargo dependency/build caches to the compile-heavy CI jobs, including cross-target jobs (and the installed Cross binary).
+- Removed repeated documentation builds from every x86 feature/OS matrix entry and both macOS entries. A dedicated documentation job now builds on pull requests and manual CI runs with `RUSTDOCFLAGS=-Dwarnings`; main pushes use the documentation deployment workflow for that same warning-checked build, avoiding a duplicate.
+- Kept the full x86 feature sweep on x86_64 Linux and Windows MSVC, plus ABI smoke coverage on Windows GNU and 32-bit Windows. This trims the x86 matrix from 31 jobs to 20 without dropping the primary OS/feature combinations; debug/release coverage remains for every retained entry. WASM, Clippy, Miri, cross-architecture, and masked-memory checks remain intact.
+- This is a workflow-efficiency change; its cache hit rate and elapsed-time improvement must be measured from the next completed Actions runs.

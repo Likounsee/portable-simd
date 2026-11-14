@@ -9,6 +9,11 @@ on:
 
 permissions: {}
 
+# A newer push supersedes older work on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -42,6 +47,33 @@ jobs:
       - name: Run masked memory benchmark and semantic assertions
         run: /tmp/masked-load-store
 
+  docs:
+    name: "documentation (warnings denied)"
+    # On main pushes, the deployment workflow performs this same warning-checked build.
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-docs-
+
+      - name: Install nightly toolchain
+        run: rustup toolchain install nightly --profile minimal
+      - name: Build documentation
+        run: cargo +nightly doc --no-deps
+        env:
+          RUSTDOCFLAGS: -Dwarnings
+
   clippy:
     name: "clippy on ${{ matrix.target }}"
     runs-on: ubuntu-latest
@@ -71,6 +103,17 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-clippy-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-clippy-${{ matrix.target }}-
       - name: Setup Rust
         run: rustup target add ${TARGET}
         env:
@@ -86,30 +129,49 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-msvc, x86_64-pc-windows-gnu, i686-pc-windows-msvc, x86_64-unknown-linux-gnu]
-        # `default` means we use the default target config for the target,
-        # `native` means we run with `-Ctarget-cpu=native`, and anything else is
-        # an arg to `-Ctarget-feature`
-        target_feature: [default, native, +sse3, +ssse3, +sse4.1, +sse4.2, +avx, +avx2]
-
-        exclude:
-          # -Ctarget-cpu=native sounds like bad-news if target != host
-          - { target: i686-pc-windows-msvc, target_feature: native }
-
+        # Run the complete feature sweep on Linux and Windows MSVC. The GNU
+        # Windows and 32-bit Windows targets retain ABI-specific smoke coverage
+        # without repeating every feature combination already covered above.
         include:
-          # Populate the `matrix.os` field
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
-          - { target: x86_64-pc-windows-msvc,   os: windows-latest }
-          - { target: x86_64-pc-windows-gnu,    os: windows-latest }
-          - { target: i686-pc-windows-msvc,     os: windows-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: default, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: native, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +sse3, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +ssse3, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +sse4.1, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +sse4.2, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +avx, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-gnu, target_feature: +avx2, os: ubuntu-latest }
 
-          # Annoyingly, the x86_64-unknown-linux-gnu runner *almost* always has
-          # avx512vl, but occasionally doesn't.  Maybe one day we can enable it.
+          - { target: x86_64-pc-windows-msvc, target_feature: default, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: native, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +sse3, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +ssse3, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +sse4.1, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +sse4.2, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +avx, os: windows-latest }
+          - { target: x86_64-pc-windows-msvc, target_feature: +avx2, os: windows-latest }
+
+          - { target: x86_64-pc-windows-gnu, target_feature: default, os: windows-latest }
+
+          - { target: i686-pc-windows-msvc, target_feature: default, os: windows-latest }
+          - { target: i686-pc-windows-msvc, target_feature: +sse3, os: windows-latest }
+          - { target: i686-pc-windows-msvc, target_feature: +avx2, os: windows-latest }
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-x86-${{ matrix.target }}-${{ matrix.target_feature }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-x86-${{ matrix.target }}-${{ matrix.target_feature }}-
       - name: Setup Rust
         run: rustup target add ${TARGET}
         env:
@@ -159,12 +221,6 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
 
-      - name: Generate docs
-        run: cargo doc --verbose --target=${TARGET}
-        env:
-          TARGET: ${{ matrix.target }}
-          RUSTDOCFLAGS: -Dwarnings
-
   macos-tests:
     name: ${{ matrix.target }}
     runs-on: macos-latest
@@ -178,6 +234,17 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-macos-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-macos-${{ matrix.target }}-
       - name: Setup Rust
         run: rustup target add ${TARGET}
         env:
@@ -197,11 +264,6 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
 
-      - name: Generate docs
-        run: cargo doc --verbose --target=${TARGET}
-        env:
-          TARGET: ${{ matrix.target }}
-          RUSTDOCFLAGS: -Dwarnings
 
   wasm-tests:
     name: "wasm (firefox, ${{ matrix.name }})"
@@ -215,6 +277,17 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-wasm-${{ matrix.name }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-${{ matrix.name }}-
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Test (debug)
@@ -262,6 +335,18 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-cargo-cross-${{ matrix.target }}-${{ matrix.target_feature }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cross-${{ matrix.target }}-${{ matrix.target_feature }}-
       - name: Setup Rust
         run: rustup target add ${TARGET}
         env:
@@ -312,6 +397,17 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+
+      - name: Cache Cargo dependencies and build artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-miri-${{ matrix.shard }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-miri-${{ matrix.shard }}-
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
