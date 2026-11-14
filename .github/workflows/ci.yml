@@ -337,10 +337,17 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
 
-      - name: Install Cross
-        # Install the latest git version for newer targets.
+      - name: Install Cross (or use the cached binary)
+        # The cache includes ~/.cargo/bin. Reinstalling an already cached binary
+        # makes cargo install fail with "binary already exists".
+        # If this pinned revision changes, update the Cross cache key above.
         run: |
-          cargo install --locked cross --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3
+          if command -v cross >/dev/null 2>&1; then
+            cross --version
+            echo "Using Cross restored from the Cargo cache."
+          else
+            cargo install --locked cross --git https://github.com/cross-rs/cross --rev 4090beca3cfffa44371a5bba524de3a578aa46c3
+          fi
 
       - name: Configure Emulated CPUs
         run: |

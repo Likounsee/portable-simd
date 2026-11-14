@@ -170,3 +170,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added `f16` to the existing no-padding layout test matrix, which already checks every supported lane count for the other SIMD element types.
 - This closes a small coverage gap in the assertion used to support the array/SIMD size documentation: `f16` is also a `SimdElement` and should be checked explicitly.
 - Test-only change; no implementation behavior changed.
+
+### 2026-11-14 — fix cached Cross installation in cross-target CI
+
+- The full-matrix run for commit `0a36778` exposed five cross-target job failures before any tests ran.
+- All five failures had the same cause: the cache restored `~/.cargo/bin/cross` and `cross-util`, then `cargo install` failed because those binaries already existed.
+- Updated the installation step to reuse the cached Cross binary when present and install the pinned revision only on a cache miss.
+- No target, feature combination, debug/release run, or test was removed. This repairs CI setup and avoids recompiling Cross on cache hits.
+- Evidence: run [43615304148](https://github.com/Likounsee/portable-simd/actions/runs/43615304148), failed step `Install Cross` in the AArch64, ARMv7, RISC-V, and PowerPC64LE jobs (all reported the same pre-test `binary already exists` error).
+- Validation pending: the next full CI run must pass the affected cross-target jobs.
