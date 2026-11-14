@@ -179,3 +179,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - No target, feature combination, debug/release run, or test was removed. This repairs CI setup and avoids recompiling Cross on cache hits.
 - Evidence: run [43615304148](https://github.com/Likounsee/portable-simd/actions/runs/43615304148), failed step `Install Cross` in the AArch64, ARMv7, RISC-V, and PowerPC64LE jobs (all reported the same pre-test `binary already exists` error).
 - Validation pending: the next full CI run must pass the affected cross-target jobs.
+
+### 2026-11-14 — consolidate CI quality and documentation workflows
+
+- Merged the standalone formatting and masked-memory benchmark jobs into one Ubuntu job. Both checks still run as separate steps with their original commands and failure behavior.
+- Moved the main-branch GitHub Pages deployment into the existing warning-checked documentation job and removed the separate documentation workflow. Documentation still builds with nightly Rust and `RUSTDOCFLAGS=-Dwarnings`; deployment runs only on pushes to `main` and only after a successful build.
+- The workflow now launches one fewer job and one fewer Actions workflow per main push. The documentation build is not duplicated, and the quality checks still execute on every CI event.
+- No test suite, target, target-feature combination, debug/release run, Clippy target, Miri shard, WASM configuration, or cross-target job was removed.
+- This change consolidates orchestration; the next completed run should be used to compare elapsed time and verify the deployment step.
