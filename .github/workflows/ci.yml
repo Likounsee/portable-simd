@@ -35,14 +35,22 @@ jobs:
           persist-credentials: false
       - name: Run rustfmt
         run: cargo fmt --all -- --check
-      - name: Compile masked memory benchmark
-        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 benchmarks/masked_load_store.rs -o /tmp/masked-load-store
+      - name: Check standalone benchmark formatting
+        run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs
+      - name: Build forked SIMD crate for codegen diagnostics
+        run: |
+          cargo build -p core_simd --features as_crate --lib
+          CORE_SIMD_RLIB="$(find target/debug/deps -maxdepth 1 -type f -name 'libcore_simd-*.rlib' -print -quit)"
+          test -n "$CORE_SIMD_RLIB"
+          echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"
+      - name: Compile masked memory benchmark against the fork
+        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
       - name: Run masked memory benchmark and semantic assertions
         run: /tmp/masked-load-store
       - name: Emit optimized assembly
-        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
+        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
       - name: Emit optimized LLVM IR
-        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
+        run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

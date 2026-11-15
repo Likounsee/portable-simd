@@ -9,13 +9,20 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — link masked-memory diagnostics to the fork implementation
+
+- Audited the first codegen artifact and found that the standalone benchmark imported `std::simd`, so rustc measured the toolchain's sysroot implementation rather than `Likounsee/portable-simd`.
+- The quality-check job now builds the workspace's `core_simd` crate with `as_crate` and passes that exact rlib to the diagnostic compiler through `--extern`; the benchmark imports `core_simd::simd`.
+- Added dedicated all-enabled load/store wrappers so `#[inline(never)]` benchmark boundaries do not hide the constant all-true mask from the optimizer. Sparse-mask cases remain separately measured.
+- The next artifact will be the first fork-specific SSE2 IR/assembly evidence. The all-enabled fast paths remain provisional until that artifact confirms their lowering and performance.
+
 ### 2026-11-15 — use contiguous copies for all-enabled masked memory operations
 
-- The optimized SSE2 artifact for #494 showed that all-enabled `load_or_default` / `load_or` and `store_select` paths lowered from LLVM masked-memory intrinsics into per-lane conditional branches. The scalar zip equivalents lowered to bounded `memcpy` operations instead.
+- The first standalone SSE2 artifact was later found to compile against the pinned toolchain's `std::simd`, not this fork's `core_simd` crate. It therefore did not establish fork-specific code generation; the benchmark and CI link are being corrected before making a performance claim.
 - Changed `load_or` to initialize from its fallback vector and copy only the available slice prefix. `load_or_default` inherits this path.
 - Added an all-enabled fast path to `load_select` and `store_select`; it uses the same bounded prefix-copy strategy. Sparse masks still use the existing masked load/store intrinsics.
 - Added regression coverage for empty, short, exact-width, and longer input slices, including fallback preservation. Existing masked-memory tests continue to cover mixed masks and short destinations.
-- This is a targeted optimization based on actual optimized IR/assembly, not a claim that arbitrary sparse-mask lowering is fixed. Full CI validation is pending.
+- This is a candidate fast path with correctness coverage. Its performance benefit and generated code remain unverified until the fork-linked diagnostic artifact is inspected; sparse-mask lowering is unchanged. Full CI validation is pending.
 
 ### 2026-11-15 — prevent native CPU artifacts from crossing runner hosts
 
