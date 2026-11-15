@@ -428,9 +428,12 @@ where
     #[must_use]
     #[inline]
     pub fn load_or(slice: &[T], mut or: Self) -> Self {
-        // A contiguous prefix copy lowers to the same efficient memcpy path as
-        // ordinary slice code on targets without hardware masked loads.
         let len = slice.len().min(N);
+        if len == N {
+            // SAFETY: len == N proves that the slice contains a full vector.
+            // load copies the array without requiring SIMD alignment.
+            return unsafe { Self::load(slice.as_ptr().cast()) };
+        }
         or.as_mut_array()[..len].copy_from_slice(&slice[..len]);
         or
     }
@@ -742,11 +745,17 @@ where
     /// ```
     #[inline]
     pub fn store_select(self, slice: &mut [T], mut enable: Mask<<T as SimdElement>::Mask, N>) {
-        // Match the scalar zip/copy path when every lane is enabled. The slice
-        // length bounds the prefix, so this never writes beyond the destination.
+        // A full-width all-enabled store can use the vector store directly.
+        // Short slices retain the bounded prefix-copy path.
         if enable.all() {
             let len = slice.len().min(N);
-            slice[..len].copy_from_slice(&self.as_array()[..len]);
+            if len == N {
+                // SAFETY: len == N proves that the destination contains a full vector.
+                // store copies the array without requiring SIMD alignment.
+                unsafe { self.store(slice.as_mut_ptr().cast()) };
+            } else {
+                slice[..len].copy_from_slice(&self.as_array()[..len]);
+            }
             return;
         }
         enable &= mask_up_to(slice.len());

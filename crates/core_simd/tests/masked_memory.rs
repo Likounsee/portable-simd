@@ -86,6 +86,18 @@ fn store_select_never_writes_disabled_or_out_of_bounds_lanes() {
 }
 
 #[test]
+fn all_enabled_full_width_store_preserves_the_destination_tail() {
+    const LANES: usize = 8;
+    let values = Simd::from_array([11_i32, 22, 33, 44, 55, 66, 77, 88]);
+    let mut destination = [-1_i32; LANES + 2];
+
+    values.store_select(&mut destination, Mask::splat(true));
+
+    assert_eq!(&destination[..LANES], values.as_array());
+    assert_eq!(&destination[LANES..], &[-1, -1]);
+}
+
+#[test]
 fn gather_select_suppresses_disabled_and_out_of_bounds_indices() {
     let source = [10_i32, 20, 30];
     let indices = Simd::from_array([usize::MAX, 2, 0, 3]);

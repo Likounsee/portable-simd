@@ -1,3 +1,11 @@
+### 2026-11-15 — use full-width SIMD memory operations for all-enabled slices
+
+- The CI assembly/LLVM IR for the all-enabled path showed that `load_or_default` and `store_select` always used a runtime `memcpy`, even when the slice contained at least a complete vector.
+- Added a full-width fast path to `load_or`: when at least `N` elements are available, use the existing unaligned-safe SIMD `load` helper. Short slices retain the bounded prefix copy and fallback values.
+- Added the matching full-width fast path to all-enabled `store_select`, using the existing unaligned-safe SIMD `store` helper. Short slices retain the prefix copy; masked stores are unchanged.
+- Added a regression test proving a full-width store writes exactly the vector lanes and preserves any destination tail.
+- This is a targeted response to the measured SSE2 codegen issue in upstream #494. CI assembly/IR and the full test matrix must validate the change before calling it complete.
+
 ### 2026-11-15 — pass both Cargo metadata and rlib artifacts to standalone rustc
 
 - Passing only the `.rmeta` file failed because rustc also requires the crate's `.rlib` form; passing only the `.rlib` failed because Cargo emits it as a metadata-only stub for this crate.
