@@ -120,6 +120,12 @@ The following is the status of the 16 upstream issue references found in the for
 | [#537](https://github.com/rust-lang/portable-simd/issues/537) | `PrivateMethods` items reachable through `MaskElement` | **Substantially addressed in the fork.** Helpers remain crate-visible for sibling modules but are not intended as downstream API; compile-fail coverage checks external access. Final stable-API review remains necessary. |
 | [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | **Open.** Scalar algebraic intrinsics do not establish SIMD semantics; this needs compiler/API contract work. |
 
+### Additional codegen issue reviewed: upstream #321
+
+[#321 — SIMD functions sometimes scalarize after inlining](https://github.com/rust-lang/portable-simd/issues/321) reports an AArch64 case where a 32-lane byte-vector predicate has good standalone assembly but scalarizes heavily when inlined into an iterator loop. The discussion identifies LLVM instruction selection / reduction lowering as the likely layer, not a demonstrated defect in the portable-simd Rust implementation. A later report (2025-01-30) says a then-current nightly generated much better assembly, though possibly not optimal.
+
+Disposition for this fork: **investigated, not claimed fixed**. This is a useful regression target for future AArch64 codegen artifacts, especially around mask reductions and inlining. It should be tested against the current compiler before any library workaround is considered. The existing SSE2 masked-memory artifact does not cover this scenario.
+
 ### Cross-cutting stabilization blocker: upstream #364
 
 The upstream meta-issue [#364 — Critical issues before stabilization](https://github.com/rust-lang/portable-simd/issues/364) is still open (last updated 2026-08-04). It is separate from the 16 issue references inventoried in the development log and should be treated as a key API-readiness checklist, not as a single implementation bug.
