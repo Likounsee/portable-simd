@@ -207,3 +207,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The shared cache key includes the pinned Cross Git revision (`CROSS_REV`), so changing the tool revision naturally invalidates the cached binaries. Target-specific Cargo registry, Git, and build-artifact caches remain separate.
 - All seven default cross targets and the additional PowerPC64LE `+vsx` configuration still run both debug and release tests. No tests or target configurations were removed.
 - Validation: the workflow syntax and resulting Actions run must be checked after this commit; cache reuse and elapsed-time gains require at least one subsequent warm-cache run to measure.
+
+
+### 2026-11-15 — prepare Cross once before target fan-out
+
+- Added a small `cross-tool` setup job that restores or installs the pinned Cross host executable once, then verifies it.
+- Made the eight existing Cross test configurations depend on that setup job and restore the exact same revision-keyed executable cache. A cold cache can no longer trigger eight simultaneous builds of Cross.
+- Kept target-specific Cargo dependency/build caches in each matrix job. All seven emulated targets plus the PowerPC64LE `+vsx` variant still execute both debug and release tests.
+- This adds one setup job but does not remove or merge any test job, target, feature, or test mode. The tradeoff is one serialized Cross setup before the emulated test fan-out, avoiding duplicated CPU and network work on cache misses.
+- Validation: the new workflow run must confirm the cache handoff and all downstream jobs; no local Rust toolchain is available for a local build.
