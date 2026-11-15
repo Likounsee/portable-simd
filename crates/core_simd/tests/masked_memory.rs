@@ -584,7 +584,7 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
 }
 
 fn check_scatter_duplicate_winners<const LANES: usize>() {
-    const DEST_LEN: usize = LANES / 2 + 1;
+    let dest_len = LANES / 2 + 1;
     let values = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
     let patterns: [[bool; LANES]; 4] = [
         core::array::from_fn(|_| false),
@@ -596,15 +596,15 @@ fn check_scatter_duplicate_winners<const LANES: usize>() {
     // Repeated valid destinations force collisions; the other lanes include
     // the exact end boundary and usize::MAX to exercise safe suppression.
     let indices = Simd::from_array(core::array::from_fn(|lane| match lane % 4 {
-        0 | 1 => lane % DEST_LEN,
-        2 => DEST_LEN,
+        0 | 1 => lane % dest_len,
+        2 => dest_len,
         _ => usize::MAX,
     }));
     let index_array = indices.to_array();
 
-    for len in 0..=DEST_LEN {
+    for len in 0..=dest_len {
         for enabled in patterns {
-            let mut actual = [-99_i32; DEST_LEN];
+            let mut actual = [-99_i32; LANES];
             values.scatter_select(&mut actual[..len], Mask::from_array(enabled), indices);
 
             for (destination, &actual_value) in actual.iter().enumerate() {
