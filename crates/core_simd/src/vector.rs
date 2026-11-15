@@ -147,7 +147,9 @@ where
     ///
     /// ```
     /// # #![feature(portable_simd)]
-    /// # use core::simd::Simd;
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::Simd;
     /// let values = Simd::from_array([0_i32, 4, -2, 0]);
     /// assert_eq!(values.to_mask().to_array(), [false, true, true, false]);
     /// ```
@@ -697,7 +699,9 @@ where
     ///
     /// ```
     /// # #![feature(portable_simd)]
-    /// # use core::simd::Simd;
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::Simd;
     /// let values = [10, 20, 30, 40];
     /// let indices = Simd::from_array([3, 0, 2, 1]);
     /// // SAFETY: every index is within the four-element slice.
