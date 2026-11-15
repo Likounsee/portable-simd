@@ -124,11 +124,9 @@ fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
         _ => (LANES - 1) as u8,
     });
 
-    let actual = unsafe {
-        core_simd::simd::Simd::from_array(values)
-            .swizzle_dyn_unchecked(core_simd::simd::Simd::from_array(indices))
-            .to_array()
-    };
+    let actual = core_simd::simd::Simd::from_array(values)
+        .swizzle_dyn_unchecked(core_simd::simd::Simd::from_array(indices))
+        .to_array();
     let expected = swizzle_dyn_scalar_ver(values, indices);
 
     assert_eq!(actual, expected);
