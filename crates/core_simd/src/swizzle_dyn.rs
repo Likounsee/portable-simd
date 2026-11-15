@@ -118,6 +118,41 @@ impl<const N: usize> Simd<u8, N> {
             }
         }
     }
+    
+    /// Swizzle a vector of bytes using indices whose out-of-bounds values have
+    /// their most significant bit set.
+    ///
+    /// This can avoid the index-fixup operation required by some x86 shuffle
+    /// instructions. On targets where the optimization is not available, this
+    /// method falls back to the regular zeroing swizzle.
+    ///
+    /// # Safety
+    /// Every index must either be less than `N` or have its most significant
+    /// bit set (be in `128..=255`). Indices in `N..=127` do not satisfy this
+    /// requirement and may select an unintended element on optimized targets.
+    #[inline]
+    pub unsafe fn swizzle_dyn_unchecked(self, idxs: Simd<u8, N>) -> Self {
+        #[cfg(all(
+            any(target_arch = "x86", target_arch = "x86_64"),
+            target_feature = "ssse3"
+        ))]
+        {
+            #[cfg(target_arch = "x86")]
+            use core::arch::x86;
+            #[cfg(target_arch = "x86_64")]
+            use core::arch::x86_64 as x86;
+
+            if N == 16 {
+                // SAFETY: The caller guarantees that every out-of-range index
+                // has its high bit set, which is the zeroing convention of
+                // PSHUFB. The target feature is enabled by this cfg.
+                return unsafe { transize(x86::_mm_shuffle_epi8, self, idxs) };
+            }
+        }
+
+        self.swizzle_dyn(idxs)
+    }
+
 }
 
 #[allow(dead_code, reason = "only used on some targets/features")]
