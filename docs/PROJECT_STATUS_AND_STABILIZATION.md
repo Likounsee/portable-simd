@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-15  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `f6657627a3828aa6317c902a9590d1f3fce3ac42`
+**Assessed head:** `8cccd48d7acabbae6149991d30efff919b296b37`
 
 ## Executive summary
 
@@ -95,7 +95,7 @@ The baseline commit and current head differ by 64 commits. The changes fall into
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
 
-The last fully green run currently confirmed by this assessment is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit `a15f086`: 30/30 jobs succeeded. The later commits added scatter/gather tests; the run for current head `f665762` was still queued at assessment time. The run for `43b3bcd` was cancelled when a newer push superseded it. A queued or cancelled run is not green.
+The last fully green run currently confirmed by this assessment is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit `a15f086`: 30/30 jobs succeeded. The current head is `8cccd48`; its run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908) has passed formatting/masked-memory checks, the Cross setup, and several Windows/macOS/WASM/Clippy/Miri jobs, but was still unfinished at the time of this update. Remaining jobs must complete before this head can be called green. The run for `43b3bcd` was cancelled when a newer push superseded it. A queued, running, or cancelled run is not green.
 
 ## 3. Upstream issue triage
 
@@ -120,6 +120,18 @@ The following is the status of the 16 upstream issue references found in the for
 | [#537](https://github.com/rust-lang/portable-simd/issues/537) | `PrivateMethods` items reachable through `MaskElement` | **Substantially addressed in the fork.** Helpers remain crate-visible for sibling modules but are not intended as downstream API; compile-fail coverage checks external access. Final stable-API review remains necessary. |
 | [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | **Open.** Scalar algebraic intrinsics do not establish SIMD semantics; this needs compiler/API contract work. |
 
+### Cross-cutting stabilization blocker: upstream #364
+
+The upstream meta-issue [#364 — Critical issues before stabilization](https://github.com/rust-lang/portable-simd/issues/364) is still open (last updated 2026-08-04). It is separate from the 16 issue references inventoried in the development log and should be treated as a key API-readiness checklist, not as a single implementation bug.
+
+Its unresolved design topics include:
+
+- **Supported lane counts:** whether the current lane-count bounds remain part of the public generic API or can be replaced by compiler-enforced post-monomorphization constraints. This affects generic ergonomics and requires compiler/API agreement.
+- **Mask element type and representation:** whether masks for different SIMD element types should retain the current associated-element relationship or move to a more explicit mask abstraction. This is a potentially breaking public type-design decision.
+- **Swizzle API:** const/dynamic swizzle ergonomics remain constrained by language and LLVM capabilities. The current fork's exhaustive tests validate today's zeroing behavior; they do not settle the long-term API.
+- **Trait/API organization and feature partitioning:** the upstream discussion also raises high-level documentation, trait structure, and splitting independently stabilizable API areas.
+
+No local implementation change can responsibly settle these design choices without maintainer consensus. Before any stabilization proposal, this fork should map every public item to the upstream decision and record whether it is accepted, deferred, or blocked. The upstream discussion also records a separate need for reviewed intrinsic safety requirements and documentation (tracked there by #381).
 ### Issue count by disposition
 
 For these 16 tracked references:
@@ -144,7 +156,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 ### What is not yet established
 
-- The current head `f665762` still needs its own completed green CI run.
+- The current head `8cccd48` still needs its own completed green CI run.
 - No full unsafe-code audit has been completed across all modules and architecture backends.
 - Miri passing is valuable but does not prove absence of undefined behavior; target-specific hardware/emulator coverage also has limits.
 - The #427 historical compiler ICE lacks a minimal compiler reproducer.
@@ -188,7 +200,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 ### Phase 4 — API and semantics review
 
 1. Reconcile every public API with the intended stable contract: overflow, division by zero, NaNs, rounding, conversions, swizzle OOB behavior, gather/scatter collisions, and mask representation.
-2. Resolve or explicitly defer proposals #481, #486, #505, and #539 with maintainer feedback.
+2. Resolve or explicitly defer proposals #481, #486, #505, and #539 with maintainer feedback; separately resolve the API-level questions in #364 (lane-count bounds, mask representation, and swizzle shape).
 3. Ensure docs and examples do not promise behavior the compiler/backend cannot guarantee.
 4. Check semver and compatibility implications before any API change.
 
@@ -214,7 +226,7 @@ A reasonable planning estimate, assuming regular work and no major compiler bloc
 - **3–8 additional weeks:** broaden target-specific codegen/performance evidence and resolve straightforward library-side defects.
 - **Several months or longer:** settle compiler-dependent/API issues, obtain upstream review, and go through the Rust stabilization process.
 
-These are planning ranges, not a promise or a prediction of a specific Rust release. If issues #472/#495/#539 require compiler changes or major API redesign, the schedule can extend significantly.
+These are planning ranges, not a promise or a prediction of a specific Rust release. If issues #364/#472/#495/#539 require compiler changes or major API redesign, the schedule can extend significantly.
 
 ## 7. Overall conclusion
 

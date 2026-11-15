@@ -377,3 +377,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The latest head CI reported only rustfmt differences in the newly added gather-boundary test, not a Rust compilation or SIMD test failure.
 - Applied the exact formatting suggested by the pinned nightly formatter and normalized the file's final newline.
 - No test semantics or production SIMD code changed. The follow-up CI must confirm formatting and finish the remaining platform/Miri jobs; no local Rust toolchain is available here.
+
+
+### 2026-11-15 — recheck current CI and stabilization blockers
+
+- Rechecked branch main at 8cccd48d7acabbae6149991d30efff919b296b37 and the push-triggered run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908).
+- The formatting and masked-memory checks passed, as did the Cross host-tool setup and multiple Windows, macOS, WASM, Clippy, and Miri jobs. The run was still unfinished at review time; no full-green claim is made.
+- Reviewed upstream issue discussions #341, #427, and #472, including maintainer comments. #341 still explicitly asks for vector-typed LLVM IR loads/stores even when memcpy may be a better non-SIMD lowering; #427 still lacks a minimal reproducer and its historical report only tentatively recalls i8 with repr(simd, packed); #472 remains a compiler representation/codegen discussion, with maintainers considering range metadata / mask representation rather than removing validity invariants in the library.
+- Audited upstream meta-issue #364, Critical issues before stabilization (still open; last updated 2026-08-04). It identifies API decisions not captured by the earlier 16-item implementation issue inventory: supported-lane-count bounds, mask element/representation design, swizzle API constraints, trait organization, and independently stabilizable feature boundaries. Added this as a separate cross-cutting blocker in docs/PROJECT_STATUS_AND_STABILIZATION.md.
+- No production code was changed: the current CI has not exposed a new failure, and these upstream reports do not justify speculative unsafe/codegen changes. No local Rust toolchain is available, so validation remains delegated to GitHub Actions.
