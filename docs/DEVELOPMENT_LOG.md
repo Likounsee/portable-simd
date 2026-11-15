@@ -437,3 +437,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Other lane widths and targets fall back to `swizzle_dyn`, retaining the existing portable behavior rather than introducing target-specific assumptions.
 - Added a regression test mixing valid indices with `0x80` and `0xff` out-of-range indices.
 - This is a targeted implementation of upstream #486. Formatting, compile tests, the full target matrix, and generated-assembly verification are pending CI; no performance gain is claimed until the assembly is checked.
+
+### 2026-11-15 — add a focused reproducer for upstream #426
+
+- Added `crates/core_simd/examples/issue_426_reduction.rs` with the issue's interleaved XYZ calculation.
+- The example compares a scalar loop, SIMD with a horizontal reduction on every record, and SIMD vector accumulation followed by one final reduction.
+- It checks numerical agreement with a relative tolerance and reports timings for a local release-mode run. Timings are intentionally not asserted because they depend on the target CPU and compiler.
+- The example is included in `cargo clippy --all-targets`; the new commit's CI must confirm it builds and passes before treating the reproducer as validated.
