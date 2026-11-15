@@ -403,3 +403,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Verified the LoongArch vendor module only imports the stable/current `core::arch::loongarch64` module and does not use APIs requiring that crate-level feature gate.
 - Removed the LoongArch gate from `core_simd/src/lib.rs` and the PowerPC gates from `test_helpers/src/lib.rs`. Retained the separate PowerPC feature gate in `core_simd`, which is not the warning source.
 - No target-specific algorithm or cfg selection was changed. Awaiting the matching CI jobs to verify the warning cleanup.
+
+
+### 2026-11-15 — prepare GitHub Actions Node 24 runtime migration
+
+- Full workflow logs repeatedly reported that pinned `actions/checkout@v4.4.0` and `actions/cache@v4.3.0` target Node.js 20 and are being forced to run on Node.js 24.
+- Verified the official action metadata at `actions/checkout@v7.0.1` and `actions/cache@v6.1.0`: both explicitly declare `using: node24`.
+- Verified the corresponding immutable tag commit SHAs before preparing the workflow update: checkout `3d3c42e5aac5ba805825da76410c181273ba90b1`; cache `55cc8345863c7cc4c66a329aec7e433d2d1c52a9`.
+- This is a CI maintenance update only; no Rust code or cache key semantics are changed. Awaiting the current CI run before pushing to avoid cancelling it.
