@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-15  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `8cccd48d7acabbae6149991d30efff919b296b37`
+**Assessed head:** `4411aeb9a860f927dece6eddeab4d387a6d6f1ea`
 
 ## Executive summary
 
@@ -126,6 +126,14 @@ The following is the status of the 16 upstream issue references found in the for
 
 Disposition for this fork: **investigated, not claimed fixed**. This is a useful regression target for future AArch64 codegen artifacts, especially around mask reductions and inlining. It should be tested against the current compiler before any library workaround is considered. The existing SSE2 masked-memory artifact does not cover this scenario.
 
+### Additional API/codegen issue reconnaissance: upstream #475, #479 and #240
+
+- [#475 — `Simd::gather_unchecked()`](https://github.com/rust-lang/portable-simd/issues/475) is still open. The fork already exposes `Simd::gather_ptr()` and `gather_select_unchecked()`; the latter still takes an explicit mask, while `gather_ptr()` builds an all-true mask and a default passthrough value. A maintainer comment points to `Mask::splat(true)` as the likely source of the missed optimization. This is a codegen/API limitation, not proof that the requested operation is absent under every equivalent name. Do not add a duplicate public method without a measured compiler-level case and upstream API agreement.
+- [#479 — add `to_mask` to `Simd`](https://github.com/rust-lang/portable-simd/issues/479) proposes a convenience conversion equivalent to comparing a vector against zero. The current vector API has no `to_mask` method. This is an ergonomics proposal; the appropriate trait placement (integer, unsigned, and/or float) and naming remain open. No implementation change is justified without API consensus.
+- [#240 — masked compress-store / expand-load](https://github.com/rust-lang/portable-simd/issues/240) remains open; its linked duplicate #241 was closed at filing time. The current `vector.rs` API contains no compress/expand operation. This is a potentially useful API gap for filtering/packing workloads, but the proposal depends on portable compiler intrinsic support and semantics for unused lanes. Track it as an upstream API/compiler dependency rather than implementing target-specific behavior in this fork.
+
+These three supplementary investigations are not added to the 16-item implementation issue count above; they are separate API/codegen observations.
+ 
 ### Cross-cutting stabilization blocker: upstream #364
 
 The upstream meta-issue [#364 — Critical issues before stabilization](https://github.com/rust-lang/portable-simd/issues/364) is still open (last updated 2026-08-04). It is separate from the 16 issue references inventoried in the development log and should be treated as a key API-readiness checklist, not as a single implementation bug.

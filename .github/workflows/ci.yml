@@ -191,7 +191,7 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
       - name: Run Clippy
-        run: cargo clippy --all-targets --target ${TARGET}
+        run: cargo clippy --all-targets --target ${TARGET} -- -D clippy::needless_range_loop
         env:
           TARGET: ${{ matrix.target }}
 

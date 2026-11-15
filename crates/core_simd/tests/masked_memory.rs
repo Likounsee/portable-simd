@@ -561,20 +561,20 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
             let mut actual = [-99_i32; DEST_LEN];
             values.scatter_select(&mut actual, Mask::from_array(enabled), indices_simd);
 
-            for destination in 0..DEST_LEN {
+            for (destination, &actual_value) in actual.iter().enumerate() {
                 let last_writer = (0..LANES)
                     .rev()
                     .find(|&lane| enabled[lane] && indices[lane] == destination);
 
                 if let Some(lane) = last_writer {
                     assert_eq!(
-                        actual[destination],
+                        actual_value,
                         values.as_array()[lane],
                         "scatter must retain the highest enabled lane: indices={indices:?}, mask={enabled:?}, destination={destination}"
                     );
                 } else {
                     assert_eq!(
-                        actual[destination], -99,
+                        actual_value, -99,
                         "unexpected write: indices={indices:?}, mask={enabled:?}, destination={destination}"
                     );
                 }
