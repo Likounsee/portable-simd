@@ -120,6 +120,17 @@ fn scatter_select_suppresses_disabled_and_out_of_bounds_indices() {
 }
 
 #[test]
+fn gather_unchecked_reads_all_valid_indices() {
+    let source = [10_i32, 20, 30, 40, 50];
+    let indices = Simd::from_array([4_usize, 0, 3, 1]);
+
+    // SAFETY: every index is strictly less than source.len().
+    let actual = unsafe { Simd::gather_unchecked(&source, indices) };
+
+    assert_eq!(actual, Simd::from_array([50, 10, 40, 20]));
+}
+
+#[test]
 fn gather_or_default_handles_empty_slices_and_max_indices() {
     let source: [i32; 0] = [];
     let indices = Simd::from_array([0_usize, 1, usize::MAX, 42]);
