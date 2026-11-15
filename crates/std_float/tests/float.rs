@@ -61,6 +61,19 @@ macro_rules! impl_tests {
             unary_test! { $scalar, sqrt, ceil, floor, round, trunc, round_ties_even }
             ternary_test! { $scalar, mul_add }
 
+            test_helpers::test_lanes! {
+                fn mul_sub<const LANES: usize>() {
+                    let a = core_simd::simd::Simd::<$scalar, LANES>::splat(1.25 as $scalar);
+                    let b = core_simd::simd::Simd::<$scalar, LANES>::splat(4.0 as $scalar);
+                    let c = core_simd::simd::Simd::<$scalar, LANES>::splat(2.0 as $scalar);
+                    let result = a.mul_sub(b, c);
+                    let expected = core::array::from_fn(|lane| {
+                        a[lane].mul_add(b[lane], -c[lane])
+                    });
+                    assert_eq!(result.to_array(), expected);
+                }
+            }
+
             // Regression coverage for halfway cases: `round` rounds away from zero,
             // while `round_ties_even` selects the even integer.
             #[test]
