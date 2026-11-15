@@ -478,3 +478,53 @@ fn all_enabled_full_width_slice_memory_handles_element_offsets() {
     check_full_width_slice_offsets::<64>();
 }
 
+#[test]
+fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
+    const LANES: usize = 4;
+    const DEST_LEN: usize = 3;
+    let values = Simd::from_array([17_i32, 31, 53, 79]);
+
+    // Each lane can target any valid destination, the first invalid index,
+    // or usize::MAX. Exhaust every tuple and every enable mask.
+    for encoded_indices in 0..5_usize.pow(LANES as u32) {
+        let mut encoded = encoded_indices;
+        let indices = core::array::from_fn(|_| {
+            let digit = encoded % 5;
+            encoded /= 5;
+            if digit == 4 { usize::MAX } else { digit }
+        });
+        let indices_simd = Simd::from_array(indices);
+
+        for mask_bits in 0..(1 << LANES) {
+            let enabled = core::array::from_fn(|lane| mask_bits & (1 << lane) != 0);
+            let mut actual = [-99_i32; DEST_LEN];
+            values.scatter_select(
+                &mut actual,
+                Mask::from_array(enabled),
+                indices_simd,
+            );
+
+            for destination in 0..DEST_LEN {
+                let writers: Vec<i32> = (0..LANES)
+                    .filter(|&lane| enabled[lane] && indices[lane] == destination)
+                    .map(|lane| values.as_array()[lane])
+                    .collect();
+
+                if writers.is_empty() {
+                    assert_eq!(
+                        actual[destination],
+                        -99,
+                        "unexpected write: indices={indices:?}, mask={enabled:?}, destination={destination}"
+                    );
+                } else {
+                    assert!(
+                        writers.contains(&actual[destination]),
+                        "invalid duplicate scatter result: indices={indices:?}, mask={enabled:?}, destination={destination}, actual={}, valid={writers:?}",
+                        actual[destination]
+                    );
+                }
+            }
+        }
+    }
+}
+

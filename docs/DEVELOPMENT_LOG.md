@@ -337,3 +337,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The matrix checks `load_or`, all-enabled `load_select`, and `store_select` against scalar expectations, including preservation of the destination prefix and the element immediately after the vector write.
 - This exercises the full-width fast path at different element-aligned addresses without assuming SIMD alignment. No production implementation was changed because no correctness defect has been demonstrated.
 - Validation: pending CI on this commit; no local Rust toolchain is available in this environment.
+
+### 2026-11-15 — exhaust duplicate-index scatter semantics
+
+- Added an exhaustive four-lane `scatter_select` regression over every destination-index tuple (including duplicate indices, the first out-of-bounds index, and `usize::MAX`) and every enable mask.
+- The oracle checks that disabled and out-of-bounds lanes never write, untouched destinations retain their sentinel, and destinations with duplicate enabled writers contain one of the permitted lane values. It deliberately does not assume a write order, matching the API contract.
+- No production implementation change was made: the audit found no demonstrated correctness defect in the scatter implementation.
+- Validation: pending GitHub Actions for this commit; no local Rust toolchain is available in this environment.
+
