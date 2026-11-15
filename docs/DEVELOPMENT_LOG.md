@@ -9,6 +9,12 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — use the full Cargo metadata artifact for inline codegen
+
+- The selected Cargo `.rlib` is intentionally a metadata stub for this crate build; rustc reported that the matching `.rmeta` contains the full metadata needed by the standalone compilation.
+- The diagnostic now selects the `.rmeta` entry from Cargo's `compiler-artifact` record. The benchmark exercises inline/generic `core_simd` methods, so the compiler can instantiate their MIR in the benchmark crate.
+- Validation of this linkage is pending; if non-inline symbols are required, the benchmark will be moved to a Cargo example target instead.
+
 ### 2026-11-15 — select the actual Cargo compiler artifact
 
 - The Cargo target-directory search selected an intermediate build-script rlib stub, which rustc correctly rejected because it contained metadata only.
