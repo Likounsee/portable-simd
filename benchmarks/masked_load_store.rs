@@ -5,7 +5,7 @@
 //! Reproducible baseline (use the toolchain pinned by this repository):
 //!   cargo build -p core_simd --features as_crate --lib
 //!   CORE_SIMD_RLIB=$(find target/debug/deps -maxdepth 1 -name 'libcore_simd-*.rlib' -print -quit)
-//!   rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 \
+//!   rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 \
 //!     --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps \
 //!     benchmarks/masked_load_store.rs -o /tmp/masked-load-store
 //!   /tmp/masked-load-store

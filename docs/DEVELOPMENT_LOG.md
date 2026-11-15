@@ -9,6 +9,11 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — compile the fork-linked benchmark with the workspace edition
+
+- The fork rlib was found and passed to rustc, but the standalone compiler invocation defaulted to Rust 2015. That edition requires an explicit `extern crate` declaration and rejected the benchmark's Rust 2018+ `use core_simd::...` path.
+- Added `--edition=2024` to all benchmark compiler commands and reproduction instructions. No library code changed.
+
 ### 2026-11-15 — locate the fork library through Cargo metadata
 
 - The fork-linked benchmark passed both formatting checks, but its build step assumed Cargo wrote artifacts under the repository-local `target/debug/deps` directory.
