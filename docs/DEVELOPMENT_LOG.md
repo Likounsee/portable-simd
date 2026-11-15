@@ -1,3 +1,8 @@
+### 2026-11-15 — remove extra blank line in masked-memory tests
+
+- The follow-up rustfmt run identified one remaining extra blank line before the new contiguous-copy test.
+- Removed the blank line; no code or test behavior changed. The next CI run is the validation for the full source optimization and native-cache fix.
+
 ### 2026-11-15 — apply rustfmt correction to contiguous-copy regression test
 
 - The first CI run for the all-enabled memory fast paths reported only a formatting difference in the new expected-value closures.

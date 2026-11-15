@@ -40,7 +40,6 @@ fn load_select_matches_scalar_slice_semantics_for_short_slices() {
     }
 }
 
-
 #[test]
 fn contiguous_all_enabled_loads_copy_only_the_available_prefix() {
     const LANES: usize = 8;
