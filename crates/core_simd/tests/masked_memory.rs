@@ -412,8 +412,7 @@ fn check_full_width_slice_offsets<const LANES: usize>() {
     let source: Vec<i32> = (0..LANES * 2 + 1)
         .map(|index| index as i32 * 5 + 3)
         .collect();
-    let values: Simd<i32, LANES> =
-        Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
+    let values: Simd<i32, LANES> = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
     let fallback = Simd::splat(-7_i32);
 
     // Shift the slice start by each element offset to exercise full-width
@@ -427,12 +426,7 @@ fn check_full_width_slice_offsets<const LANES: usize>() {
             "load_or: lanes={LANES}, offset={offset}"
         );
         assert_eq!(
-            Simd::<i32, LANES>::load_select(
-                source_slice,
-                Mask::splat(true),
-                fallback,
-            )
-            .to_array(),
+            Simd::<i32, LANES>::load_select(source_slice, Mask::splat(true), fallback,).to_array(),
             expected_load,
             "load_select: lanes={LANES}, offset={offset}"
         );
@@ -452,8 +446,7 @@ fn check_full_width_slice_offsets<const LANES: usize>() {
             })
             .collect();
         assert_eq!(
-            destination,
-            expected_store,
+            destination, expected_store,
             "store_select: lanes={LANES}, offset={offset}"
         );
     }
@@ -498,11 +491,7 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
         for mask_bits in 0..(1 << LANES) {
             let enabled = core::array::from_fn(|lane| mask_bits & (1 << lane) != 0);
             let mut actual = [-99_i32; DEST_LEN];
-            values.scatter_select(
-                &mut actual,
-                Mask::from_array(enabled),
-                indices_simd,
-            );
+            values.scatter_select(&mut actual, Mask::from_array(enabled), indices_simd);
 
             for destination in 0..DEST_LEN {
                 let writers: Vec<i32> = (0..LANES)
@@ -512,8 +501,7 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
 
                 if writers.is_empty() {
                     assert_eq!(
-                        actual[destination],
-                        -99,
+                        actual[destination], -99,
                         "unexpected write: indices={indices:?}, mask={enabled:?}, destination={destination}"
                     );
                 } else {

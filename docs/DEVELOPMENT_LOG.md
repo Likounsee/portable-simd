@@ -345,3 +345,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - No production implementation change was made: the audit found no demonstrated correctness defect in the scatter implementation.
 - Validation: pending GitHub Actions for this commit; no local Rust toolchain is available in this environment.
 
+
+### 2026-11-15 — fix scatter regression test formatting
+
+- The CI formatting job caught rustfmt differences in the shifted-offset and duplicate-index scatter regression tests.
+- Applied the exact formatting changes reported by the pinned nightly rustfmt; test logic and SIMD implementation are unchanged.
+- Validation: formatting will be rechecked by the CI run for this commit; no local Rust toolchain is available in this environment.
