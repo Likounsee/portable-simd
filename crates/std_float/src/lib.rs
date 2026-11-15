@@ -47,6 +47,17 @@ pub impl(self) trait StdFloat: Sized {
         unsafe { intrinsics::simd_fma(self, a, b) }
     }
 
+    /// Elementwise fused multiply-subtract. Computes `(self * a) - b` with one rounding
+    /// step, avoiding the intermediate rounding of a separate multiplication and subtraction.
+    ///
+    /// This may use a dedicated fused multiply-add instruction when the target supports one.
+    #[inline]
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn mul_sub(self, a: Self, b: Self) -> Self {
+        // SAFETY: The operands are SIMD floating-point vectors, as required by simd_fma.
+        unsafe { intrinsics::simd_fma(self, a, intrinsics::simd_neg(b)) }
+    }
+
     /// Produces a vector where every element has the square root value
     /// of the equivalently-indexed element in `self`
     #[inline]
