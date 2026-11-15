@@ -139,7 +139,6 @@ macro_rules! test_mask_api {
             }
 
             #[test]
-            #[test]
             fn count() {
                 assert_eq!(Mask::<$type, 8>::splat(false).count(), 0);
                 assert_eq!(Mask::<$type, 8>::splat(true).count(), 8);
@@ -152,6 +151,8 @@ macro_rules! test_mask_api {
                     values.iter().filter(|&&value| value).count(),
                 );
             }
+
+            #[test]
             fn roundtrip_int_conversion() {
                 let values = [true, false, false, true, false, false, true, false];
                 let mask = Mask::<$type, 8>::from_array(values);
@@ -200,7 +201,6 @@ macro_rules! test_mask_api {
                 assert_eq!(Mask::<$type, 11>::from_bitmask(bitmask), mask);
             }
 
-
             #[test]
             fn bitmask_roundtrip_lane_boundaries() {
                 fn check<const LANES: usize>(bits: u64) {
@@ -226,7 +226,6 @@ macro_rules! test_mask_api {
                     );
                 }
 
-                // Exercise every internal to_bitmask width transition, plus odd lane counts.
                 for bits in [0, 1, 0xA55A_9669_F00F_33CC, u64::MAX] {
                     check::<1>(bits);
                     check::<3>(bits);
@@ -243,15 +242,11 @@ macro_rules! test_mask_api {
                     check::<64>(bits);
                 }
 
-                // Exhaust every possible 16-lane bit pattern, including combinations that
-                // are easy to miss with a handful of hand-picked examples.
                 for bits in 0..=u16::MAX {
                     check::<16>(bits as u64);
                 }
             }
 
-            // Exercise first/last-set reductions at every supported lane width,
-            // including the non-power-of-two widths and the 64-lane boundary.
             test_helpers::test_lanes! {
                 fn first_and_last_set_lane_boundaries<const LANES: usize>() {
                     fn check<const LANES: usize>(values: [bool; LANES]) {
