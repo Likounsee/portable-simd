@@ -235,6 +235,7 @@ fn main() {
     let source = [0.0_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
     let masks = [
         ("all", [true; LANES]),
+        ("prefix", [true, true, true, true, false, false, false, false]),
         (
             "alternating",
             [true, false, true, false, true, false, true, false],
