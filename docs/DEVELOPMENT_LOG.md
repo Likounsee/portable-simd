@@ -503,3 +503,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added `SimdFloat::algebraic_reduce_sum` for f16/f32/f64 vectors. It folds lanes using scalar `algebraic_add`, explicitly opting into relaxed floating-point semantics so the compiler may reassociate the reduction.
 - Added property-based tests for all float widths through the shared float test macro, comparing against the scalar algebraic fold with a 16-ULP tolerance.
 - This API does not promise a particular vector instruction or speedup; target-specific codegen and benchmarks remain necessary to establish performance.
+
+
+### 2026-11-15 — implement numeric SIMD `to_mask` conversion for issue #479
+
+- Added `SimdInt::to_mask` and `SimdFloat::to_mask`, plus `SimdUint::to_mask`, converting each lane to a mask lane using comparison with zero.
+- The unsigned trait does not expose its mask as an associated type, so its method returns the mask type from `SimdPartialEq` under an explicit trait bound rather than adding a new associated type to `SimdUint`.
+- Float semantics are documented: NaN compares unequal to zero and therefore maps to `true`; both signed zeros map to `false`.
+- This is a convenience API only; it does not reinterpret the underlying bits or promise a particular instruction sequence. CI validation is pending.
