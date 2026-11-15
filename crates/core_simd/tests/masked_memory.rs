@@ -223,11 +223,13 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
         core::array::from_fn(|lane| (lane as i32).wrapping_mul(17).wrapping_add(5));
     let values = Simd::from_array(source);
     let fallback = Simd::from_array(core::array::from_fn(|lane| -1 - lane as i32));
-    let patterns: [[bool; LANES]; 4] = [
+    let patterns: [[bool; LANES]; 6] = [
         core::array::from_fn(|_| false),
         core::array::from_fn(|_| true),
         core::array::from_fn(|lane| lane % 2 == 0),
         core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES),
+        core::array::from_fn(|lane| lane < LANES / 2),
+        core::array::from_fn(|lane| lane + 1 < LANES),
     ];
 
     for len in 0..=LANES {
