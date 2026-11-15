@@ -675,6 +675,46 @@ macro_rules! impl_float_tests {
             impl_binary_op_test!(Scalar, Rem::rem, RemAssign::rem_assign);
 
             test_helpers::test_lanes! {
+                fn algebraic_add<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::algebraic_add,
+                        &Scalar::algebraic_add,
+                        &|_, _| true,
+                    );
+                }
+
+                fn algebraic_sub<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::algebraic_sub,
+                        &Scalar::algebraic_sub,
+                        &|_, _| true,
+                    );
+                }
+
+                fn algebraic_mul<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::algebraic_mul,
+                        &Scalar::algebraic_mul,
+                        &|_, _| true,
+                    );
+                }
+
+                fn algebraic_div<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::algebraic_div,
+                        &Scalar::algebraic_div,
+                        &|_, _| true,
+                    );
+                }
+
+                fn algebraic_rem<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::algebraic_rem,
+                        &Scalar::algebraic_rem,
+                        &|_, _| true,
+                    );
+                }
+
                 fn is_sign_positive<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::is_sign_positive,
