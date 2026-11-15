@@ -7,7 +7,7 @@
 
 #[doc(no_inline)]
 pub use super::{
-    Mask, Select, Simd, ToBytes,
+    Mask, Select, Simd, SimdSelect, ToBytes,
     cmp::{SimdOrd, SimdPartialEq, SimdPartialOrd},
     num::{SimdFloat, SimdInt, SimdUint},
     ptr::{SimdConstPtr, SimdMutPtr},
