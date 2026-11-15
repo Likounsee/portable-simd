@@ -371,3 +371,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added `docs/PROJECT_STATUS_AND_STABILIZATION.md` with the first-CI baseline, current validation evidence, the 16 upstream issues tracked in the development log, per-issue disposition, safety/codegen progress, stabilization roadmap, and explicitly qualified timeline ranges.
 - The report distinguishes the fork's own issue tracker (disabled) from the upstream repository's open issue backlog, and distinguishes test/diagnostic progress from confirmed production fixes.
 - The report records the last fully green run confirmed at assessment time and flags the current head CI as pending rather than claiming it is green.
+
+### 2026-11-15 — fix gather boundary test formatting
+
+- The latest head CI reported only rustfmt differences in the newly added gather-boundary test, not a Rust compilation or SIMD test failure.
+- Applied the exact formatting suggested by the pinned nightly formatter and normalized the file's final newline.
+- No test semantics or production SIMD code changed. The follow-up CI must confirm formatting and finish the remaining platform/Miri jobs; no local Rust toolchain is available here.

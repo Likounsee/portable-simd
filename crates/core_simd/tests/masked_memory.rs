@@ -343,19 +343,21 @@ fn check_gather_index_boundaries<const LANES: usize>() {
     // Re-run at each slice length so the same index can move in and out of bounds.
     for len in 0..=LANES {
         for shift in 0..LANES.max(1) {
-            let indices = Simd::from_array(core::array::from_fn(|lane| {
-                match (lane + shift) % 4 {
-                    0 => (lane + shift) % LANES,
-                    1 => len,
-                    2 => LANES,
-                    _ => usize::MAX,
-                }
+            let indices = Simd::from_array(core::array::from_fn(|lane| match (lane + shift) % 4 {
+                0 => (lane + shift) % LANES,
+                1 => len,
+                2 => LANES,
+                _ => usize::MAX,
             }));
             let index_array = indices.to_array();
             for enabled in patterns {
-                let actual =
-                    Simd::gather_select(&source[..len], Mask::from_array(enabled), indices, fallback)
-                        .to_array();
+                let actual = Simd::gather_select(
+                    &source[..len],
+                    Mask::from_array(enabled),
+                    indices,
+                    fallback,
+                )
+                .to_array();
                 let fallback_array = fallback.to_array();
                 let expected = core::array::from_fn(|lane| {
                     if enabled[lane] {
@@ -580,4 +582,3 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
         }
     }
 }
-
