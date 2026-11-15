@@ -279,6 +279,72 @@ macro_rules! impl_signed_tests {
             impl_common_integer_tests! { Vector, Scalar }
 
             test_helpers::test_lanes! {
+                fn unchecked_add<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX - 1,
+                        1 => Scalar::MIN + 1,
+                        2 => -5,
+                        _ => 7,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 1,
+                        1 => -1,
+                        2 => 5,
+                        _ => 2,
+                    });
+                    // SAFETY: Every pair above has a representable sum.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_add(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] + rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_sub<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN + 1,
+                        1 => Scalar::MAX - 1,
+                        2 => 5,
+                        _ => -5,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 1,
+                        1 => -1,
+                        2 => 5,
+                        _ => -5,
+                    });
+                    // SAFETY: Every pair above has a representable difference.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_sub(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] - rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_mul<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX / 2,
+                        1 => Scalar::MIN / 2,
+                        2 => -7,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 2,
+                        1 => 2,
+                        2 => -3,
+                        _ => Scalar::MAX,
+                    });
+                    // SAFETY: Every pair above has a representable product.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_mul(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] * rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
                 fn neg<const LANES: usize>() {
                     test_helpers::test_unary_elementwise(
                         &<Vector::<LANES> as core::ops::Neg>::neg,
@@ -480,6 +546,75 @@ macro_rules! impl_unsigned_tests {
             type Scalar = $scalar;
 
             impl_common_integer_tests! { Vector, Scalar }
+
+            test_helpers::test_lanes! {
+                fn unchecked_add<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX - 1,
+                        1 => 0,
+                        2 => 10,
+                        _ => 4,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 1,
+                        1 => 0,
+                        2 => 20,
+                        _ => 5,
+                    });
+                    // SAFETY: Every pair above has a representable sum.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_add(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] + rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_sub<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX,
+                        1 => 1,
+                        2 => 20,
+                        _ => 5,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 1,
+                        1 => 1,
+                        2 => 10,
+                        _ => 5,
+                    });
+                    // SAFETY: Every pair above has a non-underflowing difference.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_sub(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] - rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_mul<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX / 2,
+                        1 => 0,
+                        2 => 10,
+                        _ => 4,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 2,
+                        1 => Scalar::MAX,
+                        2 => 3,
+                        _ => 5,
+                    });
+                    // SAFETY: Every pair above has a representable product.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_mul(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| lhs[lane] * rhs[lane]);
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+            }
 
             test_helpers::test_lanes_panic! {
                 fn rem_zero_panic<const LANES: usize>() {
