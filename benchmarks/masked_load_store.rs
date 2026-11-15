@@ -3,12 +3,27 @@
 //! Diagnostic benchmark for masked contiguous SIMD loads and stores.
 //!
 //! Reproducible baseline (use the toolchain pinned by this repository):
-//!   cargo build -p core_simd --features as_crate --lib
-//!   CORE_SIMD_RLIB=$(find target/debug/deps -maxdepth 1 -name 'libcore_simd-*.rlib' -print -quit)
+//!   cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
+//!   CORE_SIMD_RMETA="$(python3 - <<'PY'
+//!   import json
+//!   with open("/tmp/core-simd-build.json") as build_output:
+//!       for line in build_output:
+//!           try:
+//!               message = json.loads(line)
+//!           except json.JSONDecodeError:
+//!               continue
+//!           target = message.get("target", {})
+//!           if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd" and "lib" in target.get("kind", []):
+//!               for filename in message.get("filenames", []):
+//!                   if filename.endswith(".rmeta"):
+//!                       print(filename)
+//!                       raise SystemExit(0)
+//!   raise SystemExit("Cargo did not report a core_simd rmeta")
+//!   PY
+//!   )"
 //!   rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 \
-//!     --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps \
+//!     --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps \
 //!     benchmarks/masked_load_store.rs -o /tmp/masked-load-store
-//!   /tmp/masked-load-store
 //!
 //! Inspect optimized assembly and LLVM IR with the same --extern / -L flags and
 //! replace the output option with --emit=asm or --emit=llvm-ir.

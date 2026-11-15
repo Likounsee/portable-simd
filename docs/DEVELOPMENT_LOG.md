@@ -1,3 +1,9 @@
+### 2026-11-15 — align masked-memory benchmark reproduction instructions with CI
+
+- Updated the benchmark's documented build/link command to select the `.rmeta` artifact reported by Cargo, matching the working CI diagnostic.
+- The previous `.rlib` search could select the metadata-only stub produced for this crate build, so local reproduction did not match the CI invocation.
+- This is a reproducibility/documentation correction; it does not change library behavior or test coverage.
+
 ### 2026-11-15 — remove extra blank line in masked-memory tests
 
 - The follow-up rustfmt run identified one remaining extra blank line before the new contiguous-copy test.
