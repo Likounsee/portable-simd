@@ -365,3 +365,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Rotates lanes through valid indices, the current slice-length boundary, the vector-width boundary, and usize::MAX while varying slice lengths and masks.
 - Compares every result against scalar slice lookup and fallback semantics; production gather implementation remains unchanged because the audit found no demonstrated correctness defect.
 - Validation is delegated to the repository CI; this environment has no local Rust toolchain.
+
+### 2026-11-15 — record baseline-to-current stabilization assessment
+
+- Added `docs/PROJECT_STATUS_AND_STABILIZATION.md` with the first-CI baseline, current validation evidence, the 16 upstream issues tracked in the development log, per-issue disposition, safety/codegen progress, stabilization roadmap, and explicitly qualified timeline ranges.
+- The report distinguishes the fork's own issue tracker (disabled) from the upstream repository's open issue backlog, and distinguishes test/diagnostic progress from confirmed production fixes.
+- The report records the last fully green run confirmed at assessment time and flags the current head CI as pending rather than claiming it is green.
