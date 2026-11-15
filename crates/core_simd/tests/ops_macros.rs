@@ -345,6 +345,28 @@ macro_rules! impl_signed_tests {
                     assert_eq!(actual.to_array(), expected);
                 }
 
+                fn mul_high<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => -1,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| {
+                        (((lhs[lane] as i128).wrapping_mul(rhs[lane] as i128)) >> Scalar::BITS) as Scalar
+                    });
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs).mul_high(Vector::<LANES>::from_array(rhs)).to_array(),
+                        expected,
+                    );
+                }
+
                 fn neg<const LANES: usize>() {
                     test_helpers::test_unary_elementwise(
                         &<Vector::<LANES> as core::ops::Neg>::neg,
@@ -614,6 +636,30 @@ macro_rules! impl_unsigned_tests {
                     assert_eq!(actual.to_array(), expected);
                 }
 
+            }
+
+            test_helpers::test_lanes! {
+                fn mul_high<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MIN,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MAX,
+                        1 => 2,
+                        2 => Scalar::MAX,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| {
+                        (((lhs[lane] as u128).wrapping_mul(rhs[lane] as u128)) >> Scalar::BITS) as Scalar
+                    });
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs).mul_high(Vector::<LANES>::from_array(rhs)).to_array(),
+                        expected,
+                    );
+                }
             }
 
             test_helpers::test_lanes_panic! {
