@@ -582,3 +582,61 @@ fn scatter_select_handles_duplicate_and_invalid_indices_for_every_mask() {
         }
     }
 }
+
+fn check_scatter_duplicate_winners<const LANES: usize>() {
+    const DEST_LEN: usize = 3;
+    let values = Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
+    let indices = Simd::from_array(core::array::from_fn(|lane| {
+        if lane % 5 == 0 {
+            usize::MAX
+        } else {
+            lane % DEST_LEN
+        }
+    }));
+    let index_array = indices.to_array();
+    let patterns: [[bool; LANES]; 5] = [
+        core::array::from_fn(|_| true),
+        core::array::from_fn(|lane| lane % 2 == 0),
+        core::array::from_fn(|lane| lane % 3 == 1),
+        core::array::from_fn(|lane| lane + 1 == LANES),
+        core::array::from_fn(|lane| lane == 0 || lane + 1 == LANES),
+    ];
+
+    for enabled in patterns {
+        let mut actual = [-99_i32; DEST_LEN];
+        values.scatter_select(&mut actual, Mask::from_array(enabled), indices);
+
+        let mut expected = [-99_i32; DEST_LEN];
+        // The API guarantees that the last enabled lane wins when indices collide.
+        for lane in 0..LANES {
+            if enabled[lane] && index_array[lane] < DEST_LEN {
+                expected[index_array[lane]] = values.as_array()[lane];
+            }
+        }
+
+        assert_eq!(
+            actual, expected,
+            "scatter duplicate winner: LANES={LANES}, indices={index_array:?}, mask={enabled:?}"
+        );
+    }
+}
+
+#[test]
+fn scatter_duplicate_winners_cover_supported_lane_widths() {
+    check_scatter_duplicate_winners::<1>();
+    check_scatter_duplicate_winners::<2>();
+    check_scatter_duplicate_winners::<3>();
+    check_scatter_duplicate_winners::<4>();
+    check_scatter_duplicate_winners::<7>();
+    check_scatter_duplicate_winners::<8>();
+    check_scatter_duplicate_winners::<9>();
+    check_scatter_duplicate_winners::<15>();
+    check_scatter_duplicate_winners::<16>();
+    check_scatter_duplicate_winners::<17>();
+    check_scatter_duplicate_winners::<31>();
+    check_scatter_duplicate_winners::<32>();
+    check_scatter_duplicate_winners::<33>();
+    check_scatter_duplicate_winners::<63>();
+    check_scatter_duplicate_winners::<64>();
+}
+
