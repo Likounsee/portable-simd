@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-15  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `4411aeb9a860f927dece6eddeab4d387a6d6f1ea`
+**Assessed head:** `72f95b444f237855eae7269aa3ff21eec2f8b323`
 
 ## Executive summary
 
@@ -82,7 +82,7 @@ The baseline commit and current head differ by 64 commits. The changes fall into
 - Added a fork-linked diagnostic benchmark and CI artifact generation for optimized SSE2 assembly and LLVM IR.
 - Corrected the benchmark so it links the fork's `core_simd` crate rather than accidentally measuring the toolchain's `std::simd`.
 - Added a full-width all-enabled path for `load_or` and `store_select`: complete vectors use the existing SIMD load/store helpers; short slices retain bounded prefix handling and fallback behavior.
-- The inspected SSE2 artifact showed vector loads (`movups`) for the full-width path. The short-prefix path can still use `memcpy`, as expected.
+- The inspected fork-linked SSE2 artifact showed vector loads/stores (`movups`) for full-width all-enabled operations. Short-prefix paths retain bounded `memcpy` handling. Sparse masked stores still lower to per-lane conditional scalar stores on SSE2, which has no general masked-store instruction; this remains a target/codegen optimization opportunity, not a correctness failure.
 - Added regression tests for the fast path, short slices, offsets, and tail preservation.
 
 **Impact:** this is a real production-code optimization supported by generated-code inspection. It is not yet a measured speedup claim: controlled timing comparisons across targets are still missing. Sparse-mask paths have not been comprehensively reworked.
@@ -95,7 +95,7 @@ The baseline commit and current head differ by 64 commits. The changes fall into
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
 
-The last fully green run currently confirmed by this assessment is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit `a15f086`: 30/30 jobs succeeded. The current head is `8cccd48`; its run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908) has passed formatting/masked-memory checks, the Cross setup, and several Windows/macOS/WASM/Clippy/Miri jobs, but was still unfinished at the time of this update. Remaining jobs must complete before this head can be called green. The run for `43b3bcd` was cancelled when a newer push superseded it. A queued, running, or cancelled run is not green.
+The last fully green run confirmed here is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit `a15f086`: 30/30 jobs succeeded. The later full-matrix run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908), on `8cccd48`, completed with 29/30 jobs successful, zero failures, and one cancelled job (`wasm (firefox, default)`, release step). Thus the matrix is no longer red, but that run is not strictly 30/30 green. Subsequent commits on `main` continued with the Node 24 action migration and regression coverage; the newest main commits still require their own completed run before claiming the current head is fully green. The earlier run for `43b3bcd` was cancelled when a newer push superseded it.
 
 ## 3. Upstream issue triage
 
@@ -256,3 +256,10 @@ The most honest description is:
 **The project has moved from “initial CI integration and issue reconnaissance” to “broad regression hardening plus targeted codegen work.” It is not yet at “stable-ready for Rust.”**
 
 The next priority is not to add arbitrary SIMD features. It is to finish the current CI run, audit unsafe invariants systematically, and turn the open compiler/API questions into reproducible upstream discussions.
+
+
+### 2026-11-15 — refresh scatter coverage and codegen assessment
+
+- Added a lane-width matrix for duplicate `scatter_select` destinations, checking the documented highest-enabled-lane winner and untouched out-of-slice tail elements. Validation is pending on the new main-branch CI run.
+- Re-inspected the fork-linked SSE2 artifact from run `43744268908`. Full-width all-enabled load/store paths lower to vector `movups` operations. Short-prefix handling retains a bounded copy path. Sparse masked stores lower to per-lane conditional stores on SSE2; this is expected without hardware masked stores but remains an optimization target for wider ISAs and improved lowering.
+- CI evidence: run `43744268908` completed 29/30 successful jobs, zero failures, and one cancelled default-WASM release job. The last fully green 30/30 run remains `43734489259` on `a15f086`. Do not describe the newer run as fully green.
