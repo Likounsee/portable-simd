@@ -1,3 +1,11 @@
+### 2026-11-15 — use contiguous copies for all-enabled masked memory operations
+
+- The optimized SSE2 artifact for #494 showed that all-enabled `load_or_default` / `load_or` and `store_select` paths lowered from LLVM masked-memory intrinsics into per-lane conditional branches. The scalar zip equivalents lowered to bounded `memcpy` operations instead.
+- Changed `load_or` to initialize from its fallback vector and copy only the available slice prefix. `load_or_default` inherits this path.
+- Added an all-enabled fast path to `load_select` and `store_select`; it uses the same bounded prefix-copy strategy. Sparse masks still use the existing masked load/store intrinsics.
+- Added regression coverage for empty, short, exact-width, and longer input slices, including fallback preservation. Existing masked-memory tests continue to cover mixed masks and short destinations.
+- This is a targeted optimization based on actual optimized IR/assembly, not a claim that arbitrary sparse-mask lowering is fixed. Full CI validation is pending.
+
 ### 2026-11-15 — prevent native CPU artifacts from crossing runner hosts
 
 - The native x86-64 job failed in the generated `cast` test binary with `SIGILL` after restoring its Cargo `target` cache.

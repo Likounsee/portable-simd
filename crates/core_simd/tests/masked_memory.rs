@@ -40,6 +40,28 @@ fn load_select_matches_scalar_slice_semantics_for_short_slices() {
     }
 }
 
+
+#[test]
+fn contiguous_all_enabled_loads_copy_only_the_available_prefix() {
+    const LANES: usize = 8;
+    let source = [10_i32, 20, 30, 40, 50, 60, 70, 80, 90];
+    let fallback = Simd::splat(-1_i32);
+
+    for len in 0..=source.len() {
+        let actual = Simd::<i32, LANES>::load_or_default(&source[..len]).to_array();
+        let expected = core::array::from_fn(|lane| {
+            if lane < len { source[lane] } else { 0 }
+        });
+        assert_eq!(actual, expected, "load_or_default: len={len}");
+
+        let actual = Simd::<i32, LANES>::load_or(&source[..len], fallback).to_array();
+        let expected = core::array::from_fn(|lane| {
+            if lane < len { source[lane] } else { -1 }
+        });
+        assert_eq!(actual, expected, "load_or: len={len}");
+    }
+}
+
 #[test]
 fn store_select_never_writes_disabled_or_out_of_bounds_lanes() {
     const LANES: usize = 4;

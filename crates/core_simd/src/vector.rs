@@ -427,8 +427,12 @@ where
     /// ```
     #[must_use]
     #[inline]
-    pub fn load_or(slice: &[T], or: Self) -> Self {
-        Self::load_select(slice, Mask::splat(true), or)
+    pub fn load_or(slice: &[T], mut or: Self) -> Self {
+        // A contiguous prefix copy lowers to the same efficient memcpy path as
+        // ordinary slice code on targets without hardware masked loads.
+        let len = slice.len().min(N);
+        or.as_mut_array()[..len].copy_from_slice(&slice[..len]);
+        or
     }
 
     /// Reads contiguous elements from `slice`. Each element is read from memory if its
@@ -484,6 +488,11 @@ where
         mut enable: Mask<<T as SimdElement>::Mask, N>,
         or: Self,
     ) -> Self {
+        // An all-enabled mask is just a bounded prefix copy. Keep the masked
+        // intrinsic for genuinely sparse masks, where it expresses the API best.
+        if enable.all() {
+            return Self::load_or(slice, or);
+        }
         enable &= mask_up_to(slice.len());
         // SAFETY: We performed the bounds check by updating the mask. &[T] is properly aligned to
         // the element.
@@ -733,6 +742,13 @@ where
     /// ```
     #[inline]
     pub fn store_select(self, slice: &mut [T], mut enable: Mask<<T as SimdElement>::Mask, N>) {
+        // Match the scalar zip/copy path when every lane is enabled. The slice
+        // length bounds the prefix, so this never writes beyond the destination.
+        if enable.all() {
+            let len = slice.len().min(N);
+            slice[..len].copy_from_slice(&self.as_array()[..len]);
+            return;
+        }
         enable &= mask_up_to(slice.len());
         // SAFETY: We performed the bounds check by updating the mask. &[T] is properly aligned to
         // the element.
