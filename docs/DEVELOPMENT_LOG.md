@@ -476,3 +476,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - #356 (bounds checks not eliminated) was reviewed together with its discussion and reproducer. The reported behavior is caused by bounds checks on ordinary slice indexing; the discussion confirms that an equivalent scalar implementation also retains checks, and that the original report used Rust 1.70 / LLVM 16. This is not evidence of a portable-SIMD correctness defect. No unsafe indexing change or SIMD API workaround was added.
 - #364 (critical issues before stabilization) is an API-design/stabilization discussion covering supported lane counts, mask element types, and swizzle ergonomics. These are compatibility-sensitive design decisions rather than isolated implementation bugs. The fork should not silently redefine these public API contracts in a maintenance fix; the concerns remain tracked for upstream stabilization discussion.
 - Outcome: both issues were triaged without production-code changes. Avoiding a speculative workaround is preferable to weakening memory safety or introducing an incompatible API change.
+
+### 2026-11-15 — extend the #426 reduction reproducer with structure-of-arrays
+
+- Added a fourth benchmark path that stores X, Y, and Z in separate contiguous slices, performs four records per SIMD iteration, accumulates in a vector, and reduces only once at the end.
+- The example now contrasts the original interleaved (array-of-structures) layout with a structure-of-arrays layout, reflecting the upstream discussion that non-contiguous XYZ loads can limit vectorization independently of the horizontal-reduction cost.
+- Added the SoA result to the scalar-reference tolerance checks and the small regression test. This is an explanatory benchmark/reproducer, not a guaranteed performance claim; actual timings remain target- and compiler-dependent.
+- Validation: pending CI for the implementation commit.
