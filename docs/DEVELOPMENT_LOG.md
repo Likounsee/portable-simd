@@ -9,6 +9,12 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — locate the fork library through Cargo metadata
+
+- The fork-linked benchmark passed both formatting checks, but its build step assumed Cargo wrote artifacts under the repository-local `target/debug/deps` directory.
+- CI showed the active Cargo target directory differs from that assumption. The workflow now reads `target_directory` from `cargo metadata` and searches there for the built `core_simd` rlib.
+- This changes only artifact discovery; the benchmark still links the exact fork library and the full test matrix remains unchanged.
+
 ### 2026-11-15 — format fork-linked masked-memory benchmark
 
 - The new standalone `rustfmt --check` step caught six formatting differences in the expanded benchmark, including long assertions, calls, and mask literals.

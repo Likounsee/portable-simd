@@ -40,8 +40,11 @@ jobs:
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
           cargo build -p core_simd --features as_crate --lib
-          CORE_SIMD_RLIB="$(find target/debug/deps -maxdepth 1 -type f -name 'libcore_simd-*.rlib' -print -quit)"
+          TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
+          echo "Cargo target directory: $TARGET_DIR"
+          CORE_SIMD_RLIB="$(find "$TARGET_DIR" -type f -name 'libcore_simd*.rlib' -print -quit)"
           test -n "$CORE_SIMD_RLIB"
+          echo "Using fork library: $CORE_SIMD_RLIB"
           echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"
       - name: Compile masked memory benchmark against the fork
         run: rustc -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
