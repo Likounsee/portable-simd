@@ -1,3 +1,8 @@
+### 2026-11-15 — rustfmt follow-up for issue #366
+
+- The next CI run caught formatting differences in the scalar reference expression and long test arrays in `issue_366_maddubs.rs`.
+- Applied the exact layout requested by rustfmt. This is a formatting-only correction; semantic and compilation validation remain in the active CI run.
+
 ### 2026-11-15 — fix issue #366 example compilation
 
 - The first CI compile found two example-target errors: the file had no `main` function, and the destination type for the SIMD `cast` calls was not inferable from the product annotation.
