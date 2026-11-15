@@ -63,13 +63,15 @@ macro_rules! impl_tests {
 
             test_helpers::test_lanes! {
                 fn mul_sub<const LANES: usize>() {
-                    let a = core_simd::simd::Simd::<$scalar, LANES>::splat(1.25 as $scalar);
-                    let b = core_simd::simd::Simd::<$scalar, LANES>::splat(4.0 as $scalar);
-                    let c = core_simd::simd::Simd::<$scalar, LANES>::splat(2.0 as $scalar);
-                    let result = a.mul_sub(b, c);
-                    let expected = core::array::from_fn(|lane| {
-                        a[lane].mul_add(b[lane], -c[lane])
-                    });
+                    let a = [1.25 as $scalar; LANES];
+                    let b = [4.0 as $scalar; LANES];
+                    let c = [2.0 as $scalar; LANES];
+                    let result = core_simd::simd::Simd::from_array(a)
+                        .mul_sub(
+                            core_simd::simd::Simd::from_array(b),
+                            core_simd::simd::Simd::from_array(c),
+                        );
+                    let expected = core::array::from_fn(|lane| a[lane].mul_add(b[lane], -c[lane]));
                     assert_eq!(result.to_array(), expected);
                 }
             }
