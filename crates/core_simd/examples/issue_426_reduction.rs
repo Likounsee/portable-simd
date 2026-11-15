@@ -106,8 +106,16 @@ fn main() {
 
     println!("Records: {records}");
     measure("scalar", &data, scalar);
-    measure("SIMD reduce every iteration", &data, simd_reduce_each_iteration);
-    measure("SIMD accumulate then reduce", &data, simd_accumulate_then_reduce);
+    measure(
+        "SIMD reduce every iteration",
+        &data,
+        simd_reduce_each_iteration,
+    );
+    measure(
+        "SIMD accumulate then reduce",
+        &data,
+        simd_accumulate_then_reduce,
+    );
 }
 
 #[cfg(test)]
@@ -117,8 +125,8 @@ mod tests {
     #[test]
     fn all_variants_agree_for_small_input() {
         let data = [
-            2001.0, 2002.0, 2003.0, 0.0, 1999.0, 2004.0, 2005.0, 0.0, 2010.0, 1990.0,
-            2020.0, 0.0, 1980.0, 2030.0, 1970.0, 0.0,
+            2001.0, 2002.0, 2003.0, 0.0, 1999.0, 2004.0, 2005.0, 0.0, 2010.0, 1990.0, 2020.0, 0.0,
+            1980.0, 2030.0, 1970.0, 0.0,
         ];
         let expected = scalar(&data);
         let tolerance = expected.abs().max(1.0) * 2.0e-5;
