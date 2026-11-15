@@ -496,3 +496,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - **#494 (masked memory codegen):** the fork already has explicit full-mask and contiguous-prefix fast paths in `Simd::load_select` and `Simd::store_select`. Sparse masks continue through the masked-load/store intrinsics. The diagnostic `benchmarks/masked_load_store.rs` compares SIMD and scalar paths, and `crates/core_simd/tests/masked_memory.rs` covers short/empty slices, every prefix length, lane-count boundaries, and gather/scatter edge cases. No further change was justified without target-specific assembly and timing evidence.
 - **#286 (MaybeUninit SIMD lanes):** this is not a missing trait implementation that can safely be added in isolation. The upstream discussion identifies the mismatch between LLVM poison propagation and Rust's byte-level initialization model; exposing poison-like arithmetic risks unsoundness. Defer until the compiler/validity model provides a sound foundation.
 - **#321 (scalarization after inlining):** the reproducer and discussion attribute the observed AArch64 regression to LLVM lowering/optimization of vector reductions and mask conversions. It is compiler/codegen behavior, not a portable-simd source-level correctness defect. Avoid target-specific source workarounds without reproducible compiler-version comparisons.
+
+### 2026-11-15 — issue #539: algebraic SIMD reduction
+
+- The fork already exposed elementwise `algebraic_add/sub/mul/div/rem` on `SimdFloat`, implemented by applying the scalar algebraic operation lane by lane.
+- Added `SimdFloat::algebraic_reduce_sum` for f16/f32/f64 vectors. It folds lanes using scalar `algebraic_add`, explicitly opting into relaxed floating-point semantics so the compiler may reassociate the reduction.
+- Added property-based tests for all float widths through the shared float test macro, comparing against the scalar algebraic fold with a 16-ULP tolerance.
+- This API does not promise a particular vector instruction or speedup; target-specific codegen and benchmarks remain necessary to establish performance.
