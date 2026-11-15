@@ -411,3 +411,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Verified the official action metadata at `actions/checkout@v7.0.1` and `actions/cache@v6.1.0`: both explicitly declare `using: node24`.
 - Verified the corresponding immutable tag commit SHAs before preparing the workflow update: checkout `3d3c42e5aac5ba805825da76410c181273ba90b1`; cache `55cc8345863c7cc4c66a329aec7e433d2d1c52a9`.
 - This is a CI maintenance update only; no Rust code or cache key semantics are changed. Awaiting the current CI run before pushing to avoid cancelling it.
+
+### 2026-11-15 — verify duplicate scatter winners across supported lane widths
+
+- Added a scalar-oracle regression test for duplicate-index `scatter_select` behavior at representative lane counts from 1 through 64, including non-power-of-two widths.
+- Exercises all-disabled, all-enabled, alternating, and edge-lane masks; duplicate valid destinations; the exact slice-length boundary; and `usize::MAX`.
+- Checks the documented highest-enabled-lane winner and verifies that disabled, out-of-bounds, and destination-tail elements remain unchanged.
+- This closes the test-coverage gap identified during the earlier scatter audit. It does not change the scatter implementation or claim a new performance improvement.
+- Validation: pending the CI run triggered by this main-branch commit.
