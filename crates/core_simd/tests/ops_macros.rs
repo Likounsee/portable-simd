@@ -945,6 +945,15 @@ macro_rules! impl_float_tests {
                     });
                 }
 
+                fn algebraic_reduce_sum<const LANES: usize>() {
+                    test_helpers::test_1(&|x: [Scalar; LANES]| {
+                        let actual = Vector::<LANES>::from_array(x).algebraic_reduce_sum();
+                        let expected = x.iter().copied().fold(0.0, Scalar::algebraic_add);
+                        test_helpers::prop_assert_approxeq!(actual, expected, 16);
+                        Ok(())
+                    });
+                }
+
                 fn reduce_product<const LANES: usize>() {
                     test_helpers::test_1(&|x| {
                         test_helpers::prop_assert_biteq! (
