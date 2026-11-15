@@ -21,6 +21,24 @@ pub impl(self) trait SimdUint: Copy {
     /// of `-0`.
     fn wrapping_neg(self) -> Self;
 
+    /// Adds corresponding lanes without checking for overflow.
+    ///
+    /// # Safety
+    /// Every lane addition must be representable by the scalar element type.
+    unsafe fn unchecked_add(self, second: Self) -> Self;
+
+    /// Subtracts corresponding lanes without checking for underflow.
+    ///
+    /// # Safety
+    /// Every lane subtraction must not underflow.
+    unsafe fn unchecked_sub(self, second: Self) -> Self;
+
+    /// Multiplies corresponding lanes without checking for overflow.
+    ///
+    /// # Safety
+    /// Every lane product must be representable by the scalar element type.
+    unsafe fn unchecked_mul(self, second: Self) -> Self;
+
     /// Lanewise saturating add.
     ///
     /// # Examples
@@ -135,6 +153,30 @@ macro_rules! impl_trait {
             fn wrapping_neg(self) -> Self {
                 use crate::simd::num::SimdInt;
                 (-self.cast::<$signed>()).cast()
+            }
+
+            #[inline]
+            unsafe fn unchecked_add(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees that every lane addition is representable.
+                    unsafe { self.as_array()[lane].unchecked_add(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_sub(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees that every lane subtraction cannot underflow.
+                    unsafe { self.as_array()[lane].unchecked_sub(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_mul(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees that every lane product is representable.
+                    unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
+                }))
             }
 
             #[inline]
