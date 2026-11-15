@@ -451,3 +451,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - #527 (mask ordering) is already corrected in `crates/core_simd/src/simd/cmp/ord.rs`: mask ordering is expressed with boolean logic (`!self & other`, etc.) instead of signed integer comparisons. The fork also contains dedicated regression tests in `crates/core_simd/tests/mask_partial_ord.rs`, including exhaustive 8-lane patterns and 64-lane sign-bit cases.
 - #537 (sealed-trait associated items leaking through a public supertrait) is already addressed in `crates/core_simd/src/masks.rs`: `PrivateMethods` is crate-private, and compile-fail doctests check that its associated items cannot be reached through `MaskElement`.
 - These three reports were audited without changing production code: their fixes or resolution are already represented in the fork, and duplicating them would add risk without closing a remaining gap.
+
+
+## Issue #366 — portable `maddubs` fallback
+
+- Added `crates/core_simd/examples/issue_366_maddubs.rs` with a portable implementation of the semantics of x86 `_mm_maddubs_epi16`: unsigned-byte × signed-byte products, adjacent pair sums, and signed 16-bit saturation.
+- Added scalar-reference regression tests covering saturation boundaries and varied signed/unsigned byte values.
+- This is a semantic workaround/example, not a claim that LLVM emits `pmaddubsw`. The upstream discussion identifies instruction selection/codegen as the remaining limitation; a target-specific instruction is not appropriate as a portable API without broader architectural support.
+- Validation is delegated to CI; no local Rust toolchain is available in this environment.
