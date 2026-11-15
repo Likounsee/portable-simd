@@ -1,3 +1,9 @@
+### 2026-11-15 — fix issue #366 example compilation
+
+- The first CI compile found two example-target errors: the file had no `main` function, and the destination type for the SIMD `cast` calls was not inferable from the product annotation.
+- Added explicit `cast::<i16>()` types and a small runnable `main` demonstration. The scalar-reference tests remain unchanged.
+- This corrects the example build only; it does not change the portable operation's semantics or claim that LLVM selects `pmaddubsw`. The follow-up CI run must validate the fix.
+
 ### 2026-11-15 — use full-width SIMD memory operations for all-enabled slices
 
 - The CI assembly/LLVM IR for the all-enabled path showed that `load_or_default` and `store_select` always used a runtime `memcpy`, even when the slice contained at least a complete vector.
