@@ -490,3 +490,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The method documents the contract: in-range indices select bytes; out-of-range indices with the high bit set yield zero; other out-of-range indices are implementation-defined.
 - `crates/core_simd/tests/swizzle_dyn.rs` includes high-bit out-of-range regression coverage over lane widths from 1 through 64, alongside exhaustive byte-index coverage for the regular zeroing API.
 - Outcome: #486's requested API/performance path is already present in this fork; no duplicate API or speculative target-specific implementation was added.
+
+### 2026-11-15 — audit upstream issues #494, #286 and #321
+
+- **#494 (masked memory codegen):** the fork already has explicit full-mask and contiguous-prefix fast paths in `Simd::load_select` and `Simd::store_select`. Sparse masks continue through the masked-load/store intrinsics. The diagnostic `benchmarks/masked_load_store.rs` compares SIMD and scalar paths, and `crates/core_simd/tests/masked_memory.rs` covers short/empty slices, every prefix length, lane-count boundaries, and gather/scatter edge cases. No further change was justified without target-specific assembly and timing evidence.
+- **#286 (MaybeUninit SIMD lanes):** this is not a missing trait implementation that can safely be added in isolation. The upstream discussion identifies the mismatch between LLVM poison propagation and Rust's byte-level initialization model; exposing poison-like arithmetic risks unsoundness. Defer until the compiler/validity model provides a sound foundation.
+- **#321 (scalarization after inlining):** the reproducer and discussion attribute the observed AArch64 regression to LLVM lowering/optimization of vector reductions and mask conversions. It is compiler/codegen behavior, not a portable-simd source-level correctness defect. Avoid target-specific source workarounds without reproducible compiler-version comparisons.
