@@ -329,5 +329,5 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added a shared regression matrix for `load_or`, all-enabled `load_select`, and all-enabled `store_select` across representative supported lane counts from 1 through 64.
 - Each lane count checks every slice length from empty through two elements beyond the vector width, covering the short-prefix path, exact full-width fast path, and oversized-slice tail preservation.
 - The tests compare results against scalar slice semantics. No production code or unsafe behavior was changed in this test-only follow-up.
-- Validation: CI is required to execute the new matrix; no local Rust toolchain is available in this environment.
+- Applied the formatting corrections reported by the first CI run. CI is required to execute the new matrix; no local Rust toolchain is available in this environment.
 
