@@ -351,3 +351,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The CI formatting job caught rustfmt differences in the shifted-offset and duplicate-index scatter regression tests.
 - Applied the exact formatting changes reported by the pinned nightly rustfmt; test logic and SIMD implementation are unchanged.
 - Validation: formatting will be rechecked by the CI run for this commit; no local Rust toolchain is available in this environment.
+
+### 2026-11-15 — enforce documented duplicate scatter winner
+
+- Tightened the exhaustive duplicate-index scatter_select regression oracle: for each destination, it now requires the highest enabled lane targeting that destination to win, matching the public API guarantee and its documented example.
+- Removed the permissive assertion that accepted any colliding writer, which could hide a violation of the documented last-writer behavior.
+- Kept exhaustive coverage over all 625 four-lane index tuples and all 16 masks, including out-of-bounds indices and usize::MAX.
+- Validation: GitHub Actions must confirm formatting and all target test configurations; no local Rust toolchain is available in this environment.
