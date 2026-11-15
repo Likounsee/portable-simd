@@ -2,7 +2,7 @@ use core::intrinsics::simd::SimdAlign;
 
 use crate::simd::{
     Mask, MaskElement,
-    cmp::SimdPartialOrd,
+    cmp::{SimdPartialEq, SimdPartialOrd},
     num::SimdUint,
     ptr::{SimdConstPtr, SimdMutPtr},
 };
@@ -136,6 +136,29 @@ where
     #[allow(clippy::len_without_is_empty)]
     pub const fn len(&self) -> usize {
         Self::LEN
+    }
+
+    /// Converts each non-zero element into `true` and each zero element into `false`.
+    ///
+    /// This is equivalent to comparing the vector with a vector of zeros using
+    /// `simd_ne`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # use core::simd::Simd;
+    /// let values = Simd::from_array([0_i32, 4, -2, 0]);
+    /// assert_eq!(values.to_mask().to_array(), [false, true, true, false]);
+    /// ```
+    #[must_use]
+    #[inline]
+    pub fn to_mask(self) -> <Self as SimdPartialEq>::Mask
+    where
+        T: Default,
+        Self: SimdPartialEq,
+    {
+        self.simd_ne(Self::splat(T::default()))
     }
 
     /// Constructs a new SIMD vector with all elements set to the given value.
