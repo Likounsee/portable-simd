@@ -49,15 +49,11 @@ fn contiguous_all_enabled_loads_copy_only_the_available_prefix() {
 
     for len in 0..=source.len() {
         let actual = Simd::<i32, LANES>::load_or_default(&source[..len]).to_array();
-        let expected = core::array::from_fn(|lane| {
-            if lane < len { source[lane] } else { 0 }
-        });
+        let expected = core::array::from_fn(|lane| if lane < len { source[lane] } else { 0 });
         assert_eq!(actual, expected, "load_or_default: len={len}");
 
         let actual = Simd::<i32, LANES>::load_or(&source[..len], fallback).to_array();
-        let expected = core::array::from_fn(|lane| {
-            if lane < len { source[lane] } else { -1 }
-        });
+        let expected = core::array::from_fn(|lane| if lane < len { source[lane] } else { -1 });
         assert_eq!(actual, expected, "load_or: len={len}");
     }
 }

@@ -1,3 +1,9 @@
+### 2026-11-15 — apply rustfmt correction to contiguous-copy regression test
+
+- The first CI run for the all-enabled memory fast paths reported only a formatting difference in the new expected-value closures.
+- Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
+- The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
+
 ### 2026-11-15 — use contiguous copies for all-enabled masked memory operations
 
 - The optimized SSE2 artifact for #494 showed that all-enabled `load_or_default` / `load_or` and `store_select` paths lowered from LLVM masked-memory intrinsics into per-lane conditional branches. The scalar zip equivalents lowered to bounded `memcpy` operations instead.
