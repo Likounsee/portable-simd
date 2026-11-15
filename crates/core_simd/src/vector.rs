@@ -661,6 +661,45 @@ where
         unsafe { Self::gather_select_ptr(ptrs, enable, or) }
     }
 
+    /// Reads from indices in `slice` without checking bounds.
+    ///
+    /// This is the unchecked counterpart to a gather with every lane enabled.
+    /// It avoids requiring the caller to construct an all-true mask.
+    ///
+    /// # Safety
+    ///
+    /// Every index in `idxs` must be less than `slice.len()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # use core::simd::Simd;
+    /// let values = [10, 20, 30, 40];
+    /// let indices = Simd::from_array([3, 0, 2, 1]);
+    /// // SAFETY: every index is within the four-element slice.
+    /// let gathered = unsafe { Simd::gather_unchecked(&values, indices) };
+    /// assert_eq!(gathered, Simd::from_array([40, 10, 30, 20]));
+    /// ```
+    #[must_use]
+    #[inline]
+    #[cfg_attr(miri, track_caller)]
+    pub unsafe fn gather_unchecked(slice: &[T], idxs: Simd<usize, N>) -> Self
+    where
+        T: Default,
+    {
+        // SAFETY: The caller guarantees that every index is in bounds, so all
+        // lanes can be enabled. The fallback vector is never selected.
+        unsafe {
+            Self::gather_select_unchecked(
+                slice,
+                Mask::splat(true),
+                idxs,
+                Self::splat(T::default()),
+            )
+        }
+    }
+
     /// Reads elementwise from pointers into a SIMD vector.
     ///
     /// # Safety
