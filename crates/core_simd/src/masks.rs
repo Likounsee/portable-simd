@@ -80,6 +80,38 @@ pub(crate) trait PrivateMethods {
 /// }
 /// ```
 ///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>() {
+///     let _ = <T as MaskElement>::FALSE;
+/// }
+/// ```
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::{MaskElement, Simd};
+/// fn leak<T: MaskElement>() {
+///     let _ = <T as MaskElement>::valid::<4>(Simd::<T, 4>::splat(0));
+/// }
+/// ```
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>(value: T) {
+///     let _ = <T as MaskElement>::to_usize(value);
+/// }
+/// ```
+///
+/// ```compile_fail
+/// #![feature(portable_simd)]
+/// use core_simd::simd::MaskElement;
+/// fn leak<T: MaskElement>() {
+///     let _ = <T as MaskElement>::max_unsigned();
+/// }
+/// ```
+///
 /// # Safety
 /// Type must be a signed integer.
 #[allow(private_bounds)]
