@@ -470,3 +470,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added scalar-reference regression tests covering saturation boundaries and varied signed/unsigned byte values.
 - This is a semantic workaround/example, not a claim that LLVM emits `pmaddubsw`. The upstream discussion identifies instruction selection/codegen as the remaining limitation; a target-specific instruction is not appropriate as a portable API without broader architectural support.
 - Validation is delegated to CI; no local Rust toolchain is available in this environment.
+
+### 2026-11-15 — triage upstream issues #356 and #364
+
+- #356 (bounds checks not eliminated) was reviewed together with its discussion and reproducer. The reported behavior is caused by bounds checks on ordinary slice indexing; the discussion confirms that an equivalent scalar implementation also retains checks, and that the original report used Rust 1.70 / LLVM 16. This is not evidence of a portable-SIMD correctness defect. No unsafe indexing change or SIMD API workaround was added.
+- #364 (critical issues before stabilization) is an API-design/stabilization discussion covering supported lane counts, mask element types, and swizzle ergonomics. These are compatibility-sensitive design decisions rather than isolated implementation bugs. The fork should not silently redefine these public API contracts in a maintenance fix; the concerns remain tracked for upstream stabilization discussion.
+- Outcome: both issues were triaged without production-code changes. Avoiding a speculative workaround is preferable to weakening memory safety or introducing an incompatible API change.
