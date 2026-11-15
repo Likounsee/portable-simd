@@ -41,6 +41,18 @@ pub impl(self) trait SimdInt: Copy {
     /// Every lane product must be representable by the scalar element type.
     unsafe fn unchecked_mul(self, second: Self) -> Self;
 
+    /// Shifts each lane left without masking the shift amount.
+    ///
+    /// # Safety
+    /// Every lane's shift amount must be less than the lane bit width.
+    unsafe fn unchecked_shl(self, rhs: Self) -> Self;
+
+    /// Shifts each lane right without masking the shift amount.
+    ///
+    /// # Safety
+    /// Every lane's shift amount must be less than the lane bit width.
+    unsafe fn unchecked_shr(self, rhs: Self) -> Self;
+
     /// Returns the high half of each signed lane's full-width product.
     ///
     /// The result is the product shifted right by the lane bit width, using
@@ -292,6 +304,22 @@ macro_rules! impl_trait {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees that every lane product is representable.
                     unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_shl(self, rhs: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees every shift amount is less than the lane width.
+                    unsafe { self.as_array()[lane].unchecked_shl(rhs.as_array()[lane] as u32) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_shr(self, rhs: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees every shift amount is less than the lane width.
+                    unsafe { self.as_array()[lane].unchecked_shr(rhs.as_array()[lane] as u32) }
                 }))
             }
 
