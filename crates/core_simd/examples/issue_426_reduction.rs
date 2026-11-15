@@ -65,6 +65,52 @@ fn simd_accumulate_then_reduce(data: &[f32]) -> f32 {
     sums.reduce_sum()
 }
 
+#[inline]
+fn simd_soa_accumulate_then_reduce(x: &[f32], y: &[f32], z: &[f32]) -> f32 {
+    assert_eq!(x.len(), y.len());
+    assert_eq!(y.len(), z.len());
+    assert_eq!(x.len() % 4, 0);
+
+    let position_x = f32x4::splat(POSITION[0]);
+    let position_y = f32x4::splat(POSITION[1]);
+    let position_z = f32x4::splat(POSITION[2]);
+    let direction_x = f32x4::splat(DIRECTION[0]);
+    let direction_y = f32x4::splat(DIRECTION[1]);
+    let direction_z = f32x4::splat(DIRECTION[2]);
+    let mut sums = f32x4::splat(0.0);
+
+    for ((x, y), z) in x
+        .chunks_exact(4)
+        .zip(y.chunks_exact(4))
+        .zip(z.chunks_exact(4))
+    {
+        let x = f32x4::from_array(x.try_into().unwrap());
+        let y = f32x4::from_array(y.try_into().unwrap());
+        let z = f32x4::from_array(z.try_into().unwrap());
+        sums += (x - position_x) * direction_x
+            + (y - position_y) * direction_y
+            + (z - position_z) * direction_z;
+    }
+
+    sums.reduce_sum()
+}
+
+fn measure_soa(
+    label: &str,
+    x: &[f32],
+    y: &[f32],
+    z: &[f32],
+    operation: impl Fn(&[f32], &[f32], &[f32]) -> f32,
+) {
+    black_box(operation(black_box(x), black_box(y), black_box(z)));
+
+    let start = Instant::now();
+    let result = black_box(operation(black_box(x), black_box(y), black_box(z)));
+    let elapsed = start.elapsed();
+
+    println!("{label:32} {elapsed:>12.3?}  result={result}");
+}
+
 fn measure(label: &str, data: &[f32], operation: impl Fn(&[f32]) -> f32) {
     // Warm up and keep the result observable so the loop cannot be removed.
     black_box(operation(black_box(data)));
@@ -88,9 +134,19 @@ fn main() {
         data.extend_from_slice(&[x, y, z, 0.0]);
     }
 
+    let mut x = Vec::with_capacity(records);
+    let mut y = Vec::with_capacity(records);
+    let mut z = Vec::with_capacity(records);
+    for record in data.chunks_exact(RECORD_WIDTH) {
+        x.push(record[0]);
+        y.push(record[1]);
+        z.push(record[2]);
+    }
+
     let reference = scalar(&data);
     let reduce_each = simd_reduce_each_iteration(&data);
     let accumulate = simd_accumulate_then_reduce(&data);
+    let soa_accumulate = simd_soa_accumulate_then_reduce(&x, &y, &z);
 
     // Floating-point reassociation changes rounding, so compare with a
     // tolerance rather than requiring bit-for-bit equality.
@@ -104,6 +160,11 @@ fn main() {
         "vector accumulation differs: scalar={reference}, SIMD={accumulate}"
     );
 
+    assert!(
+        (reference - soa_accumulate).abs() <= tolerance,
+        "SoA vector accumulation differs: scalar={reference}, SIMD={soa_accumulate}"
+    );
+
     println!("Records: {records}");
     measure("scalar", &data, scalar);
     measure(
@@ -115,6 +176,13 @@ fn main() {
         "SIMD accumulate then reduce",
         &data,
         simd_accumulate_then_reduce,
+    );
+    measure_soa(
+        "SIMD SoA accumulate then reduce",
+        &x,
+        &y,
+        &z,
+        simd_soa_accumulate_then_reduce,
     );
 }
 
@@ -131,9 +199,14 @@ mod tests {
         let expected = scalar(&data);
         let tolerance = expected.abs().max(1.0) * 2.0e-5;
 
+        let x = [2001.0, 1999.0, 2010.0, 1980.0];
+        let y = [2002.0, 2004.0, 1990.0, 2030.0];
+        let z = [2003.0, 2005.0, 2020.0, 1970.0];
+
         for actual in [
             simd_reduce_each_iteration(&data),
             simd_accumulate_then_reduce(&data),
+            simd_soa_accumulate_then_reduce(&x, &y, &z),
         ] {
             assert!(
                 (expected - actual).abs() <= tolerance,
