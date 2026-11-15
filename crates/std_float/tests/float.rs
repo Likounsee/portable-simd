@@ -95,6 +95,7 @@ macro_rules! impl_tests {
                     input.round_ties_even().to_array(),
                     [2.0 as $scalar, 2.0 as $scalar, -2.0 as $scalar, -2.0 as $scalar],
                 );
+                assert_eq!(input.round_fast(), input.round_ties_even());
             }
 
             // https://github.com/rust-lang/miri/issues/3555
