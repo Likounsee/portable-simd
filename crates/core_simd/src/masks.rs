@@ -316,6 +316,21 @@ where
         unsafe { core::intrinsics::simd::simd_reduce_all(self.0) }
     }
 
+    /// Returns the number of set (true) elements in the mask.
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::mask32x4;
+    /// let mask = mask32x4::from_array([true, false, true, true]);
+    /// assert_eq!(mask.count(), 3);
+    /// ```
+    #[inline]
+    #[must_use = "method returns the number of set elements and does not mutate the mask"]
+    pub fn count(self) -> usize {
+        self.to_bitmask().count_ones() as usize
+    }
     /// Creates a bitmask from a mask.
     ///
     /// Each bit is set if the corresponding element in the mask is `true`.
