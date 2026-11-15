@@ -43,6 +43,24 @@ pub impl(self) trait SimdFloat: Copy {
     #[must_use]
     fn cast<T: SimdCast>(self) -> Self::Cast<T>;
 
+    /// Adds corresponding lanes using relaxed algebraic floating-point semantics.
+    ///
+    /// This permits optimizations that may change rounding, NaN, infinity, and signed-zero
+    /// behavior compared with ordinary floating-point addition.
+    fn algebraic_add(self, other: Self) -> Self;
+
+    /// Subtracts corresponding lanes using relaxed algebraic floating-point semantics.
+    fn algebraic_sub(self, other: Self) -> Self;
+
+    /// Multiplies corresponding lanes using relaxed algebraic floating-point semantics.
+    fn algebraic_mul(self, other: Self) -> Self;
+
+    /// Divides corresponding lanes using relaxed algebraic floating-point semantics.
+    fn algebraic_div(self, other: Self) -> Self;
+
+    /// Computes the remainder of corresponding lanes using relaxed algebraic semantics.
+    fn algebraic_rem(self, other: Self) -> Self;
+
     /// Rounds toward zero and converts to the same-width integer type, assuming that
     /// the value is finite and fits in that type.
     ///
@@ -251,6 +269,41 @@ macro_rules! impl_trait {
             {
                 // Safety: supported types are guaranteed by SimdCast
                 unsafe { core::intrinsics::simd::simd_as(self) }
+            }
+
+            #[inline]
+            fn algebraic_add(self, other: Self) -> Self {
+                Self::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].algebraic_add(other.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn algebraic_sub(self, other: Self) -> Self {
+                Self::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].algebraic_sub(other.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn algebraic_mul(self, other: Self) -> Self {
+                Self::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].algebraic_mul(other.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn algebraic_div(self, other: Self) -> Self {
+                Self::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].algebraic_div(other.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn algebraic_rem(self, other: Self) -> Self {
+                Self::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].algebraic_rem(other.as_array()[lane])
+                }))
             }
 
             #[inline]
