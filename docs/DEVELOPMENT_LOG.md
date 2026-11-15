@@ -483,3 +483,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The example now contrasts the original interleaved (array-of-structures) layout with a structure-of-arrays layout, reflecting the upstream discussion that non-contiguous XYZ loads can limit vectorization independently of the horizontal-reduction cost.
 - Added the SoA result to the scalar-reference tolerance checks and the small regression test. This is an explanatory benchmark/reproducer, not a guaranteed performance claim; actual timings remain target- and compiler-dependent.
 - Validation: pending CI for the implementation commit.
+
+### 2026-11-15 — audit upstream issue #486 (dynamic swizzle fast path)
+
+- Confirmed the fork already contains `Simd<u8, N>::swizzle_dyn_unchecked`, which avoids `zeroing_idxs` on the x86 SSSE3 `u8x16` path and falls back to the regular zeroing implementation where that specialized path is unavailable.
+- The method documents the contract: in-range indices select bytes; out-of-range indices with the high bit set yield zero; other out-of-range indices are implementation-defined.
+- `crates/core_simd/tests/swizzle_dyn.rs` includes high-bit out-of-range regression coverage over lane widths from 1 through 64, alongside exhaustive byte-index coverage for the regular zeroing API.
+- Outcome: #486's requested API/performance path is already present in this fork; no duplicate API or speculative target-specific implementation was added.
