@@ -329,6 +329,72 @@ fn check_gather_scatter_masked_memory_width<const LANES: usize>() {
     }
 }
 
+fn check_gather_index_boundaries<const LANES: usize>() {
+    let source: Vec<i32> = (0..LANES).map(|lane| lane as i32 * 19 + 3).collect();
+    let fallback = Simd::from_array(core::array::from_fn(|lane| -100 - lane as i32));
+    let patterns: [[bool; LANES]; 4] = [
+        core::array::from_fn(|_| false),
+        core::array::from_fn(|_| true),
+        core::array::from_fn(|lane| lane % 2 == 0),
+        core::array::from_fn(|lane| lane % 3 == 1),
+    ];
+
+    // Rotate every lane through valid, boundary, and maximally invalid indices.
+    // Re-run at each slice length so the same index can move in and out of bounds.
+    for len in 0..=LANES {
+        for shift in 0..LANES.max(1) {
+            let indices = Simd::from_array(core::array::from_fn(|lane| {
+                match (lane + shift) % 4 {
+                    0 => (lane + shift) % LANES,
+                    1 => len,
+                    2 => LANES,
+                    _ => usize::MAX,
+                }
+            }));
+            let index_array = indices.to_array();
+            for enabled in patterns {
+                let actual =
+                    Simd::gather_select(&source[..len], Mask::from_array(enabled), indices, fallback)
+                        .to_array();
+                let fallback_array = fallback.to_array();
+                let expected = core::array::from_fn(|lane| {
+                    if enabled[lane] {
+                        source[..len]
+                            .get(index_array[lane])
+                            .copied()
+                            .unwrap_or(fallback_array[lane])
+                    } else {
+                        fallback_array[lane]
+                    }
+                });
+                assert_eq!(
+                    actual, expected,
+                    "gather boundaries: LANES={LANES}, len={len}, shift={shift}, indices={index_array:?}, mask={enabled:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn gather_index_boundaries_cover_supported_lane_widths() {
+    check_gather_index_boundaries::<1>();
+    check_gather_index_boundaries::<2>();
+    check_gather_index_boundaries::<3>();
+    check_gather_index_boundaries::<4>();
+    check_gather_index_boundaries::<7>();
+    check_gather_index_boundaries::<8>();
+    check_gather_index_boundaries::<9>();
+    check_gather_index_boundaries::<15>();
+    check_gather_index_boundaries::<16>();
+    check_gather_index_boundaries::<17>();
+    check_gather_index_boundaries::<31>();
+    check_gather_index_boundaries::<32>();
+    check_gather_index_boundaries::<33>();
+    check_gather_index_boundaries::<63>();
+    check_gather_index_boundaries::<64>();
+}
+
 #[test]
 fn gather_scatter_masked_memory_covers_lane_count_boundaries() {
     check_gather_scatter_masked_memory_width::<1>();

@@ -358,3 +358,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Removed the permissive assertion that accepted any colliding writer, which could hide a violation of the documented last-writer behavior.
 - Kept exhaustive coverage over all 625 four-lane index tuples and all 16 masks, including out-of-bounds indices and usize::MAX.
 - Validation: GitHub Actions must confirm formatting and all target test configurations; no local Rust toolchain is available in this environment.
+
+### 2026-11-15 — expand gather bounds regression coverage
+
+- Added gather_select boundary coverage for every supported lane width (1 through 64, including non-power-of-two widths).
+- Rotates lanes through valid indices, the current slice-length boundary, the vector-width boundary, and usize::MAX while varying slice lengths and masks.
+- Compares every result against scalar slice lookup and fallback semantics; production gather implementation remains unchanged because the audit found no demonstrated correctness defect.
+- Validation is delegated to the repository CI; this environment has no local Rust toolchain.
