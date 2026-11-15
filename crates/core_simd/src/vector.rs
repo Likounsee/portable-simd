@@ -718,12 +718,7 @@ where
         // SAFETY: The caller guarantees that every index is in bounds, so all
         // lanes can be enabled. The fallback vector is never selected.
         unsafe {
-            Self::gather_select_unchecked(
-                slice,
-                Mask::splat(true),
-                idxs,
-                Self::splat(T::default()),
-            )
+            Self::gather_select_unchecked(slice, Mask::splat(true), idxs, Self::splat(T::default()))
         }
     }
 
