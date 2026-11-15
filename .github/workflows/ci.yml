@@ -40,7 +40,7 @@ jobs:
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
           cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
-          CORE_SIMD_RMETA="$(python3 - <<'PY'
+          mapfile -t CORE_SIMD_ARTIFACTS < <(python3 - <<'PY'
           import json
           with open("/tmp/core-simd-build.json") as build_output:
               for line in build_output:
@@ -50,24 +50,31 @@ jobs:
                       continue
                   target = message.get("target", {})
                   if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd" and "lib" in target.get("kind", []):
-                      for filename in message.get("filenames", []):
-                          if filename.endswith(".rmeta"):
-                              print(filename)
-                              raise SystemExit(0)
-          raise SystemExit("Cargo did not report a core_simd rmeta")
+                      filenames = message.get("filenames", [])
+                      rlib = next((name for name in filenames if name.endswith(".rlib")), None)
+                      rmeta = next((name for name in filenames if name.endswith(".rmeta")), None)
+                      if rlib and rmeta:
+                          print(rlib)
+                          print(rmeta)
+                          raise SystemExit(0)
+          raise SystemExit("Cargo did not report both core_simd rlib and rmeta artifacts")
           PY
-          )"
+          )
+          CORE_SIMD_RLIB="${CORE_SIMD_ARTIFACTS[0]:-}"
+          CORE_SIMD_RMETA="${CORE_SIMD_ARTIFACTS[1]:-}"
+          test -n "$CORE_SIMD_RLIB"
           test -n "$CORE_SIMD_RMETA"
-          echo "Using fork library: $CORE_SIMD_RMETA"
+          echo "Using fork library artifacts: $CORE_SIMD_RLIB and $CORE_SIMD_RMETA"
+          echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"
           echo "CORE_SIMD_RMETA=$CORE_SIMD_RMETA" >> "$GITHUB_ENV"
       - name: Compile masked memory benchmark against the fork
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
       - name: Run masked memory benchmark and semantic assertions
         run: /tmp/masked-load-store
       - name: Emit optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
       - name: Emit optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

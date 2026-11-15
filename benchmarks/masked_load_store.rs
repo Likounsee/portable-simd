@@ -4,7 +4,7 @@
 //!
 //! Reproducible baseline (use the toolchain pinned by this repository):
 //!   cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
-//!   CORE_SIMD_RMETA="$(python3 - <<'PY'
+//!   mapfile -t CORE_SIMD_ARTIFACTS < <(python3 - <<'PY'
 //!   import json
 //!   with open("/tmp/core-simd-build.json") as build_output:
 //!       for line in build_output:
@@ -14,16 +14,21 @@
 //!               continue
 //!           target = message.get("target", {})
 //!           if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd" and "lib" in target.get("kind", []):
-//!               for filename in message.get("filenames", []):
-//!                   if filename.endswith(".rmeta"):
-//!                       print(filename)
-//!                       raise SystemExit(0)
-//!   raise SystemExit("Cargo did not report a core_simd rmeta")
+//!               filenames = message.get("filenames", [])
+//!               rlib = next((name for name in filenames if name.endswith(".rlib")), None)
+//!               rmeta = next((name for name in filenames if name.endswith(".rmeta")), None)
+//!               if rlib and rmeta:
+//!                   print(rlib)
+//!                   print(rmeta)
+//!                   raise SystemExit(0)
+//!   raise SystemExit("Cargo did not report both core_simd rlib and rmeta artifacts")
 //!   PY
-//!   )"
+//!   )
+//!   CORE_SIMD_RLIB="${CORE_SIMD_ARTIFACTS[0]}"
+//!   CORE_SIMD_RMETA="${CORE_SIMD_ARTIFACTS[1]}"
 //!   rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 \
-//!     --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps \
-//!     benchmarks/masked_load_store.rs -o /tmp/masked-load-store
+//!     --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" \
+//!     -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
 //!
 //! Inspect optimized assembly and LLVM IR with the same --extern / -L flags and
 //! replace the output option with --emit=asm or --emit=llvm-ir.

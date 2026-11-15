@@ -1,3 +1,10 @@
+### 2026-11-15 — pass both Cargo metadata and rlib artifacts to standalone rustc
+
+- Passing only the `.rmeta` file failed because rustc also requires the crate's `.rlib` form; passing only the `.rlib` failed because Cargo emits it as a metadata-only stub for this crate.
+- Updated CI and the local reproduction instructions to select both files from the same Cargo `compiler-artifact` record and pass both repeated `--extern core_simd=...` arguments, matching the form Cargo itself uses for this crate's integration tests.
+- The benchmark still compiles against the fork and uses the public `as_array` accessor for its scalar reference. No SIMD implementation or test matrix changes.
+- Validation is pending on the next quality-check run.
+
 ### 2026-11-15 — fix fork API usage in masked-memory codegen benchmark
 
 - The first CI compile against the fork exposed one benchmark-only API mismatch: the scalar reference used `value[lane]`, but `core_simd::Simd` does not implement indexing. Replaced it with the supported `value.as_array()[lane]` accessor.
