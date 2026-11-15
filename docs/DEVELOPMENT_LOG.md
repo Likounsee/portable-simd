@@ -444,3 +444,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The example compares a scalar loop, SIMD with a horizontal reduction on every record, and SIMD vector accumulation followed by one final reduction.
 - It checks numerical agreement with a relative tolerance and reports timings for a local release-mode run. Timings are intentionally not asserted because they depend on the target CPU and compiler.
 - The example is included in `cargo clippy --all-targets`; the new commit's CI must confirm it builds and passes before treating the reproducer as validated.
+
+### 2026-11-15 — follow-up audit of upstream issues #524, #527, and #537
+
+- #524 (Miri selecting unsupported architecture intrinsics) is closed upstream after the reported AArch64 swizzle path began working with newer Miri support. The discussion places the remaining missing-intrinsic work in Miri, not in a portable-simd software-fallback change; no speculative `cfg(miri)` branch was added.
+- #527 (mask ordering) is already corrected in `crates/core_simd/src/simd/cmp/ord.rs`: mask ordering is expressed with boolean logic (`!self & other`, etc.) instead of signed integer comparisons. The fork also contains dedicated regression tests in `crates/core_simd/tests/mask_partial_ord.rs`, including exhaustive 8-lane patterns and 64-lane sign-bit cases.
+- #537 (sealed-trait associated items leaking through a public supertrait) is already addressed in `crates/core_simd/src/masks.rs`: `PrivateMethods` is crate-private, and compile-fail doctests check that its associated items cannot be reached through `MaskElement`.
+- These three reports were audited without changing production code: their fixes or resolution are already represented in the fork, and duplicating them would add risk without closing a remaining gap.
