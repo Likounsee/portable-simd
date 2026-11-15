@@ -100,7 +100,7 @@ fn scalar_store(value: Simd<f32, LANES>, slice: &mut [f32], enabled: [bool; LANE
     for lane in 0..LANES {
         if enabled[lane] {
             if let Some(destination) = slice.get_mut(lane) {
-                *destination = value[lane];
+                *destination = value.as_array()[lane];
             }
         }
     }

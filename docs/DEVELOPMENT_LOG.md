@@ -1,3 +1,10 @@
+### 2026-11-15 — fix fork API usage in masked-memory codegen benchmark
+
+- The first CI compile against the fork exposed one benchmark-only API mismatch: the scalar reference used `value[lane]`, but `core_simd::Simd` does not implement indexing. Replaced it with the supported `value.as_array()[lane]` accessor.
+- Corrected the artifact-discovery error text to name the expected `.rmeta` file.
+- Changed artifact upload's missing-file policy to warn: a failed compile remains the job's real failure, without a second redundant upload failure when no assembly/IR was produced.
+- No library implementation or test matrix was changed. Validation is pending on the next full CI run.
+
 ### 2026-11-15 — align masked-memory benchmark reproduction instructions with CI
 
 - Updated the benchmark's documented build/link command to select the `.rmeta` artifact reported by Cargo, matching the working CI diagnostic.

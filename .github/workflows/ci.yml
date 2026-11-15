@@ -54,7 +54,7 @@ jobs:
                           if filename.endswith(".rmeta"):
                               print(filename)
                               raise SystemExit(0)
-          raise SystemExit("Cargo did not report a core_simd rlib")
+          raise SystemExit("Cargo did not report a core_simd rmeta")
           PY
           )"
           test -n "$CORE_SIMD_RMETA"
@@ -76,7 +76,7 @@ jobs:
           path: |
             /tmp/masked-load-store.s
             /tmp/masked-load-store.ll
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
 
   docs:
