@@ -1,9 +1,15 @@
-use crate::simd::{Simd, SimdCast, SimdElement, cmp::SimdOrd};
+use crate::simd::{Simd, SimdCast, SimdElement, cmp::{SimdOrd, SimdPartialEq}};
 
 /// Operations on SIMD vectors of unsigned integers.
 pub impl(self) trait SimdUint: Copy {
     /// Scalar type contained by this SIMD vector type.
     type Scalar;
+
+    /// Converts each lane to `true` when it is not equal to zero.
+    #[must_use]
+    fn to_mask(self) -> <Self as SimdPartialEq>::Mask
+    where
+        Self: SimdPartialEq;
 
     /// A SIMD vector with a different element type.
     type Cast<T: SimdElement>;
@@ -160,6 +166,11 @@ macro_rules! impl_trait {
         {
             type Scalar = $ty;
             type Cast<T: SimdElement> = Simd<T, N>;
+
+            #[inline]
+            fn to_mask(self) -> <Self as SimdPartialEq>::Mask {
+                self.simd_ne(Self::splat(0))
+            }
 
             #[inline]
             fn cast<T: SimdCast>(self) -> Self::Cast<T> {
