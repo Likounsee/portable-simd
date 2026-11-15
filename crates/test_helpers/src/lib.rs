@@ -1,9 +1,4 @@
 #![feature(f16)]
-#![cfg_attr(
-    any(target_arch = "powerpc", target_arch = "powerpc64"),
-    feature(powerpc_target_feature, stdarch_powerpc)
-)]
-
 pub mod array;
 
 #[cfg(target_arch = "wasm32")]

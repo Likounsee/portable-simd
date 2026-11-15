@@ -134,6 +134,11 @@ Disposition for this fork: **investigated, not claimed fixed**. This is a useful
 
 These three supplementary investigations are not added to the 16-item implementation issue count above; they are separate API/codegen observations.
  
+### CI warning audit: obsolete architecture feature gates
+
+The 2026-11-15 CI logs showed `stdarch_loongarch` as declared-but-unused in `core_simd`, and `powerpc_target_feature` plus `stdarch_powerpc` as declared-but-unused in `test_helpers`. These are distinct from the still-used PowerPC feature gate in `core_simd`, which is intentionally retained. The unused declarations were removed only from the crates where the compiler explicitly reported them unused. Target-specific Clippy jobs must confirm the cleanup; this does not alter architecture implementations or target cfg behavior.
+
+
 ### Cross-cutting stabilization blocker: upstream #364
 
 The upstream meta-issue [#364 — Critical issues before stabilization](https://github.com/rust-lang/portable-simd/issues/364) is still open (last updated 2026-08-04). It is separate from the 16 issue references inventoried in the development log and should be treated as a key API-readiness checklist, not as a single implementation bug.

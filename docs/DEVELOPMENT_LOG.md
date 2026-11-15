@@ -395,3 +395,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Re-read #341 maintainer comments: the request is specifically for a vector-typed LLVM load/store where appropriate, even when array copies or memcpy are preferable for other cases. Existing fast-path evidence is useful but does not close the upstream request.
 - Reviewed #486 source: x86 SSSE3 and AVX2 paths still use zeroing/clamping logic as documented; exhaustive semantic tests validate OOB zeroing but do not provide the optional implementation-defined-OOB API proposed by the issue. No new API was added without upstream consensus.
 - No CI failure had been confirmed at the time of this review. No speculative production changes were made.
+
+
+### 2026-11-15 — remove compiler-confirmed unused architecture feature gates
+
+- Inspected complete Clippy logs rather than annotations: LoongArch Clippy reported `stdarch_loongarch` unused in `core_simd`; PowerPC64 Clippy reported `powerpc_target_feature` and `stdarch_powerpc` unused in `test_helpers`.
+- Verified the LoongArch vendor module only imports the stable/current `core::arch::loongarch64` module and does not use APIs requiring that crate-level feature gate.
+- Removed the LoongArch gate from `core_simd/src/lib.rs` and the PowerPC gates from `test_helpers/src/lib.rs`. Retained the separate PowerPC feature gate in `core_simd`, which is not the warning source.
+- No target-specific algorithm or cfg selection was changed. Awaiting the matching CI jobs to verify the warning cleanup.
