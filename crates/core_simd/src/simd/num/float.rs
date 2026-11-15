@@ -8,6 +8,12 @@ pub impl(self) trait SimdFloat: Copy {
     /// Mask type used for manipulating this SIMD vector type.
     type Mask;
 
+    /// Converts each lane to `true` when it is not equal to zero.
+    ///
+    /// NaN lanes are considered nonzero; both positive and negative zero become `false`.
+    #[must_use]
+    fn to_mask(self) -> Self::Mask;
+
     /// Scalar type contained by this SIMD vector type.
     type Scalar;
 
@@ -271,6 +277,11 @@ macro_rules! impl_trait {
             type Scalar = $ty;
             type Bits = Simd<$bits_ty, N>;
             type Cast<T: SimdElement> = Simd<T, N>;
+
+            #[inline]
+            fn to_mask(self) -> Self::Mask {
+                self.simd_ne(Self::splat(0.0))
+            }
 
             #[inline]
             fn cast<T: SimdCast>(self) -> Self::Cast<T>
