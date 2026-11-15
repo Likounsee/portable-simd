@@ -41,6 +41,13 @@ pub impl(self) trait SimdInt: Copy {
     /// Every lane product must be representable by the scalar element type.
     unsafe fn unchecked_mul(self, second: Self) -> Self;
 
+    /// Returns the high half of each signed lane's full-width product.
+    ///
+    /// The result is the product shifted right by the lane bit width, using
+    /// arithmetic (sign-extending) shift semantics.
+    #[must_use]
+    fn mul_high(self, second: Self) -> Self;
+
     /// Lanewise saturating add.
     ///
     /// # Examples
@@ -250,7 +257,7 @@ pub impl(self) trait SimdInt: Copy {
 }
 
 macro_rules! impl_trait {
-    { $($ty:ident ($unsigned:ident)),* } => {
+    { $($ty:ident ($unsigned:ident, $wide:ident)),* } => {
         $(
         impl<const N: usize> SimdInt for Simd<$ty, N> {
             type Mask = Mask<<$ty as SimdElement>::Mask, N>;
@@ -285,6 +292,15 @@ macro_rules! impl_trait {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees that every lane product is representable.
                     unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            fn mul_high(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let product = (self.as_array()[lane] as $wide)
+                        .wrapping_mul(second.as_array()[lane] as $wide);
+                    (product >> <$ty>::BITS) as $ty
                 }))
             }
 
@@ -433,4 +449,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { i8 (u8), i16 (u16), i32 (u32), i64 (u64), isize (usize) }
+impl_trait! { i8 (u8, i16), i16 (u16, i32), i32 (u32, i64), i64 (u64, i128), isize (usize, i128) }
