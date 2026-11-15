@@ -347,3 +347,77 @@ fn gather_scatter_masked_memory_covers_lane_count_boundaries() {
     check_gather_scatter_masked_memory_width::<63>();
     check_gather_scatter_masked_memory_width::<64>();
 }
+
+fn check_all_enabled_slice_memory<const LANES: usize>() {
+    let source: Vec<i32> = (0..LANES + 2)
+        .map(|lane| lane as i32 * 3 + 1)
+        .collect();
+    let values: Simd<i32, LANES> = Simd::from_array(core::array::from_fn(|lane| source[lane]));
+    let fallback = Simd::splat(-7_i32);
+
+    // Exercise the prefix boundary on both sides of the vector width. This
+    // covers the full-width fast path as well as the bounded short-slice path.
+    for len in 0..=LANES + 2 {
+        let expected_load = core::array::from_fn(|lane| {
+            if lane < len {
+                source[lane]
+            } else {
+                -7
+            }
+        });
+
+        assert_eq!(
+            Simd::<i32, LANES>::load_or(&source[..len], fallback).to_array(),
+            expected_load,
+            "load_or: lanes={LANES}, len={len}"
+        );
+        assert_eq!(
+            Simd::<i32, LANES>::load_select(
+                &source[..len],
+                Mask::splat(true),
+                fallback,
+            )
+            .to_array(),
+            expected_load,
+            "load_select: lanes={LANES}, len={len}"
+        );
+
+        let mut destination = vec![-1_i32; LANES + 2];
+        values.store_select(&mut destination[..len], Mask::splat(true));
+
+        let expected_store: Vec<i32> = (0..LANES + 2)
+            .map(|lane| {
+                if lane < len && lane < LANES {
+                    source[lane]
+                } else {
+                    -1
+                }
+            })
+            .collect();
+        assert_eq!(
+            destination,
+            expected_store,
+            "store_select: lanes={LANES}, len={len}"
+        );
+    }
+}
+
+#[test]
+fn all_enabled_slice_memory_operations_cover_supported_lane_widths() {
+    check_all_enabled_slice_memory::<1>();
+    check_all_enabled_slice_memory::<2>();
+    check_all_enabled_slice_memory::<3>();
+    check_all_enabled_slice_memory::<4>();
+    check_all_enabled_slice_memory::<7>();
+    check_all_enabled_slice_memory::<8>();
+    check_all_enabled_slice_memory::<9>();
+    check_all_enabled_slice_memory::<15>();
+    check_all_enabled_slice_memory::<16>();
+    check_all_enabled_slice_memory::<17>();
+    check_all_enabled_slice_memory::<31>();
+    check_all_enabled_slice_memory::<32>();
+    check_all_enabled_slice_memory::<33>();
+    check_all_enabled_slice_memory::<63>();
+    check_all_enabled_slice_memory::<64>();
+}
+
