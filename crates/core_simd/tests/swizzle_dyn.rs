@@ -111,7 +111,6 @@ fn swizzle_dyn_exhaustive_indices_at_width_boundaries() {
     check_exhaustive_swizzle_indices::<64>();
 }
 
-
 #[test]
 fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
     const LANES: usize = 16;
