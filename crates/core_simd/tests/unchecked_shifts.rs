@@ -19,11 +19,13 @@ macro_rules! signed_shift_tests {
                     let left = unsafe { value.unchecked_shl(amount) };
                     // SAFETY: Every shift amount is either zero or one.
                     let right = unsafe { value.unchecked_shr(amount) };
-                    let expected_left = core::array::from_fn(|lane| unsafe {
-                        lhs[lane].unchecked_shl(rhs[lane] as u32)
+                    let expected_left = core::array::from_fn(|lane| {
+                        // SAFETY: Every shift amount is either zero or one.
+                        unsafe { lhs[lane].unchecked_shl(rhs[lane] as u32) }
                     });
-                    let expected_right = core::array::from_fn(|lane| unsafe {
-                        lhs[lane].unchecked_shr(rhs[lane] as u32)
+                    let expected_right = core::array::from_fn(|lane| {
+                        // SAFETY: Every shift amount is either zero or one.
+                        unsafe { lhs[lane].unchecked_shr(rhs[lane] as u32) }
                     });
                     assert_eq!(left.to_array(), expected_left);
                     assert_eq!(right.to_array(), expected_right);
@@ -48,11 +50,13 @@ macro_rules! unsigned_shift_tests {
                     let left = unsafe { value.unchecked_shl(amount) };
                     // SAFETY: Every shift amount is either zero or one.
                     let right = unsafe { value.unchecked_shr(amount) };
-                    let expected_left = core::array::from_fn(|lane| unsafe {
-                        lhs[lane].unchecked_shl(rhs[lane] as u32)
+                    let expected_left = core::array::from_fn(|lane| {
+                        // SAFETY: Every shift amount is either zero or one.
+                        unsafe { lhs[lane].unchecked_shl(rhs[lane] as u32) }
                     });
-                    let expected_right = core::array::from_fn(|lane| unsafe {
-                        lhs[lane].unchecked_shr(rhs[lane] as u32)
+                    let expected_right = core::array::from_fn(|lane| {
+                        // SAFETY: Every shift amount is either zero or one.
+                        unsafe { lhs[lane].unchecked_shr(rhs[lane] as u32) }
                     });
                     assert_eq!(left.to_array(), expected_left);
                     assert_eq!(right.to_array(), expected_right);
