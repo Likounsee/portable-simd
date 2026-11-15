@@ -664,10 +664,14 @@ fn check_scatter_duplicate_winners<const LANES: usize>() {
             let mut actual = [-99_i32; DEST_LEN];
             values.scatter_select(&mut actual[..len], Mask::from_array(enabled), indices);
 
-            for (destination, &actual_value) in actual[..len].iter().enumerate() {
-                let last_writer = (0..LANES)
-                    .rev()
-                    .find(|&lane| enabled[lane] && index_array[lane] == destination);
+            for (destination, &actual_value) in actual.iter().enumerate() {
+                let last_writer = if destination < len {
+                    (0..LANES)
+                        .rev()
+                        .find(|&lane| enabled[lane] && index_array[lane] == destination)
+                } else {
+                    None
+                };
 
                 if let Some(lane) = last_writer {
                     assert_eq!(
