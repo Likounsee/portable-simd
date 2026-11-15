@@ -166,6 +166,18 @@ pub impl(self) trait StdFloat: Sized {
         unsafe { intrinsics::simd_round_ties_even(self) }
     }
 
+    /// Rounds each element to the nearest integer-valued float using the platform's
+    /// efficient SIMD rounding operation. Halfway cases are rounded to the nearest even
+    /// integer, matching [`round_ties_even`](Self::round_ties_even).
+    ///
+    /// Unlike [`round`](Self::round), this method does not round halfway cases away from zero.
+    /// Its performance advantage depends on the target architecture and compiler.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    #[inline]
+    fn round_fast(self) -> Self {
+        unsafe { intrinsics::simd_round_ties_even(self) }
+    }
+
     /// Returns the floating point's fractional value, with its integer part removed.
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn fract(self) -> Self;
