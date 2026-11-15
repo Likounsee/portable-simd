@@ -110,3 +110,26 @@ fn swizzle_dyn_exhaustive_indices_at_width_boundaries() {
     check_exhaustive_swizzle_indices::<63>();
     check_exhaustive_swizzle_indices::<64>();
 }
+
+
+#[test]
+fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
+    const LANES: usize = 16;
+    let values: [u8; LANES] =
+        core::array::from_fn(|lane| (lane as u8).wrapping_mul(13).wrapping_add(7));
+    let indices: [u8; LANES] = core::array::from_fn(|lane| match lane % 4 {
+        0 => lane as u8,
+        1 => 0x80,
+        2 => 0xff,
+        _ => (LANES - 1) as u8,
+    });
+
+    let actual = unsafe {
+        core_simd::simd::Simd::from_array(values)
+            .swizzle_dyn_unchecked(core_simd::simd::Simd::from_array(indices))
+            .to_array()
+    };
+    let expected = swizzle_dyn_scalar_ver(values, indices);
+
+    assert_eq!(actual, expected);
+}

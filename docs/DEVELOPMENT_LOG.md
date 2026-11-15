@@ -428,3 +428,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Sparse `store_select` lowers to per-lane conditional scalar stores on SSE2. This is consistent with the absence of general masked-store instructions on SSE2; it remains a target-specific optimization candidate, not a correctness defect. No unsafe workaround was introduced.
 - The artifact does not establish a measured end-to-end speedup. Controlled benchmark comparisons and AArch64/WASM codegen diagnostics remain outstanding.
 - The previous scatter-collision test PR is now represented on `main`; no separate diff remains on its branch.
+
+
+### 2026-11-15 — add the high-bit dynamic-swizzle fast path (#486)
+
+- Added `Simd<u8, N>::swizzle_dyn_unchecked`, whose caller contract guarantees that every out-of-range index has bit 7 set.
+- On x86/x86_64 builds with SSSE3 and exactly 16 lanes, the method now feeds indices directly to `PSHUFB`, avoiding the `zeroing_idxs` arithmetic required by the fully checked API.
+- Other lane widths and targets fall back to `swizzle_dyn`, retaining the existing portable behavior rather than introducing target-specific assumptions.
+- Added a regression test mixing valid indices with `0x80` and `0xff` out-of-range indices.
+- This is a targeted implementation of upstream #486. Formatting, compile tests, the full target matrix, and generated-assembly verification are pending CI; no performance gain is claimed until the assembly is checked.
