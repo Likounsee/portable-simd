@@ -407,3 +407,74 @@ fn all_enabled_slice_memory_operations_cover_supported_lane_widths() {
     check_all_enabled_slice_memory::<63>();
     check_all_enabled_slice_memory::<64>();
 }
+
+fn check_full_width_slice_offsets<const LANES: usize>() {
+    let source: Vec<i32> = (0..LANES * 2 + 1)
+        .map(|index| index as i32 * 5 + 3)
+        .collect();
+    let values: Simd<i32, LANES> =
+        Simd::from_array(core::array::from_fn(|lane| 100 + lane as i32));
+    let fallback = Simd::splat(-7_i32);
+
+    // Shift the slice start by each element offset to exercise full-width
+    // operations at different addresses within the same allocation.
+    for offset in 0..LANES {
+        let source_slice = &source[offset..offset + LANES + 1];
+        let expected_load = core::array::from_fn(|lane| source[offset + lane]);
+        assert_eq!(
+            Simd::<i32, LANES>::load_or(source_slice, fallback).to_array(),
+            expected_load,
+            "load_or: lanes={LANES}, offset={offset}"
+        );
+        assert_eq!(
+            Simd::<i32, LANES>::load_select(
+                source_slice,
+                Mask::splat(true),
+                fallback,
+            )
+            .to_array(),
+            expected_load,
+            "load_select: lanes={LANES}, offset={offset}"
+        );
+
+        let mut destination = vec![-99_i32; LANES * 2 + 1];
+        values.store_select(
+            &mut destination[offset..offset + LANES + 1],
+            Mask::splat(true),
+        );
+        let expected_store: Vec<i32> = (0..destination.len())
+            .map(|index| {
+                if (offset..offset + LANES).contains(&index) {
+                    values.as_array()[index - offset]
+                } else {
+                    -99
+                }
+            })
+            .collect();
+        assert_eq!(
+            destination,
+            expected_store,
+            "store_select: lanes={LANES}, offset={offset}"
+        );
+    }
+}
+
+#[test]
+fn all_enabled_full_width_slice_memory_handles_element_offsets() {
+    check_full_width_slice_offsets::<1>();
+    check_full_width_slice_offsets::<2>();
+    check_full_width_slice_offsets::<3>();
+    check_full_width_slice_offsets::<4>();
+    check_full_width_slice_offsets::<7>();
+    check_full_width_slice_offsets::<8>();
+    check_full_width_slice_offsets::<9>();
+    check_full_width_slice_offsets::<15>();
+    check_full_width_slice_offsets::<16>();
+    check_full_width_slice_offsets::<17>();
+    check_full_width_slice_offsets::<31>();
+    check_full_width_slice_offsets::<32>();
+    check_full_width_slice_offsets::<33>();
+    check_full_width_slice_offsets::<63>();
+    check_full_width_slice_offsets::<64>();
+}
+

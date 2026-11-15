@@ -331,3 +331,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The tests compare results against scalar slice semantics. No production code or unsafe behavior was changed in this test-only follow-up.
 - Applied the formatting corrections reported by the first CI run. CI is required to execute the new matrix; no local Rust toolchain is available in this environment.
 
+### 2026-11-15 — test full-width slice memory at shifted element offsets
+
+- Added load/store regression coverage that advances slice starts through every element offset from zero to `LANES - 1` for representative vector widths from 1 to 64 lanes.
+- The matrix checks `load_or`, all-enabled `load_select`, and `store_select` against scalar expectations, including preservation of the destination prefix and the element immediately after the vector write.
+- This exercises the full-width fast path at different element-aligned addresses without assuming SIMD alignment. No production implementation was changed because no correctness defect has been demonstrated.
+- Validation: pending CI on this commit; no local Rust toolchain is available in this environment.
