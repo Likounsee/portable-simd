@@ -139,6 +139,19 @@ macro_rules! test_mask_api {
             }
 
             #[test]
+            #[test]
+            fn count() {
+                assert_eq!(Mask::<$type, 8>::splat(false).count(), 0);
+                assert_eq!(Mask::<$type, 8>::splat(true).count(), 8);
+                let values = [true, false, true, false, false, true, false, true];
+                assert_eq!(Mask::<$type, 8>::from_array(values).count(), 4);
+
+                let values = core::array::from_fn::<_, 64, _>(|lane| lane % 3 == 0);
+                assert_eq!(
+                    Mask::<$type, 64>::from_array(values).count(),
+                    values.iter().filter(|&&value| value).count(),
+                );
+            }
             fn roundtrip_int_conversion() {
                 let values = [true, false, false, true, false, false, true, false];
                 let mask = Mask::<$type, 8>::from_array(values);
