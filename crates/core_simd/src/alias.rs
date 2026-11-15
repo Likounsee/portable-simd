@@ -236,7 +236,6 @@ mask_alias! {
     }
 }
 
-
 // Generic-lane-count aliases complement the fixed-width aliases above. These
 // are useful in APIs where the lane count is itself a const generic parameter.
 macro_rules! generic_alias {
