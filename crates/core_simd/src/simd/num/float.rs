@@ -185,6 +185,14 @@ pub impl(self) trait SimdFloat: Copy {
     /// ```
     fn reduce_sum(self) -> Self::Scalar;
 
+    /// Returns the sum of the elements using relaxed algebraic floating-point semantics.
+    ///
+    /// Unlike the ordered reduction, this operation permits reassociation and other
+    /// algebraic optimizations that may change rounding, NaN, infinity, and signed-zero
+    /// behavior. Use it only when those differences are acceptable.
+    #[must_use]
+    fn algebraic_reduce_sum(self) -> Self::Scalar;
+
     /// Reducing multiply.  Returns the product of the elements of the vector.
     ///
     /// # Examples
@@ -436,6 +444,14 @@ macro_rules! impl_trait {
                     // Safety: `self` is a float vector
                     unsafe { core::intrinsics::simd::simd_reduce_add_ordered(self, -0.) }
                 }
+            }
+
+            #[inline]
+            fn algebraic_reduce_sum(self) -> Self::Scalar {
+                self.as_array()
+                    .iter()
+                    .copied()
+                    .fold(0.0, |sum, lane| sum.algebraic_add(lane))
             }
 
             #[inline]
