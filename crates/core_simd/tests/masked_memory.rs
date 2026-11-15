@@ -233,6 +233,44 @@ fn check_contiguous_masked_memory_width<const LANES: usize>() {
     ];
 
     for len in 0..=LANES {
+        // Exercise every possible prefix length, not only half-width and
+        // all-but-one masks. This covers the complete prefix fast-path boundary.
+        for prefix_len in 0..=LANES {
+            let enabled = core::array::from_fn(|lane| lane < prefix_len);
+            let actual = Simd::<i32, LANES>::load_select(
+                &source[..len],
+                Mask::from_array(enabled),
+                fallback,
+            )
+            .to_array();
+            let fallback_array = fallback.to_array();
+            let expected = core::array::from_fn(|lane| {
+                if enabled[lane] && lane < len {
+                    source[lane]
+                } else {
+                    fallback_array[lane]
+                }
+            });
+            assert_eq!(
+                actual, expected,
+                "prefix load: LANES={LANES}, len={len}, prefix_len={prefix_len}"
+            );
+
+            let mut destination = [-99_i32; LANES];
+            values.store_select(&mut destination[..len], Mask::from_array(enabled));
+            let expected = core::array::from_fn(|lane| {
+                if enabled[lane] && lane < len {
+                    source[lane]
+                } else {
+                    -99
+                }
+            });
+            assert_eq!(
+                destination, expected,
+                "prefix store: LANES={LANES}, len={len}, prefix_len={prefix_len}"
+            );
+        }
+
         for enabled in patterns {
             let actual = Simd::<i32, LANES>::load_select(
                 &source[..len],
