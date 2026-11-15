@@ -1,3 +1,11 @@
+### 2026-11-15 — retain optimized codegen evidence for masked memory operations
+
+- Extended the existing masked-memory diagnostic CI job to emit optimized x86-64/SSE2 assembly and LLVM IR using the repository-pinned nightly toolchain.
+- Uploads both files as a commit-specific Actions artifact for 14 days, making the exact generated code available for review after each CI run.
+- This closes the evidence gap in upstream #494: future changes can compare the actual `load_select` / `load_or_default` and `store_select` lowering against the scalar reference rather than relying on timings or source-level assumptions.
+- The existing semantic benchmark still runs unchanged. No library implementation, unsafe code, target matrix, or test coverage was altered.
+- Validation: the new CI run must confirm both compiler emissions and artifact upload succeed; the first artifact will be inspected before proposing any codegen implementation change.
+
 # portable-simd development log
 
 This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a forward-looking roadmap: entries record what was changed, where it was changed, why, and what evidence exists. Line numbers refer to the files at this log's commit; later edits may shift them.
