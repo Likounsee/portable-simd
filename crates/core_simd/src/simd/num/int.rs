@@ -1,5 +1,5 @@
 use crate::simd::{
-    Mask, Select, Simd, SimdCast, SimdElement, cmp::SimdOrd, cmp::SimdPartialOrd, num::SimdUint,
+    Mask, Select, Simd, SimdCast, SimdElement, cmp::SimdOrd, cmp::SimdPartialEq, cmp::SimdPartialOrd, num::SimdUint,
 };
 
 /// Operations on SIMD vectors of signed integers.
