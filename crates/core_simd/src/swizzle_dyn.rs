@@ -129,10 +129,6 @@ impl<const N: usize> Simd<u8, N> {
     /// Indices less than `N` select the corresponding byte. Out-of-bounds
     /// indices with their most significant bit set select zero. Other
     /// out-of-bounds indices have an implementation-defined result.
-    ///
-    /// This can avoid the index-fixup operation required by some x86 shuffle
-    /// instructions. On targets where the optimization is not available, this
-    /// method falls back to the regular zeroing swizzle.
     #[inline]
     pub fn swizzle_dyn_unchecked(self, idxs: Simd<u8, N>) -> Self {
         #[cfg(all(
