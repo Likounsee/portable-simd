@@ -48,12 +48,14 @@ use crate::simd::{FixEndianness, Mask, MaskElement, Simd, SimdElement};
 /// let c = mask.select(a, b);
 /// assert_eq!(c.to_array(), [true, false, true, false]);
 /// ```
-pub trait Select<T> {
+pub trait SimdSelect<T> {
     /// Choose elements
     fn select(self, true_values: T, false_values: T) -> T;
 }
 
-impl<T, U, const N: usize> Select<Simd<T, N>> for Mask<U, N>
+pub use SimdSelect as Select;
+
+impl<T, U, const N: usize> SimdSelect<Simd<T, N>> for Mask<U, N>
 where
     T: SimdElement,
     U: MaskElement,
@@ -70,7 +72,7 @@ where
     }
 }
 
-impl<T, const N: usize> Select<Simd<T, N>> for u64
+impl<T, const N: usize> SimdSelect<Simd<T, N>> for u64
 where
     T: SimdElement,
 {
@@ -125,7 +127,7 @@ where
     }
 }
 
-impl<T, U, const N: usize> Select<Mask<T, N>> for Mask<U, N>
+impl<T, U, const N: usize> SimdSelect<Mask<T, N>> for Mask<U, N>
 where
     T: MaskElement,
     U: MaskElement,
@@ -133,21 +135,21 @@ where
     #[inline]
     fn select(self, true_values: Mask<T, N>, false_values: Mask<T, N>) -> Mask<T, N> {
         let selected: Simd<T, N> =
-            Select::select(self, true_values.to_simd(), false_values.to_simd());
+            SimdSelect::select(self, true_values.to_simd(), false_values.to_simd());
 
         // Safety: all values come from masks
         unsafe { Mask::from_simd_unchecked(selected) }
     }
 }
 
-impl<T, const N: usize> Select<Mask<T, N>> for u64
+impl<T, const N: usize> SimdSelect<Mask<T, N>> for u64
 where
     T: MaskElement,
 {
     #[inline]
     fn select(self, true_values: Mask<T, N>, false_values: Mask<T, N>) -> Mask<T, N> {
         let selected: Simd<T, N> =
-            Select::select(self, true_values.to_simd(), false_values.to_simd());
+            SimdSelect::select(self, true_values.to_simd(), false_values.to_simd());
 
         // Safety: all values come from masks
         unsafe { Mask::from_simd_unchecked(selected) }
