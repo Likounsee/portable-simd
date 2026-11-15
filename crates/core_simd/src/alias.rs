@@ -235,3 +235,36 @@ mask_alias! {
         masksizex64 64
     }
 }
+
+
+// Generic-lane-count aliases complement the fixed-width aliases above. These
+// are useful in APIs where the lane count is itself a const generic parameter.
+macro_rules! generic_alias {
+    ($($element_ty:ty => $alias:ident),* $(,)?) => {
+        $(
+            #[doc = concat!(
+                "A SIMD vector with a const-generic number of elements of type [`",
+                stringify!($element_ty),
+                "`]."
+            )]
+            #[allow(non_camel_case_types)]
+            pub type $alias<const N: usize> = $crate::simd::Simd<$element_ty, N>;
+        )*
+    };
+}
+
+generic_alias! {
+    i8 => i8xN,
+    i16 => i16xN,
+    i32 => i32xN,
+    i64 => i64xN,
+    isize => isizexN,
+    u8 => u8xN,
+    u16 => u16xN,
+    u32 => u32xN,
+    u64 => u64xN,
+    usize => usizexN,
+    f16 => f16xN,
+    f32 => f32xN,
+    f64 => f64xN,
+}
