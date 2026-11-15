@@ -419,3 +419,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Checks the documented highest-enabled-lane winner and verifies that disabled, out-of-bounds, and destination-tail elements remain unchanged.
 - This closes the test-coverage gap identified during the earlier scatter audit. It does not change the scatter implementation or claim a new performance improvement.
 - Validation: pending the CI run triggered by this main-branch commit.
+
+### 2026-11-15 — inspect fork-linked SSE2 assembly for the masked-memory fast paths
+
+- Downloaded and inspected the actual `masked-load-store-codegen-8cccd48` artifact produced by CI, which links this fork's `core_simd` crate.
+- Confirmed that the full-width all-enabled `load_select` path emits two 128-bit `movups` loads and the corresponding `store_select` path emits two `movups` stores for the eight-lane `f32` case.
+- Short slices still use a bounded prefix-copy path, preserving fallback values and avoiding out-of-bounds access.
+- Sparse `store_select` lowers to per-lane conditional scalar stores on SSE2. This is consistent with the absence of general masked-store instructions on SSE2; it remains a target-specific optimization candidate, not a correctness defect. No unsafe workaround was introduced.
+- The artifact does not establish a measured end-to-end speedup. Controlled benchmark comparisons and AArch64/WASM codegen diagnostics remain outstanding.
+- The previous scatter-collision test PR is now represented on `main`; no separate diff remains on its branch.
