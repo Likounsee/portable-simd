@@ -522,6 +522,21 @@ where
             return Self::load_or(slice, or);
         }
         enable &= mask_up_to(slice.len());
+
+        // A prefix mask describes a contiguous slice prefix. Copying that prefix
+        // avoids lowering a masked load to one conditional memory operation per lane
+        // on targets without native masked-load instructions.
+        let enabled_bits = enable.to_bitmask();
+        let prefix_len = enabled_bits.trailing_ones() as usize;
+        let prefix_bits = if prefix_len == 64 {
+            u64::MAX
+        } else {
+            (1_u64 << prefix_len) - 1
+        };
+        if enabled_bits == prefix_bits {
+            return Self::load_or(&slice[..prefix_len], or);
+        }
+
         // SAFETY: We performed the bounds check by updating the mask. &[T] is properly aligned to
         // the element.
         unsafe { Self::load_select_ptr(slice.as_ptr(), enable, or) }
@@ -820,6 +835,21 @@ where
             return;
         }
         enable &= mask_up_to(slice.len());
+
+        // A prefix mask can be implemented as one contiguous copy instead of a
+        // scalarized masked store on targets without native masked-store instructions.
+        let enabled_bits = enable.to_bitmask();
+        let prefix_len = enabled_bits.trailing_ones() as usize;
+        let prefix_bits = if prefix_len == 64 {
+            u64::MAX
+        } else {
+            (1_u64 << prefix_len) - 1
+        };
+        if enabled_bits == prefix_bits {
+            slice[..prefix_len].copy_from_slice(&self.as_array()[..prefix_len]);
+            return;
+        }
+
         // SAFETY: We performed the bounds check by updating the mask. &[T] is properly aligned to
         // the element.
         unsafe { self.store_select_ptr(slice.as_mut_ptr(), enable) }
