@@ -39,10 +39,24 @@ jobs:
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
-          cargo build -p core_simd --features as_crate --lib
-          TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
-          echo "Cargo target directory: $TARGET_DIR"
-          CORE_SIMD_RLIB="$(find "$TARGET_DIR" -type f -name 'libcore_simd*.rlib' -print -quit)"
+          cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
+          CORE_SIMD_RLIB="$(python3 - <<'PY'
+          import json
+          with open("/tmp/core-simd-build.json") as build_output:
+              for line in build_output:
+                  try:
+                      message = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  target = message.get("target", {})
+                  if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd" and "lib" in target.get("kind", []):
+                      for filename in message.get("filenames", []):
+                          if filename.endswith(".rlib"):
+                              print(filename)
+                              raise SystemExit(0)
+          raise SystemExit("Cargo did not report a core_simd rlib")
+          PY
+          )"
           test -n "$CORE_SIMD_RLIB"
           echo "Using fork library: $CORE_SIMD_RLIB"
           echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"

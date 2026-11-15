@@ -9,6 +9,12 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — select the actual Cargo compiler artifact
+
+- The Cargo target-directory search selected an intermediate build-script rlib stub, which rustc correctly rejected because it contained metadata only.
+- The CI step now captures Cargo's JSON build messages and selects the `.rlib` from the `compiler-artifact` record for the `core_simd` library target. This avoids confusing build-script outputs with the final crate artifact.
+- The standalone compiler remains on edition 2024 and links the selected fork artifact through `--extern`.
+
 ### 2026-11-15 — compile the fork-linked benchmark with the workspace edition
 
 - The fork rlib was found and passed to rustc, but the standalone compiler invocation defaulted to Rust 2015. That edition requires an explicit `extern crate` declaration and rejected the benchmark's Rust 2018+ `use core_simd::...` path.
