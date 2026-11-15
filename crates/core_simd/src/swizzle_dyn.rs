@@ -118,7 +118,7 @@ impl<const N: usize> Simd<u8, N> {
             }
         }
     }
-    
+
     /// Swizzle a vector of bytes using indices whose out-of-bounds values have
     /// their most significant bit set.
     ///
@@ -151,7 +151,6 @@ impl<const N: usize> Simd<u8, N> {
 
         self.swizzle_dyn(idxs)
     }
-
 }
 
 #[allow(dead_code, reason = "only used on some targets/features")]
