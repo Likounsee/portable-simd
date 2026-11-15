@@ -361,6 +361,14 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn to_mask<const LANES: usize>() {
+                    test_helpers::test_unary_mask_elementwise(
+                        &Vector::<LANES>::to_mask,
+                        &|x: Scalar| x != 0,
+                        &|_| true,
+                    );
+                }
+
                 fn is_positive<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::is_positive,
@@ -643,6 +651,14 @@ macro_rules! impl_unsigned_tests {
             }
 
             test_helpers::test_lanes! {
+                fn to_mask<const LANES: usize>() {
+                    test_helpers::test_unary_mask_elementwise(
+                        &Vector::<LANES>::to_mask,
+                        &|x: Scalar| x != 0,
+                        &|_| true,
+                    );
+                }
+
                 fn wrapping_neg<const LANES: usize>() {
                     test_helpers::test_unary_elementwise(
                         &Vector::<LANES>::wrapping_neg,
@@ -735,6 +751,14 @@ macro_rules! impl_float_tests {
                         &Scalar::algebraic_rem,
                         &|_, _| true,
                         16,
+                    );
+                }
+
+                fn to_mask<const LANES: usize>() {
+                    test_helpers::test_unary_mask_elementwise(
+                        &Vector::<LANES>::to_mask,
+                        &|x: Scalar| x != 0.0,
+                        &|_| true,
                     );
                 }
 
