@@ -1,4 +1,7 @@
-use crate::simd::{Simd, SimdCast, SimdElement, cmp::{SimdOrd, SimdPartialEq}};
+use crate::simd::{
+    Simd, SimdCast, SimdElement,
+    cmp::{SimdOrd, SimdPartialEq},
+};
 
 /// Operations on SIMD vectors of unsigned integers.
 pub impl(self) trait SimdUint: Copy {
