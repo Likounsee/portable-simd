@@ -16,7 +16,7 @@ use core_simd::simd::prelude::*;
 /// Computes eight pairwise, signed-saturating sums from sixteen byte lanes.
 #[inline]
 pub fn maddubs(a: u8x16, b: i8x16) -> i16x8 {
-    let products: i16x16 = a.cast() * b.cast();
+    let products: i16x16 = a.cast::<i16>() * b.cast::<i16>();
     let even: i16x8 = simd_swizzle!(products, [0, 2, 4, 6, 8, 10, 12, 14]);
     let odd: i16x8 = simd_swizzle!(products, [1, 3, 5, 7, 9, 11, 13, 15]);
     even.saturating_add(odd)
@@ -68,4 +68,10 @@ mod tests {
             assert_eq!(actual, reference(a, b), "base={base}");
         }
     }
+}
+
+fn main() {
+    let a = u8x16::splat(u8::MAX);
+    let b = i8x16::splat(i8::MAX);
+    println!("maddubs result: {:?}", maddubs(a, b).to_array());
 }
