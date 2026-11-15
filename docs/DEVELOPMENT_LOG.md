@@ -216,3 +216,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Kept target-specific Cargo dependency/build caches in each matrix job. All seven emulated targets plus the PowerPC64LE `+vsx` variant still execute both debug and release tests.
 - This adds one setup job but does not remove or merge any test job, target, feature, or test mode. The tradeoff is one serialized Cross setup before the emulated test fan-out, avoiding duplicated CPU and network work on cache misses.
 - Validation: the new workflow run must confirm the cache handoff and all downstream jobs; no local Rust toolchain is available for a local build.
+
+
+### 2026-11-15 — fix Cross verification workspace context
+
+- The first run of the single-install Cross setup exposed a verification-only failure: `cross --version` still probes Cargo metadata, but the setup job had not checked out the repository and therefore had no workspace manifest.
+- Added a read-only checkout to the setup job before verifying Cross. This gives Cross the same valid workspace context it has in the downstream test jobs.
+- The failure occurred before any emulated tests started; no test target or coverage was affected. The pinned Cross revision and shared executable cache remain unchanged.
+- Validation: the next CI run must confirm that setup verification succeeds, the cache is restored by all eight Cross matrix entries, and their debug/release tests complete. No local Rust toolchain is available.

@@ -316,6 +316,12 @@ jobs:
     name: "prepare Cross host tool"
     runs-on: ubuntu-latest
     steps:
+      # Cross inspects the current Cargo workspace even for --version.
+      # Check out the repository so its metadata probe has a valid manifest.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
       - name: Cache Cross executable
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
