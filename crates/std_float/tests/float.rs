@@ -98,6 +98,16 @@ macro_rules! impl_tests {
                 assert_eq!(input.round_fast(), input.round_ties_even());
             }
 
+            test_helpers::test_lanes! {
+                fn round_fast<const LANES: usize>() {
+                    test_helpers::test_unary_elementwise(
+                        &core_simd::simd::Simd::<$scalar, LANES>::round_fast,
+                        &$scalar::round_ties_even,
+                        &|_| true,
+                    )
+                }
+            }
+
             // https://github.com/rust-lang/miri/issues/3555
             unary_approx_test! { $scalar, sin, cos, exp, exp2, ln, log2, log10 }
 
