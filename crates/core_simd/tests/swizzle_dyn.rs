@@ -111,13 +111,11 @@ fn swizzle_dyn_exhaustive_indices_at_width_boundaries() {
     check_exhaustive_swizzle_indices::<64>();
 }
 
-#[test]
-fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
-    const LANES: usize = 16;
+fn check_unchecked_swizzle_high_bit_indices<const LANES: usize>() {
     let values: [u8; LANES] =
         core::array::from_fn(|lane| (lane as u8).wrapping_mul(13).wrapping_add(7));
     let indices: [u8; LANES] = core::array::from_fn(|lane| match lane % 4 {
-        0 => lane as u8,
+        0 => (lane % LANES) as u8,
         1 => 0x80,
         2 => 0xff,
         _ => (LANES - 1) as u8,
@@ -128,5 +126,21 @@ fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
         .to_array();
     let expected = swizzle_dyn_scalar_ver(values, indices);
 
-    assert_eq!(actual, expected);
+    assert_eq!(actual, expected, "LANES={LANES}");
+}
+
+#[test]
+fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
+    check_unchecked_swizzle_high_bit_indices::<1>();
+    check_unchecked_swizzle_high_bit_indices::<7>();
+    check_unchecked_swizzle_high_bit_indices::<8>();
+    check_unchecked_swizzle_high_bit_indices::<9>();
+    check_unchecked_swizzle_high_bit_indices::<15>();
+    check_unchecked_swizzle_high_bit_indices::<16>();
+    check_unchecked_swizzle_high_bit_indices::<17>();
+    check_unchecked_swizzle_high_bit_indices::<31>();
+    check_unchecked_swizzle_high_bit_indices::<32>();
+    check_unchecked_swizzle_high_bit_indices::<33>();
+    check_unchecked_swizzle_high_bit_indices::<63>();
+    check_unchecked_swizzle_high_bit_indices::<64>();
 }
