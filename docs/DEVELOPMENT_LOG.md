@@ -1,3 +1,11 @@
+### 2026-11-15 — prevent native CPU artifacts from crossing runner hosts
+
+- The native x86-64 job failed in the generated `cast` test binary with `SIGILL` after restoring its Cargo `target` cache.
+- Compared the successful and failing runner diagnostics: the earlier cache producer advertised AVX-512 features (`avx512f`, `avx512bw`, `avx512dq`, and others), while the failing runner exposed AVX2 but no AVX-512. The native cache key was identical because it described only OS, target, feature label, and lockfile.
+- The failure is therefore explained by reusing machine-code artifacts compiled under a different `-Ctarget-cpu=native` feature set; it is not evidence of a cast implementation defect.
+- Native x86 matrix entries now cache only Cargo registry/Git dependencies. Their `target` build artifacts are compiled fresh on each runner. Non-native matrix entries retain the existing full build cache.
+- No target, feature combination, debug/release run, or test was removed. Validation is pending on the next full CI run.
+ 
 ### 2026-11-15 — retain optimized codegen evidence for masked memory operations
 
 - Extended the existing masked-memory diagnostic CI job to emit optimized x86-64/SSE2 assembly and LLVM IR using the repository-pinned nightly toolchain.

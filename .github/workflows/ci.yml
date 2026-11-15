@@ -187,7 +187,10 @@ jobs:
         with:
           persist-credentials: false
 
+      # Native artifacts depend on the physical runner CPU. Do not restore a
+      # target directory compiled with a different runner's -Ctarget-cpu=native.
       - name: Cache Cargo dependencies and build artifacts
+        if: matrix.target_feature != 'native'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
@@ -197,6 +200,19 @@ jobs:
           key: ${{ runner.os }}-cargo-x86-${{ matrix.target }}-${{ matrix.target_feature }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-x86-${{ matrix.target }}-${{ matrix.target_feature }}-
+
+      # Keep downloaded crates warm, but compile native-feature artifacts fresh
+      # on every runner so AVX/AVX-512 capabilities cannot leak across hosts.
+      - name: Cache Cargo dependencies for native CPU tests
+        if: matrix.target_feature == 'native'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-x86-native-deps-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-x86-native-deps-${{ matrix.target }}-
       - name: Setup Rust
         run: rustup target add ${TARGET}
         env:
