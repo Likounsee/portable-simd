@@ -126,7 +126,10 @@ fn run_default_case(source: &[f32; LANES], len: usize) {
     // Match the exact load_or_default API and zip-based scalar loop from issue #494.
     let simd_loaded = simd_load_or_default(slice);
     let scalar_loaded = scalar_load_or_default(slice);
-    assert_eq!(simd_loaded, scalar_loaded, "default load mismatch: len={len}");
+    assert_eq!(
+        simd_loaded, scalar_loaded,
+        "default load mismatch: len={len}"
+    );
 
     // Compare all-enabled store_select with the scalar zip loop from issue #494.
     let mut simd_output = [SENTINEL; LANES];
@@ -168,7 +171,10 @@ fn run_case(source: &[f32; LANES], len: usize, enabled: [bool; LANES], mask_name
     // Check load semantics, including disabled and out-of-bounds lanes.
     let simd_loaded = simd_load(slice, enabled);
     let scalar_loaded = scalar_load(slice, enabled);
-    assert_eq!(simd_loaded, scalar_loaded, "load mismatch: len={len}, mask={mask_name}");
+    assert_eq!(
+        simd_loaded, scalar_loaded,
+        "load mismatch: len={len}, mask={mask_name}"
+    );
 
     // Check store semantics without allowing disabled/out-of-bounds writes.
     let mut simd_output = [SENTINEL; LANES];
@@ -188,11 +194,19 @@ fn run_case(source: &[f32; LANES], len: usize, enabled: [bool; LANES], mask_name
         black_box(scalar_load(black_box(slice), black_box(enabled)));
     });
     measure("SIMD store_select", || {
-        simd_store(black_box(value), black_box(&mut simd_output[..len]), black_box(enabled));
+        simd_store(
+            black_box(value),
+            black_box(&mut simd_output[..len]),
+            black_box(enabled),
+        );
         black_box(&simd_output);
     });
     measure("scalar masked store", || {
-        scalar_store(black_box(value), black_box(&mut scalar_output[..len]), black_box(enabled));
+        scalar_store(
+            black_box(value),
+            black_box(&mut scalar_output[..len]),
+            black_box(enabled),
+        );
         black_box(&scalar_output);
     });
 }
@@ -201,8 +215,14 @@ fn main() {
     let source = [0.0_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
     let masks = [
         ("all", [true; LANES]),
-        ("alternating", [true, false, true, false, true, false, true, false]),
-        ("sparse", [false, false, true, false, false, false, true, false]),
+        (
+            "alternating",
+            [true, false, true, false, true, false, true, false],
+        ),
+        (
+            "sparse",
+            [false, false, true, false, false, false, true, false],
+        ),
     ];
 
     println!("portable-simd masked load/store diagnostic");

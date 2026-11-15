@@ -9,6 +9,12 @@
 - Applied rustfmt's exact single-line closure layout. No implementation or test semantics changed.
 - The same run also exercised the native Linux job with the new dependency-only cache; full validation remains pending on the corrected commit.
 
+### 2026-11-15 — format fork-linked masked-memory benchmark
+
+- The new standalone `rustfmt --check` step caught six formatting differences in the expanded benchmark, including long assertions, calls, and mask literals.
+- Applied rustfmt's suggested layout. No benchmark behavior or library code changed.
+- The fork-linked compile and codegen artifact steps will run once formatting passes.
+
 ### 2026-11-15 — link masked-memory diagnostics to the fork implementation
 
 - Audited the first codegen artifact and found that the standalone benchmark imported `std::simd`, so rustc measured the toolchain's sysroot implementation rather than `Likounsee/portable-simd`.
