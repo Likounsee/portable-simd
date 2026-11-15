@@ -7,6 +7,10 @@ pub impl(self) trait SimdInt: Copy {
     /// Mask type used for manipulating this SIMD vector type.
     type Mask;
 
+    /// Converts each lane to `true` when it is not equal to zero.
+    #[must_use]
+    fn to_mask(self) -> Self::Mask;
+
     /// Scalar type contained by this SIMD vector type.
     type Scalar;
 
@@ -276,6 +280,11 @@ macro_rules! impl_trait {
             type Scalar = $ty;
             type Unsigned = Simd<$unsigned, N>;
             type Cast<T: SimdElement> = Simd<T, N>;
+
+            #[inline]
+            fn to_mask(self) -> Self::Mask {
+                self.simd_ne(Self::splat(0))
+            }
 
             #[inline]
             fn cast<T: SimdCast>(self) -> Self::Cast<T> {
