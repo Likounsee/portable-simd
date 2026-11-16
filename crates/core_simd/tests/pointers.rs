@@ -39,6 +39,23 @@ macro_rules! common_tests {
                     &<*$constness u32>::with_addr,
                     &|_, _| true,
                 );
+
+                let mut storage = [0u32; LANES];
+                let base: [*$constness u32; LANES] = core::array::from_fn(|lane| {
+                    storage.as_mut_ptr().wrapping_add(lane) as *$constness u32
+                });
+                let target_addresses: [usize; LANES] = core::array::from_fn(|lane| {
+                    storage
+                        .as_mut_ptr()
+                        .wrapping_add(LANES - 1 - lane)
+                        .addr()
+                });
+
+                let actual = Simd::<*$constness u32, LANES>::from_array(base)
+                    .with_addr(Simd::from_array(target_addresses))
+                    .addr()
+                    .to_array();
+                assert_eq!(actual, target_addresses);
             }
 
             fn expose_provenance<const LANES: usize>() {
