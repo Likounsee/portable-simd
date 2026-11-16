@@ -116,9 +116,6 @@ pub impl(self) trait SimdInt: Copy {
     /// Division by zero panics, matching the scalar integer operation.
     fn overflowing_div(self, second: Self) -> (Self, Self::Mask);
 
-    /// Returns the remainder and a mask indicating lanes where remainder overflowed.
-    ///
-    /// Division by zero panics, matching the scalar integer operation.
     /// Returns the Euclidean quotient of each lane.
     ///
     /// Division by zero panics, matching the scalar integer operation.
@@ -129,6 +126,9 @@ pub impl(self) trait SimdInt: Copy {
     /// Division by zero panics, matching the scalar integer operation.
     fn rem_euclid(self, rhs: Self) -> Self;
 
+    /// Returns the wrapped remainder and a mask indicating lanes where remainder overflowed.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
     fn overflowing_rem(self, second: Self) -> (Self, Self::Mask);
 
     /// Returns the wrapped negation and a mask indicating lanes where negation overflowed.
