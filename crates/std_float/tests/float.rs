@@ -179,3 +179,24 @@ fn mul_sub_uses_single_rounding_f64() {
     assert_eq!(fused.to_array(), [expected; 4]);
     assert_eq!(unfused.to_array(), [0.0; 4]);
 }
+
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn mul_sub_uses_single_rounding_f16() {
+    use std_float::StdFloat;
+
+    let epsilon = 2.0_f32.powi(-10) as f16;
+    let a = core_simd::simd::Simd::<f16, 4>::splat(1.0 + epsilon);
+    let b = core_simd::simd::Simd::<f16, 4>::splat(1.0 - epsilon);
+    let c = core_simd::simd::Simd::<f16, 4>::splat(1.0);
+
+    let fused = a.mul_sub(b, c);
+    let unfused = (a * b) - c;
+    let expected = -(2.0_f32.powi(-20) as f16);
+
+    assert_eq!(
+        fused.to_array().map(f16::to_bits),
+        [expected.to_bits(); 4]
+    );
+    assert_eq!(unfused.to_array(), [0.0_f16; 4]);
+}
