@@ -52,7 +52,9 @@ fn f32_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let x = [1.25_f32, -8.0, 0.125, 64.0];
     let a = [0.5_f32, 2.0, -0.25, 4.0];
     let b = [3.0_f32, -1.0, 2.0, 0.5];
-    let actual = Simd::from_array(x).mul_add_relaxed(Simd::from_array(a), Simd::from_array(b)).to_array();
+    let actual = Simd::from_array(x)
+        .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
+        .to_array();
     let fused = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
     let separate = core::array::from_fn(|i| x[i] * a[i] + b[i]);
     for i in 0..4 { assert!(actual[i] == fused[i] || actual[i] == separate[i]); }
@@ -63,7 +65,9 @@ fn f64_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let x = [1.25_f64, -8.0, 0.125, 64.0];
     let a = [0.5_f64, 2.0, -0.25, 4.0];
     let b = [3.0_f64, -1.0, 2.0, 0.5];
-    let actual = Simd::from_array(x).mul_add_relaxed(Simd::from_array(a), Simd::from_array(b)).to_array();
+    let actual = Simd::from_array(x)
+        .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
+        .to_array();
     let fused = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
     let separate = core::array::from_fn(|i| x[i] * a[i] + b[i]);
     for i in 0..4 { assert!(actual[i] == fused[i] || actual[i] == separate[i]); }

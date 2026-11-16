@@ -357,13 +357,21 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
 
 #[test]
 fn to_mask_covers_all_integer_width_families() {
-    assert_eq!(Simd::from_array([0_i8, 1, -1, 0]).to_mask().to_array(), [false, true, true, false]);
-    assert_eq!(Simd::from_array([i16::MIN, 0, 1, -1]).to_mask().to_array(), [true, false, true, true]);
-    assert_eq!(Simd::from_array([0_i64, i64::MIN, 0, 1]).to_mask().to_array(), [false, true, false, true]);
-    assert_eq!(Simd::from_array([0_isize, -1, 1, 0]).to_mask().to_array(), [false, true, true, false]);
+    let signed8 = Simd::from_array([0_i8, 1, -1, 0]);
+    assert_eq!(signed8.to_mask().to_array(), [false, true, true, false]);
+    let signed16 = Simd::from_array([i16::MIN, 0, 1, -1]);
+    assert_eq!(signed16.to_mask().to_array(), [true, false, true, true]);
+    let signed64 = Simd::from_array([0_i64, i64::MIN, 0, 1]);
+    assert_eq!(signed64.to_mask().to_array(), [false, true, false, true]);
+    let signed_size = Simd::from_array([0_isize, -1, 1, 0]);
+    assert_eq!(signed_size.to_mask().to_array(), [false, true, true, false]);
 
-    assert_eq!(Simd::from_array([0_u8, 1, u8::MAX, 0]).to_mask().to_array(), [false, true, true, false]);
-    assert_eq!(Simd::from_array([0_u16, u16::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
-    assert_eq!(Simd::from_array([0_u64, u64::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
-    assert_eq!(Simd::from_array([0_usize, usize::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
+    let unsigned8 = Simd::from_array([0_u8, 1, u8::MAX, 0]);
+    assert_eq!(unsigned8.to_mask().to_array(), [false, true, true, false]);
+    let unsigned16 = Simd::from_array([0_u16, u16::MAX, 0, 1]);
+    assert_eq!(unsigned16.to_mask().to_array(), [false, true, false, true]);
+    let unsigned64 = Simd::from_array([0_u64, u64::MAX, 0, 1]);
+    assert_eq!(unsigned64.to_mask().to_array(), [false, true, false, true]);
+    let unsigned_size = Simd::from_array([0_usize, usize::MAX, 0, 1]);
+    assert_eq!(unsigned_size.to_mask().to_array(), [false, true, false, true]);
 }

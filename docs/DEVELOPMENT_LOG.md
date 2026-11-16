@@ -1,3 +1,9 @@
+### 2026-11-16 — synchronize sprint status and formatting
+
+- Updated the five-issue status table to reflect the current architecture-specific unchecked-swizzle paths, expanded integer/floating `to_mask` tests, f64 gather coverage, and AVX2 gather reference.
+- Removed stale CI commit references. The latest workflow has all jobs queued and no runner assigned, so test success remains unconfirmed.
+- Applied rustfmt-compatible wrapping to the newly added gather, to_mask, and algebraic-float assertions.
+
 ### 2026-11-16 — broaden gather and to_mask regression coverage
 
 - Added unchecked-gather tests for u8/u64 and bit-preservation tests for f64 (negative zero, subnormal, infinity, and NaN payload), complementing the existing i32/f32 cases.

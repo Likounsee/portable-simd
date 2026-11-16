@@ -42,7 +42,8 @@ fn gather_unchecked_supports_other_integer_element_widths() {
     let words = [13_u64, 17, 19, 23];
     let word_indices = Simd::from_array([2_usize, 3, 0, 1]);
     // SAFETY: all indices are below the four-element slice length.
-    assert_eq!(unsafe { Simd::gather_unchecked(&words, word_indices) }.to_array(), [19, 23, 13, 17]);
+    let actual = unsafe { Simd::gather_unchecked(&words, word_indices) };
+    assert_eq!(actual.to_array(), [19, 23, 13, 17]);
 }
 
 #[test]
