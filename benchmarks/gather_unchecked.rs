@@ -33,6 +33,24 @@ fn pointer_gather(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u3
     unsafe { Simd::gather_ptr(pointers) }
 }
 
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+#[inline(never)]
+unsafe fn avx2_gather(values: &[u32; LANES], indices: Simd<i32, LANES>) -> Simd<u32, LANES> {
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86;
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64 as x86;
+
+    // SAFETY: The caller must ensure AVX2 is available. The indices are valid
+    // element offsets, and scale=4 addresses u32 elements.
+    unsafe {
+        let indices: x86::__m256i = indices.into();
+        x86::_mm256_i32gather_epi32::<4>(values.as_ptr().cast::<i32>(), indices).into()
+    }
+}
+
 fn measure(label: &str, mut f: impl FnMut()) {
     let start = Instant::now();
     for _ in 0..ITERATIONS {
@@ -53,6 +71,14 @@ fn main() {
     assert_eq!(checked(&values, indices), expected);
     assert_eq!(unchecked(&values, indices), expected);
     assert_eq!(pointer_gather(&values, indices), expected);
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    let avx2_indices = Simd::from_array([7_i32, 0, 5, 2, 6, 1, 4, 3]);
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") {
+        // SAFETY: runtime feature detection proves AVX2 is available.
+        assert_eq!(unsafe { avx2_gather(&values, avx2_indices) }, expected);
+    }
+
 
     println!("portable-simd issue #475 gather diagnostic");
     println!("lanes={LANES}, iterations={ITERATIONS}");
@@ -65,4 +91,12 @@ fn main() {
     measure("pointer gather", || {
         black_box(pointer_gather(black_box(&values), black_box(indices)));
     });
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    if std::is_x86_feature_detected!("avx2") {
+        measure("AVX2 hardware gather", || {
+            // SAFETY: runtime feature detection proves AVX2 is available.
+            black_box(unsafe { avx2_gather(black_box(&values), black_box(avx2_indices)) });
+        });
+    }
+
 }

@@ -1,3 +1,9 @@
+### 2026-11-16 — add an AVX2 hardware-gather reference
+
+- Extended the #475 diagnostic benchmark with a direct AVX2 `i32x8` gather reference, guarded by runtime feature detection. The test asserts that checked gather, unchecked gather, pointer gather, and the hardware gather all produce the same lane values.
+- This establishes a concrete hardware baseline for the API's generated code without making the benchmark binary require AVX2 on unsupported hosts.
+- The API remains performance-unverified until the CI assembly/LLVM IR artifact is available and compared with this reference.
+
 ### 2026-11-16 — simplify standalone benchmark linking
 
 - Corrected the CI diagnostic build to pass the generated core_simd rlib once to rustc. The previous duplicate --extern entries for the same crate name could shadow the linkable artifact with metadata-only output.

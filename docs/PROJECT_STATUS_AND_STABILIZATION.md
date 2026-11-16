@@ -324,3 +324,5 @@ The latest test and diagnostic changes are on the main branch. CI is pending for
 - The existing test matrix checks every high-bit index value and CI has explicit SSSE3 and AVX2 target-feature configurations. Results remain pending CI.
 
 - Correctness refinement: split vectors use the ordinary split helper unless a full-width ISA-specific path is available. This avoids treating valid cross-half indices as implementation-defined out-of-range indices.
+
+- #475 diagnostic now includes a runtime-gated AVX2 hardware gather reference for `u32x8`, allowing the generated code for the generic API to be compared against a known gather instruction baseline. No speedup is claimed before CI artifacts are inspected.
