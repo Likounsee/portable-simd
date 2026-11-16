@@ -816,7 +816,9 @@ fn float_to_int_unchecked_f16_to_i32_matches_scalar_truncation() {
 #[cfg(target_has_reliable_f16_math)]
 #[test]
 fn float_to_int_unchecked_f16_to_u32_matches_scalar_truncation() {
-    let values = [0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0];
+    let values = [
+        0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0,
+    ];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable u32.
     let actual = unsafe { vector.to_int_unchecked::<u32>() };
