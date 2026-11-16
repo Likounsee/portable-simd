@@ -75,15 +75,16 @@ pub impl(self) trait SimdFloat: Copy {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn mul_add_relaxed(self, a: Self, b: Self) -> Self;
 
-    /// Rounds toward zero and converts to the same-width integer type, assuming that
-    /// the value is finite and fits in that type.
+    /// Rounds toward zero and converts each lane to the requested integer type.
+    ///
+    /// Unlike [`cast`](Self::cast), this operation does not saturate out-of-range values.
     ///
     /// # Safety
-    /// The value must:
+    /// Every lane must:
     ///
     /// * Not be NaN
     /// * Not be infinite
-    /// * Be representable in the return type, after truncating off its fractional part
+    /// * Be representable in the requested integer type after truncation toward zero
     ///
     /// If these requirements are infeasible or costly, consider using the safe function [cast],
     /// which saturates on conversion.
