@@ -560,3 +560,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Generated values remain normalized to finite [-1, 1] values; no cases are discarded and no Miri tests are skipped.
 - Validation: the first revised tolerance passed `f16` but exposed the subnormal-`f64` underflow described above. The new floor must be confirmed by CI; no local Rust test run was available.
 
+
+
+### 2026-11-16 — refresh the stabilization report and begin the unsafe inventory
+
+- Updated `docs/PROJECT_STATUS_AND_STABILIZATION.md` to the current main-line assessment and corrected stale issue dispositions for #475 (`gather_unchecked`), #479 (numeric `to_mask`), #486 (unchecked dynamic swizzle), and #539 (`algebraic_reduce_sum`).
+- Added the implementation and triage work recorded through 2026-11-16, including #366 and #426, while distinguishing fork-side implementation from upstream issue closure and compiler-level resolution.
+- Started a source inventory of unsafe operations in `vector.rs`, `masks.rs`, `select.rs`, pointer SIMD modules, and `std_float/src/lib.rs`. The inventory identifies pointer/memory, mask-validity, intrinsic, provenance, and unsafe-trait areas for review; it is not yet a soundness verdict.
+- The last observed main CI run before this documentation update was run `43944365944` on `6d88cf5`, pending with 56 jobs. The current documentation commits must receive their own CI validation; no current-head green claim is made.
+- No Rust implementation or unsafe block was changed in this documentation/audit-start commit. The next audit step is to inspect each unsafe API's contract against its implementation and compiler intrinsic requirements, then add focused tests or fixes only where a concrete defect is demonstrated.
