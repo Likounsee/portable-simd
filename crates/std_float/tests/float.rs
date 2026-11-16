@@ -141,3 +141,41 @@ macro_rules! impl_tests {
 impl_tests! { f16 }
 impl_tests! { f32 }
 impl_tests! { f64 }
+
+
+// These inputs distinguish a fused multiply-subtract from a separately rounded
+// multiply followed by subtraction. The exact product is just below 1.0, but
+// rounds to 1.0 in the intermediate f32/f64 representation.
+#[test]
+fn mul_sub_uses_single_rounding_f32() {
+    use std_float::StdFloat;
+
+    let epsilon = 2.0_f32.powi(-23);
+    let a = Simd::<f32, 4>::splat(1.0 + epsilon);
+    let b = Simd::<f32, 4>::splat(1.0 - epsilon);
+    let c = Simd::<f32, 4>::splat(1.0);
+
+    let fused = a.mul_sub(b, c);
+    let unfused = (a * b) - c;
+    let expected = -2.0_f32.powi(-46);
+
+    assert_eq!(fused.to_array(), [expected; 4]);
+    assert_eq!(unfused.to_array(), [0.0; 4]);
+}
+
+#[test]
+fn mul_sub_uses_single_rounding_f64() {
+    use std_float::StdFloat;
+
+    let epsilon = 2.0_f64.powi(-52);
+    let a = Simd::<f64, 4>::splat(1.0 + epsilon);
+    let b = Simd::<f64, 4>::splat(1.0 - epsilon);
+    let c = Simd::<f64, 4>::splat(1.0);
+
+    let fused = a.mul_sub(b, c);
+    let unfused = (a * b) - c;
+    let expected = -2.0_f64.powi(-104);
+
+    assert_eq!(fused.to_array(), [expected; 4]);
+    assert_eq!(unfused.to_array(), [0.0; 4]);
+}
