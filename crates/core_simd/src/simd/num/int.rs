@@ -102,6 +102,11 @@ pub impl(self) trait SimdInt: Copy {
     /// the range of the element type, the result is clamped to the nearest bound.
     fn saturating_mul(self, second: Self) -> Self;
 
+    /// Raises every lane to the same exponent, saturating at the signed integer bounds.
+    ///
+    /// An exponent of zero returns one for every lane, including zero lanes.
+    fn saturating_pow(self, exp: u32) -> Self;
+
     /// Returns the wrapped sum and a mask indicating lanes where addition overflowed.
     fn overflowing_add(self, second: Self) -> (Self, Self::Mask);
 
@@ -110,6 +115,11 @@ pub impl(self) trait SimdInt: Copy {
 
     /// Returns the wrapped product and a mask indicating lanes where multiplication overflowed.
     fn overflowing_mul(self, second: Self) -> (Self, Self::Mask);
+
+    /// Raises every lane to the same exponent and returns a mask for lanes that overflowed.
+    ///
+    /// The returned values wrap on overflow, matching the scalar integer operation.
+    fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask);
 
     /// Returns the quotient and a mask indicating lanes where division overflowed.
     ///
@@ -465,6 +475,13 @@ macro_rules! impl_trait {
             }
 
             #[inline]
+            fn saturating_pow(self, exp: u32) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].saturating_pow(exp)
+                }))
+            }
+
+            #[inline]
             fn overflowing_add(self, second: Self) -> (Self, Self::Mask) {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
@@ -502,6 +519,21 @@ macro_rules! impl_trait {
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
                         self.as_array()[lane].overflowing_mul(second.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask) {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) = self.as_array()[lane].overflowing_pow(exp);
                     overflow[lane] = did_overflow;
                     value
                 }));
