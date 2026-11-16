@@ -44,6 +44,16 @@ fn masked_load_store_boundary_masks() {
         u32x4::splat(17)
     );
 
+    // Active lanes beyond an empty slice use the fallback instead of reading.
+    assert_eq!(
+        u32x4::load_select(
+            &empty,
+            Mask::from_array([false, true, false, true]),
+            u32x4::from_array([1, 2, 3, 4]),
+        ),
+        u32x4::from_array([1, 2, 3, 4]),
+    );
+
     // An all-true mask exactly matching the slice must access every lane.
     let source = [10u32, 20, 30, 40];
     assert_eq!(
@@ -55,6 +65,9 @@ fn masked_load_store_boundary_masks() {
     let mut destination = [1u32, 2, 3, 4];
     u32x4::splat(88).store_select(&mut destination, Mask::splat(false));
     assert_eq!(destination, [1, 2, 3, 4]);
+
+    // An all-false store is also safe when the destination is empty.
+    u32x4::splat(77).store_select(&mut [], Mask::splat(false));
 
     // A partial mask at the end of the slice must only write active in-bounds lanes.
     u32x4::from_array([5, 6, 7, 8]).store_select(
