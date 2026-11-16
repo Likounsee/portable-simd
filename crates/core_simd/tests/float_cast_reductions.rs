@@ -411,3 +411,39 @@ fn float_to_int_unchecked_f64_to_u64_matches_scalar_truncation() {
     assert_eq!(actual.to_array(), values.map(|value| value as u64));
 }
 
+#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[test]
+fn float_cast_f16_to_i32_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -65504.0_f16,
+        -19.5,
+        -0.0,
+        0.0,
+        19.5,
+        65504.0,
+        f16::INFINITY,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as i32);
+    assert_eq!(vector.cast::<i32>().to_array(), expected);
+}
+
+#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[test]
+fn float_cast_f16_to_u32_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -1.5_f16,
+        -0.0,
+        0.0,
+        19.5,
+        65504.0,
+        f16::INFINITY,
+        f16::NAN,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as u32);
+    assert_eq!(vector.cast::<u32>().to_array(), expected);
+}
+
