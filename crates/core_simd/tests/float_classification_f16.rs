@@ -4,14 +4,12 @@
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![allow(unused_features)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
-
 #[cfg(all(
     target_has_reliable_f16_math,
     not(all(target_arch = "wasm32", target_feature = "simd128"))
 ))]
 mod tests {
-    use super::*;
+    use core_simd::simd::{Simd, num::SimdFloat};
 
     #[test]
     fn f16_classification_handles_subnormals_zeros_normals_and_special_values() {

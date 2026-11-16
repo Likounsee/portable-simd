@@ -156,11 +156,12 @@ mod const_ptr {
 
         fn with_addr_preserves_provenance_for_dereference<const LANES: usize>() {
             let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 10);
+            let base = storage.as_ptr();
             let pointers = Simd::<*const u32, LANES>::from_array(
-                core::array::from_fn(|lane| core::ptr::addr_of!(storage[lane])),
+                core::array::from_fn(|lane| base.wrapping_add(lane)),
             );
             let target_addresses = core::array::from_fn(|lane| {
-                core::ptr::addr_of!(storage[LANES - 1 - lane]).addr()
+                base.wrapping_add(LANES - 1 - lane).addr()
             });
             let relocated = pointers.with_addr(Simd::from_array(target_addresses)).to_array();
 
@@ -214,11 +215,12 @@ mod mut_ptr {
 
         fn with_addr_preserves_provenance_for_writes<const LANES: usize>() {
             let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr();
             let pointers = Simd::<*mut u32, LANES>::from_array(
-                core::array::from_fn(|lane| core::ptr::addr_of_mut!(storage[lane])),
+                core::array::from_fn(|lane| base.wrapping_add(lane)),
             );
             let target_addresses = core::array::from_fn(|lane| {
-                core::ptr::addr_of_mut!(storage[LANES - 1 - lane]).addr()
+                base.wrapping_add(LANES - 1 - lane).addr()
             });
             let relocated = pointers.with_addr(Simd::from_array(target_addresses)).to_array();
 
