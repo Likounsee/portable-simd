@@ -974,7 +974,7 @@ macro_rules! impl_float_tests {
                         // Keep every possible reassociation within a finite range. In
                         // particular, f16 can overflow an intermediate pairwise sum even
                         // when the sequential scalar fold remains finite.
-                        test_helpers::prop_assume!(x.iter().all(|value| value.abs() <= 1.0));
+                        proptest::prop_assume!(x.iter().all(|value| value.abs() <= 1.0));
                         let actual = Vector::<LANES>::from_array(x).algebraic_reduce_sum();
                         let expected = x.iter().copied().fold(0.0, Scalar::algebraic_add);
                         test_helpers::prop_assert_approxeq!(actual, expected, 16);
