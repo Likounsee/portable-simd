@@ -178,13 +178,15 @@ pub impl(self) trait SimdInt: Copy {
     /// Shifts each lane left and returns a mask for shift amounts greater than or equal to the lane width.
     ///
     /// Shift amounts are interpreted as unsigned scalar shift counts, matching the scalar
-    /// `overflowing_shl` operation.
+    /// `overflowing_shl` operation. Negative lane values therefore become large unsigned
+    /// counts and are reported as overflow.
     fn overflowing_shl(self, rhs: Self) -> (Self, Self::Mask);
 
     /// Shifts each lane right and returns a mask for shift amounts greater than or equal to the lane width.
     ///
     /// Shift amounts are interpreted as unsigned scalar shift counts, matching the scalar
-    /// `overflowing_shr` operation.
+    /// `overflowing_shr` operation. Negative lane values therefore become large unsigned
+    /// counts and are reported as overflow.
     fn overflowing_shr(self, rhs: Self) -> (Self, Self::Mask);
 
     /// Lanewise saturating subtract.
