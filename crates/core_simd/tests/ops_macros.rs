@@ -1171,7 +1171,7 @@ macro_rules! impl_unsigned_tests {
                         1 => Scalar::MAX,
                         2 => Scalar::MIN,
                         3 => Scalar::MAX,
-                        4 => -1,
+                        4 => 1,
                         _ => 0,
                     });
                     let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
