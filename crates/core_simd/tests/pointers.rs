@@ -219,6 +219,19 @@ mod const_ptr {
             );
         }
 
+        fn exposed_provenance_can_be_recovered_for_reads<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 50);
+            let base = storage.as_ptr();
+            let addresses = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .expose_provenance();
+            let recovered = ptr::with_exposed_provenance::<u32, LANES>(addresses).to_array();
+
+            // SAFETY: each address was exposed from a live pointer into storage.
+            let actual = unsafe { recovered.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
+        }
+
         fn without_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::without_provenance::<u32, LANES>,
@@ -332,6 +345,23 @@ mod mut_ptr {
                 &core::ptr::with_exposed_provenance_mut::<u32>,
                 &|_| true,
             );
+        }
+
+        fn exposed_provenance_can_be_recovered_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr();
+            let addresses = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .expose_provenance();
+            let recovered = ptr::with_exposed_provenance_mut::<u32, LANES>(addresses).to_array();
+
+            // SAFETY: each address was exposed from a distinct live pointer into storage.
+            unsafe {
+                for (lane, pointer) in recovered.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 500);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 500));
         }
 
         fn without_provenance<const LANES: usize>() {
