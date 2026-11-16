@@ -734,7 +734,31 @@ macro_rules! impl_signed_tests {
                         &Vector::<LANES>::abs_diff,
                         &Scalar::abs_diff,
                         &|_, _| true,
-                    )
+                    );
+
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MIN,
+                        3 => Scalar::MAX,
+                        4 => -1,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MIN,
+                        2 => 0,
+                        3 => 0,
+                        4 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].abs_diff(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .abs_diff(Vector::<LANES>::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
                 }
 
                 fn simd_min<const LANES: usize>() {
@@ -1140,7 +1164,31 @@ macro_rules! impl_unsigned_tests {
                         &Vector::<LANES>::abs_diff,
                         &Scalar::abs_diff,
                         &|_, _| true,
-                    )
+                    );
+
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MIN,
+                        3 => Scalar::MAX,
+                        4 => -1,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MIN,
+                        2 => 0,
+                        3 => 0,
+                        4 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].abs_diff(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .abs_diff(Vector::<LANES>::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
                 }
             }
 
