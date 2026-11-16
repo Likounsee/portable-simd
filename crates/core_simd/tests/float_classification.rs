@@ -84,9 +84,7 @@ fn float_sign_operations_preserve_f32_nan_payloads_and_signed_zero() {
         f32::from_bits(1),
         f32::from_bits(0x8000_0001),
     ]);
-    let signs = Simd::from_array([
-        -1.0_f32, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
-    ]);
+    let signs = Simd::from_array([-1.0_f32, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0]);
     let bits = values.to_bits().to_array();
     let sign_bits = signs.to_bits().to_array();
 
@@ -107,7 +105,11 @@ fn float_sign_operations_preserve_f32_nan_payloads_and_signed_zero() {
     assert_eq!(
         values.signum().to_bits().to_array(),
         values.to_array().map(|value| {
-            if value.is_nan() { value.to_bits() } else { value.signum().to_bits() }
+            if value.is_nan() {
+                value.to_bits()
+            } else {
+                value.signum().to_bits()
+            }
         }),
     );
 }
@@ -124,9 +126,7 @@ fn float_sign_operations_preserve_f64_nan_payloads_and_signed_zero() {
         f64::from_bits(1),
         f64::from_bits(0x8000_0000_0000_0001),
     ]);
-    let signs = Simd::from_array([
-        -1.0_f64, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
-    ]);
+    let signs = Simd::from_array([-1.0_f64, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0]);
     let bits = values.to_bits().to_array();
     let sign_bits = signs.to_bits().to_array();
 
@@ -141,14 +141,17 @@ fn float_sign_operations_preserve_f64_nan_payloads_and_signed_zero() {
     assert_eq!(
         values.copysign(signs).to_bits().to_array(),
         core::array::from_fn(|lane| {
-            (bits[lane] & 0x7fff_ffff_ffff_ffff)
-                | (sign_bits[lane] & 0x8000_0000_0000_0000)
+            (bits[lane] & 0x7fff_ffff_ffff_ffff) | (sign_bits[lane] & 0x8000_0000_0000_0000)
         }),
     );
     assert_eq!(
         values.signum().to_bits().to_array(),
         values.to_array().map(|value| {
-            if value.is_nan() { value.to_bits() } else { value.signum().to_bits() }
+            if value.is_nan() {
+                value.to_bits()
+            } else {
+                value.signum().to_bits()
+            }
         }),
     );
 }

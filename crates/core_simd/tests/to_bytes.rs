@@ -1,6 +1,6 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{num::SimdFloat, Simd, ToBytes};
+use core_simd::simd::{Simd, ToBytes, num::SimdFloat};
 
 #[test]
 fn byte_convert() {
@@ -31,9 +31,18 @@ fn float_byte_conversions_preserve_f32_bit_patterns() {
     let big = values.to_be_bytes();
     let little = values.to_le_bytes();
 
-    assert_eq!(Simd::<f32, 4>::from_ne_bytes(native).to_bits(), values.to_bits());
-    assert_eq!(Simd::<f32, 4>::from_be_bytes(big).to_bits(), values.to_bits());
-    assert_eq!(Simd::<f32, 4>::from_le_bytes(little).to_bits(), values.to_bits());
+    assert_eq!(
+        Simd::<f32, 4>::from_ne_bytes(native).to_bits(),
+        values.to_bits()
+    );
+    assert_eq!(
+        Simd::<f32, 4>::from_be_bytes(big).to_bits(),
+        values.to_bits()
+    );
+    assert_eq!(
+        Simd::<f32, 4>::from_le_bytes(little).to_bits(),
+        values.to_bits()
+    );
 }
 
 #[test]
@@ -77,4 +86,3 @@ fn unsigned_integer_byte_conversions_roundtrip_all_endiannesses() {
     assert_eq!(Simd::<u16, 4>::from_be_bytes(values.to_be_bytes()), values);
     assert_eq!(Simd::<u16, 4>::from_le_bytes(values.to_le_bytes()), values);
 }
-

@@ -2,6 +2,7 @@
 #![feature(f16)]
 #![expect(internal_features)]
 #![feature(cfg_target_has_reliable_f16_f128)]
+#![allow(unused_features)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -143,7 +144,6 @@ fn float_min_max_reductions_f64_skip_single_nan_lanes() {
     assert!(Simd::<f64, 8>::splat(f64::NAN).reduce_max().is_nan());
 }
 
-
 #[test]
 fn float_cast_f32_to_i8_matches_scalar_saturating_casts() {
     let values = [
@@ -233,7 +233,10 @@ fn float_cast_f16_to_i8_matches_scalar_saturating_casts() {
     assert_eq!(vector.cast::<i8>().to_array(), expected);
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_u8_matches_scalar_saturating_casts() {
     let values = [
@@ -251,7 +254,10 @@ fn float_cast_f16_to_u8_matches_scalar_saturating_casts() {
     assert_eq!(vector.cast::<u8>().to_array(), expected);
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_i16_matches_scalar_saturating_casts() {
     let values = [
@@ -269,7 +275,10 @@ fn float_cast_f16_to_i16_matches_scalar_saturating_casts() {
     assert_eq!(vector.cast::<i16>().to_array(), expected);
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_u16_matches_scalar_saturating_casts() {
     let values = [
@@ -411,7 +420,10 @@ fn float_to_int_unchecked_f64_to_u64_matches_scalar_truncation() {
     assert_eq!(actual.to_array(), values.map(|value| value as u64));
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_i32_matches_scalar_saturating_casts() {
     let values = [
@@ -429,7 +441,10 @@ fn float_cast_f16_to_i32_matches_scalar_saturating_casts() {
     assert_eq!(vector.cast::<i32>().to_array(), expected);
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_u32_matches_scalar_saturating_casts() {
     let values = [
@@ -460,7 +475,10 @@ fn float_cast_f32_to_i64_matches_scalar_saturating_casts() {
         f32::INFINITY,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<i64>().to_array(), values.map(|value| value as i64));
+    assert_eq!(
+        vector.cast::<i64>().to_array(),
+        values.map(|value| value as i64)
+    );
 }
 
 #[test]
@@ -476,7 +494,10 @@ fn float_cast_f32_to_u64_matches_scalar_saturating_casts() {
         f32::NAN,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<u64>().to_array(), values.map(|value| value as u64));
+    assert_eq!(
+        vector.cast::<u64>().to_array(),
+        values.map(|value| value as u64)
+    );
 }
 
 #[test]
@@ -492,7 +513,10 @@ fn float_cast_f64_to_i8_matches_scalar_saturating_casts() {
         f64::INFINITY,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<i8>().to_array(), values.map(|value| value as i8));
+    assert_eq!(
+        vector.cast::<i8>().to_array(),
+        values.map(|value| value as i8)
+    );
 }
 
 #[test]
@@ -508,10 +532,16 @@ fn float_cast_f64_to_u8_matches_scalar_saturating_casts() {
         f64::NAN,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<u8>().to_array(), values.map(|value| value as u8));
+    assert_eq!(
+        vector.cast::<u8>().to_array(),
+        values.map(|value| value as u8)
+    );
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_i64_matches_scalar_saturating_casts() {
     let values = [
@@ -525,10 +555,16 @@ fn float_cast_f16_to_i64_matches_scalar_saturating_casts() {
         f16::INFINITY,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<i64>().to_array(), values.map(|value| value as i64));
+    assert_eq!(
+        vector.cast::<i64>().to_array(),
+        values.map(|value| value as i64)
+    );
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128")),
+))]
 #[test]
 fn float_cast_f16_to_u64_matches_scalar_saturating_casts() {
     let values = [
@@ -542,7 +578,10 @@ fn float_cast_f16_to_u64_matches_scalar_saturating_casts() {
         f16::NAN,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<u64>().to_array(), values.map(|value| value as u64));
+    assert_eq!(
+        vector.cast::<u64>().to_array(),
+        values.map(|value| value as u64)
+    );
 }
 
 #[test]
@@ -558,7 +597,10 @@ fn float_cast_f32_to_i16_matches_scalar_saturating_casts() {
         f32::INFINITY,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<i16>().to_array(), values.map(|value| value as i16));
+    assert_eq!(
+        vector.cast::<i16>().to_array(),
+        values.map(|value| value as i16)
+    );
 }
 
 #[test]
@@ -574,7 +616,10 @@ fn float_cast_f32_to_u16_matches_scalar_saturating_casts() {
         f32::NAN,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<u16>().to_array(), values.map(|value| value as u16));
+    assert_eq!(
+        vector.cast::<u16>().to_array(),
+        values.map(|value| value as u16)
+    );
 }
 
 #[test]
@@ -590,7 +635,10 @@ fn float_cast_f64_to_i32_matches_scalar_saturating_casts() {
         f64::INFINITY,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<i32>().to_array(), values.map(|value| value as i32));
+    assert_eq!(
+        vector.cast::<i32>().to_array(),
+        values.map(|value| value as i32)
+    );
 }
 
 #[test]
@@ -606,6 +654,9 @@ fn float_cast_f64_to_u32_matches_scalar_saturating_casts() {
         f64::NAN,
     ];
     let vector = Simd::from_array(values);
-    assert_eq!(vector.cast::<u32>().to_array(), values.map(|value| value as u32));
+    assert_eq!(
+        vector.cast::<u32>().to_array(),
+        values.map(|value| value as u32)
+    );
 }
 

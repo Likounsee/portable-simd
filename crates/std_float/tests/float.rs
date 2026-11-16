@@ -142,7 +142,6 @@ impl_tests! { f16 }
 impl_tests! { f32 }
 impl_tests! { f64 }
 
-
 // These inputs distinguish a fused multiply-subtract from a separately rounded
 // multiply followed by subtraction. The exact product is just below 1.0, but
 // rounds to 1.0 in the intermediate f32/f64 representation.
@@ -194,9 +193,6 @@ fn mul_sub_uses_single_rounding_f16() {
     let unfused = (a * b) - c;
     let expected = -(2.0_f32.powi(-20) as f16);
 
-    assert_eq!(
-        fused.to_array().map(f16::to_bits),
-        [expected.to_bits(); 4]
-    );
+    assert_eq!(fused.to_array().map(f16::to_bits), [expected.to_bits(); 4]);
     assert_eq!(unfused.to_array(), [0.0_f16; 4]);
 }
