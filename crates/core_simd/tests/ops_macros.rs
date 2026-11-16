@@ -864,6 +864,18 @@ macro_rules! impl_signed_tests {
                     let b = Vector::<LANES>::splat(0);
                     let _ = a % b;
                 }
+
+                fn div_euclid_zero_panic<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(42);
+                    let b = Vector::<LANES>::splat(0);
+                    let _ = a.div_euclid(b);
+                }
+
+                fn rem_euclid_zero_panic<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(42);
+                    let b = Vector::<LANES>::splat(0);
+                    let _ = a.rem_euclid(b);
+                }
             }
 
             test_helpers::test_lanes! {
