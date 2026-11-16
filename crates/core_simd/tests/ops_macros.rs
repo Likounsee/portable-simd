@@ -517,6 +517,44 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn overflowing_neg<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => -1,
+                        _ => 0,
+                    });
+                    let expected = lhs.map(Scalar::overflowing_neg);
+                    let (actual, overflow) = Vector::<LANES>::from_array(lhs).overflowing_neg();
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
+                fn overflowing_abs<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => -1,
+                        _ => 0,
+                    });
+                    let expected = lhs.map(Scalar::overflowing_abs);
+                    let (actual, overflow) = Vector::<LANES>::from_array(lhs).overflowing_abs();
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::to_mask,
