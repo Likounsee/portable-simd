@@ -132,6 +132,16 @@ pub impl(self) trait SimdUint: Copy {
     where
         Self: SimdPartialEq;
 
+    /// Shifts each lane left and reports shift amounts greater than or equal to the lane width.
+    fn overflowing_shl(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
+
+    /// Shifts each lane right and reports shift amounts greater than or equal to the lane width.
+    fn overflowing_shr(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
+
     /// Lanewise saturating subtract.
     ///
     /// # Examples
@@ -397,6 +407,44 @@ macro_rules! impl_trait {
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
                         self.as_array()[lane].overflowing_rem(second.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_shl(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shl(rhs.as_array()[lane] as u32);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_shr(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shr(rhs.as_array()[lane] as u32);
                     overflow[lane] = did_overflow;
                     value
                 }));
