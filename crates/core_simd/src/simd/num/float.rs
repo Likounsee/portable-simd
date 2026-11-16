@@ -296,8 +296,7 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn cast<T: SimdCast>(self) -> Self::Cast<T>
-            {
+            fn cast<T: SimdCast>(self) -> Self::Cast<T> {
                 // Safety: supported types are guaranteed by SimdCast
                 unsafe { core::intrinsics::simd::simd_as(self) }
             }

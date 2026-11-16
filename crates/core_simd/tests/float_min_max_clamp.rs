@@ -1,6 +1,6 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
+use core_simd::simd::{num::SimdFloat, Simd};
 
 #[test]
 fn simd_min_matches_scalar_nan_handling_for_f32() {
