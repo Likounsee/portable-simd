@@ -1,5 +1,6 @@
 #![feature(portable_simd)]
 #![feature(f16)]
+#![feature(cfg_target_has_reliable_f16_f128)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -113,7 +114,7 @@ fn float_min_max_reductions_f32_skip_single_nan_lanes() {
 
     assert_eq!(values.reduce_min(), f32::NEG_INFINITY);
     assert_eq!(values.reduce_max(), f32::INFINITY);
-    assert!(Simd::splat(f32::NAN).reduce_min().is_nan());
+    assert!(Simd::<f32, 8>::splat(f32::NAN).reduce_min().is_nan());
     assert!(Simd::splat(f32::NAN).reduce_max().is_nan());
 }
 
@@ -132,7 +133,7 @@ fn float_min_max_reductions_f64_skip_single_nan_lanes() {
 
     assert_eq!(values.reduce_min(), f64::NEG_INFINITY);
     assert_eq!(values.reduce_max(), f64::INFINITY);
-    assert!(Simd::splat(f64::NAN).reduce_min().is_nan());
+    assert!(Simd::<f64, 8>::splat(f64::NAN).reduce_min().is_nan());
     assert!(Simd::splat(f64::NAN).reduce_max().is_nan());
 }
 
