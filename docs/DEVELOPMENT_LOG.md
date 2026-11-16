@@ -556,7 +556,7 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 ### 2026-11-16 — stabilize algebraic-reduction tests under Miri
 
 - The Miri shards exposed a false-negative in the new algebraic_reduce_sum property test: a fixed 16-ULP comparison is too strict around zero after cancellation, particularly for f16.
-- Replaced the ULP check with an absolute error bound scaled by the sum of the input magnitudes and the scalar type's machine epsilon. This remains sensitive to errors relative to the operation's input scale without treating tiny near-zero results as a large ULP regression.
-- The generated values remain normalized to finite [-1, 1] values; no cases are discarded and no Miri tests are skipped.
-- Validation: the new commit's CI must confirm the updated tolerance on all Miri shards and supported targets. No local Rust test run was available.
+- Replaced the ULP check with an absolute error bound scaled by the sum of input magnitudes and machine epsilon. The scale is floored at `Scalar::MIN_POSITIVE`, because multiplying a subnormal magnitude by `EPSILON` can underflow the tolerance to zero (reproduced by Miri on `f64` with a subnormal input).
+- Generated values remain normalized to finite [-1, 1] values; no cases are discarded and no Miri tests are skipped.
+- Validation: the first revised tolerance passed `f16` but exposed the subnormal-`f64` underflow described above. The new floor must be confirmed by CI; no local Rust test run was available.
 
