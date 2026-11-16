@@ -977,6 +977,19 @@ macro_rules! impl_signed_tests {
                         &Scalar::is_positive,
                         &|_| true,
                     );
+
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                        0 => Scalar::MIN,
+                        1 => -1,
+                        2 => 0,
+                        3 => 1,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = values.map(Scalar::is_positive);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).is_positive(),
+                        Vector::<LANES>::from_array(expected.map(|value| value as Scalar)).to_mask(),
+                    );
                 }
 
                 fn is_negative<const LANES: usize>() {
@@ -985,6 +998,19 @@ macro_rules! impl_signed_tests {
                         &Scalar::is_negative,
                         &|_| true,
                     );
+
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                        0 => Scalar::MIN,
+                        1 => -1,
+                        2 => 0,
+                        3 => 1,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = values.map(Scalar::is_negative);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).is_negative(),
+                        Vector::<LANES>::from_array(expected.map(|value| value as Scalar)).to_mask(),
+                    );
                 }
 
                 fn signum<const LANES: usize>() {
@@ -992,7 +1018,20 @@ macro_rules! impl_signed_tests {
                         &Vector::<LANES>::signum,
                         &Scalar::signum,
                         &|_| true,
-                    )
+                    );
+
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                        0 => Scalar::MIN,
+                        1 => -1,
+                        2 => 0,
+                        3 => 1,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = values.map(Scalar::signum);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).signum().to_array(),
+                        expected,
+                    );
                 }
 
                 fn abs_diff<const LANES: usize>() {
