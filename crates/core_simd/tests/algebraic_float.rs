@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(float_algebraic)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 

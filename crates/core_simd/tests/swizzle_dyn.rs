@@ -146,3 +146,37 @@ fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
     check_unchecked_swizzle_high_bit_indices::<63>();
     check_unchecked_swizzle_high_bit_indices::<64>();
 }
+
+fn check_all_high_bit_swizzle_indices<const LANES: usize>() {
+    let values = core::array::from_fn(|lane| (lane as u8).wrapping_mul(29).wrapping_add(3));
+    let vector = core_simd::simd::Simd::from_array(values);
+
+    // Every out-of-range byte with its most significant bit set must zero the
+    // corresponding output lane, including on the SSSE3 u8x16 fast path.
+    for index in 0x80_u8..=u8::MAX {
+        let indices = core_simd::simd::Simd::splat(index);
+        assert_eq!(
+            vector.swizzle_dyn_unchecked(indices).to_array(),
+            [0; LANES],
+            "LANES={LANES}, index={index:#04x}"
+        );
+    }
+}
+
+#[test]
+fn swizzle_dyn_unchecked_zeros_every_high_bit_index() {
+    check_all_high_bit_swizzle_indices::<1>();
+    check_all_high_bit_swizzle_indices::<7>();
+    check_all_high_bit_swizzle_indices::<8>();
+    check_all_high_bit_swizzle_indices::<9>();
+    check_all_high_bit_swizzle_indices::<15>();
+    check_all_high_bit_swizzle_indices::<16>();
+    check_all_high_bit_swizzle_indices::<17>();
+    check_all_high_bit_swizzle_indices::<24>();
+    check_all_high_bit_swizzle_indices::<31>();
+    check_all_high_bit_swizzle_indices::<32>();
+    check_all_high_bit_swizzle_indices::<33>();
+    check_all_high_bit_swizzle_indices::<48>();
+    check_all_high_bit_swizzle_indices::<63>();
+    check_all_high_bit_swizzle_indices::<64>();
+}

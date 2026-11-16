@@ -30,3 +30,13 @@ fn generic_lane_aliases_work_with_const_generics() {
 
     assert_eq!(double(u32xN::<4>::splat(41)).to_array(), [42; 4]);
 }
+
+#[test]
+fn generic_float_aliases_work_with_const_generics() {
+    fn scale<const N: usize>(value: f32xN<N>) -> f32xN<N> {
+        value * f32xN::<N>::splat(2.0)
+    }
+
+    let input: f32xN<8> = f32xN::<8>::splat(1.25);
+    assert_eq!(scale(input).to_array(), [2.5; 8]);
+}
