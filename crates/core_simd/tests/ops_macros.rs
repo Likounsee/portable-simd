@@ -971,6 +971,21 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn abs<const LANES: usize>() {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MIN + 1,
+                        2 => -1,
+                        3 => 0,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = values.map(Scalar::abs);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).abs().to_array(),
+                        expected,
+                    );
+                }
+
                 fn is_positive<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::is_positive,
