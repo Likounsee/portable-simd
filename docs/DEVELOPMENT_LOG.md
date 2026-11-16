@@ -577,3 +577,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Both intrinsics use `SimdAlign::Element`, which requires the base pointer to be aligned to the SIMD element type independently of which lanes are enabled. The previous wrapper safety text described enabled-lane readability/writability but did not explicitly state this unconditional base-pointer alignment requirement.
 - Updated `Simd::load_select_ptr` and `Simd::store_select_ptr` safety sections to require `align_of::<T>()` alignment even when the mask is all false, and clarified the matching internal SAFETY comments.
 - This is a safety-contract/documentation correction for upstream #381; it does not change generated code or intrinsic behavior. No misaligned-pointer test was added because violating this contract would itself be undefined behavior. Full CI and Miri validation are pending.
+
+
+### 2026-11-16 — add a focused code-generation diagnostic for issue #475
+
+- Added `benchmarks/gather_unchecked.rs` to compare the safe `gather_or_default` path with `gather_unchecked` on identical, in-bounds indices.
+- The benchmark asserts result equivalence before timing and documents that optimized assembly, compiler version, CPU, and target features must be captured before making a performance claim.
+- This makes the original issue's bounds-check/codegen concern reproducible in the fork. It does not yet establish that the unchecked implementation emits better machine code; that requires running the diagnostic on the intended targets.

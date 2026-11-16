@@ -1,0 +1,57 @@
+#![feature(portable_simd)]
+
+//! Diagnostic benchmark for issue #475 (unchecked SIMD gather).
+//!
+//! Build the core_simd crate with the pinned nightly, then compile this file
+//! against its rlib with optimization enabled. Inspect the optimized assembly
+//! to confirm that the unchecked path does not retain per-lane bounds checks.
+//! Timing is diagnostic only and must be recorded together with rustc, target,
+//! CPU, and target-feature settings.
+
+use core_simd::simd::Simd;
+use std::hint::black_box;
+use std::time::Instant;
+
+const LANES: usize = 8;
+const ITERATIONS: u32 = 1_000_000;
+
+#[inline(never)]
+fn checked(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LANES> {
+    Simd::gather_or_default(values, indices)
+}
+
+#[inline(never)]
+fn unchecked(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LANES> {
+    // SAFETY: the fixed indices used by main are all below LANES.
+    unsafe { Simd::gather_unchecked(values, indices) }
+}
+
+fn measure(label: &str, mut f: impl FnMut()) {
+    let start = Instant::now();
+    for _ in 0..ITERATIONS {
+        f();
+    }
+    let elapsed = start.elapsed();
+    println!(
+        "{label:24} {:>10.3} ns/iteration ({ITERATIONS} iterations)",
+        elapsed.as_nanos() as f64 / f64::from(ITERATIONS)
+    );
+}
+
+fn main() {
+    let values = [11_u32, 23, 37, 41, 53, 67, 79, 83];
+    let indices = Simd::from_array([7_usize, 0, 5, 2, 6, 1, 4, 3]);
+    let expected = Simd::from_array([83, 11, 67, 37, 79, 23, 53, 41]);
+
+    assert_eq!(checked(&values, indices), expected);
+    assert_eq!(unchecked(&values, indices), expected);
+
+    println!("portable-simd issue #475 gather diagnostic");
+    println!("lanes={LANES}, iterations={ITERATIONS}");
+    measure("checked gather", || {
+        black_box(checked(black_box(&values), black_box(indices)));
+    });
+    measure("unchecked gather", || {
+        black_box(unchecked(black_box(&values), black_box(indices)));
+    });
+}
