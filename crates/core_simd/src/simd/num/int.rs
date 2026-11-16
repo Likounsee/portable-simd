@@ -155,6 +155,18 @@ pub impl(self) trait SimdInt: Copy {
     /// ```
     fn overflowing_abs(self) -> (Self, Self::Mask);
 
+    /// Shifts each lane left and returns a mask for shift amounts greater than or equal to the lane width.
+    ///
+    /// Shift amounts are interpreted as unsigned scalar shift counts, matching the scalar
+    /// `overflowing_shl` operation.
+    fn overflowing_shl(self, rhs: Self) -> (Self, Self::Mask);
+
+    /// Shifts each lane right and returns a mask for shift amounts greater than or equal to the lane width.
+    ///
+    /// Shift amounts are interpreted as unsigned scalar shift counts, matching the scalar
+    /// `overflowing_shr` operation.
+    fn overflowing_shr(self, rhs: Self) -> (Self, Self::Mask);
+
     /// Lanewise saturating subtract.
     ///
     /// # Examples
@@ -542,6 +554,38 @@ macro_rules! impl_trait {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) = self.as_array()[lane].overflowing_abs();
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_shl(self, rhs: Self) -> (Self, Self::Mask) {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shl(rhs.as_array()[lane] as u32);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_shr(self, rhs: Self) -> (Self, Self::Mask) {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shr(rhs.as_array()[lane] as u32);
                     overflow[lane] = did_overflow;
                     value
                 }));
