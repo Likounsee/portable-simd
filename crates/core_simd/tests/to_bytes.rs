@@ -1,6 +1,6 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{Simd, ToBytes};
+use core_simd::simd::{num::SimdFloat, Simd, ToBytes};
 
 #[test]
 fn byte_convert() {
