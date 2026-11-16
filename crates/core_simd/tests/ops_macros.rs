@@ -1288,17 +1288,25 @@ macro_rules! impl_unsigned_tests {
                 }
 
                 fn overflowing_shl<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
-                        0 => 3,
-                        1 => Scalar::MAX,
-                        2 => 1,
-                        _ => 7,
-                    });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => 0,
                         1 => 1,
-                        2 => Scalar::BITS as Scalar,
-                        _ => 2,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX / 2,
+                        4 => Scalar::MAX - 1,
+                        5 => 3,
+                        6 => 7,
+                        _ => Scalar::MAX / 3,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 0,
+                        1 => 1,
+                        2 => (Scalar::BITS - 1) as Scalar,
+                        3 => Scalar::BITS as Scalar,
+                        4 => (Scalar::BITS + 1) as Scalar,
+                        5 => 2,
+                        6 => Scalar::MAX,
+                        _ => 3,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_shl(rhs[lane] as u32));
                     let (actual, overflow) =
@@ -1314,17 +1322,25 @@ macro_rules! impl_unsigned_tests {
                 }
 
                 fn overflowing_shr<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
-                        0 => 12,
-                        1 => Scalar::MAX,
-                        2 => Scalar::MIN,
-                        _ => 7,
-                    });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => 0,
                         1 => 1,
-                        2 => Scalar::BITS as Scalar,
-                        _ => 2,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX / 2,
+                        4 => Scalar::MAX - 1,
+                        5 => 3,
+                        6 => 7,
+                        _ => Scalar::MAX / 3,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 0,
+                        1 => 1,
+                        2 => (Scalar::BITS - 1) as Scalar,
+                        3 => Scalar::BITS as Scalar,
+                        4 => (Scalar::BITS + 1) as Scalar,
+                        5 => 2,
+                        6 => Scalar::MAX,
+                        _ => 3,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_shr(rhs[lane] as u32));
                     let (actual, overflow) =
