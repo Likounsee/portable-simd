@@ -4,7 +4,6 @@
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![allow(unused_features)]
 
-
 // FIXME: f16 SIMD operations can hang on wasm simd; keep this suite gated
 // consistently with the existing f16 operation tests.
 #[cfg(all(
