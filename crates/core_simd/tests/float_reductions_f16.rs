@@ -76,6 +76,17 @@ mod tests {
     }
 
     #[test]
+    fn f16_algebraic_reduce_sum_handles_exact_finite_values() {
+        let values = [1.0_f16, 2.0, 4.0, 8.0, -0.5, 0.25, 0.125, 0.0];
+        let expected = values.into_iter().sum::<f16>();
+
+        assert_eq!(
+            Simd::from_array(values).algebraic_reduce_sum().to_bits(),
+            expected.to_bits()
+        );
+    }
+
+    #[test]
     fn f16_reduce_sum_preserves_order_for_cancellation() {
         let values = [2048.0_f16, -2048.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let expected = values.into_iter().fold(0.0_f16, |sum, value| sum + value);
