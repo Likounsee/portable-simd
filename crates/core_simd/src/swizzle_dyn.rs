@@ -131,6 +131,44 @@ impl<const N: usize> Simd<u8, N> {
     /// out-of-bounds indices have an implementation-defined result.
     #[inline]
     pub fn swizzle_dyn_unchecked(self, idxs: Simd<u8, N>) -> Self {
+        // AArch64 TBL and ARMv7 VTBL naturally return zero for out-of-range
+        // indices, including every index with its most significant bit set.
+        #[cfg(all(
+            any(target_arch = "aarch64", target_arch = "arm64ec"),
+            target_feature = "neon",
+            target_endian = "little"
+        ))]
+        if matches!(N, 8 | 16 | 24 | 32 | 48 | 64) {
+            // SAFETY: The target feature is enabled by this cfg and N is one
+            // of the widths handled by aarch64_swizzle.
+            return unsafe { aarch64_swizzle(self, idxs) };
+        }
+
+        #[cfg(all(
+            target_arch = "arm",
+            target_feature = "v7",
+            target_feature = "neon",
+            target_endian = "little"
+        ))]
+        if N == 16 {
+            // SAFETY: The target features are enabled by this cfg. VTBL
+            // returns zero for indices outside its two-register lookup table.
+            return unsafe { transize(armv7_neon_swizzle_u8x16, self, idxs) };
+        }
+
+        // WebAssembly swizzle instructions already zero out-of-range indices.
+        #[cfg(all(target_arch = "wasm32", target_feature = "simd128"))]
+        {
+            use core::arch::wasm32 as wasm;
+            if N == 16 {
+                // SAFETY: simd128 is enabled and both vectors are 128 bits.
+                return unsafe { transize(wasm::i8x16_swizzle, self, idxs) };
+            }
+            if N == 32 {
+                return swizzle_dyn_split_unchecked::<32, 16>(self, idxs);
+            }
+        }
+
         #[cfg(all(
             any(target_arch = "x86", target_arch = "x86_64"),
             target_feature = "ssse3"
@@ -146,6 +184,21 @@ impl<const N: usize> Simd<u8, N> {
                 // defines high-bit indices to produce zero; other out-of-range
                 // indices intentionally have an implementation-defined result.
                 return unsafe { transize(x86::_mm_shuffle_epi8, self, idxs) };
+            }
+        }
+
+        #[cfg(all(
+            any(target_arch = "x86", target_arch = "x86_64"),
+            target_feature = "avx2"
+        ))]
+        {
+            if N == 32 {
+                // SAFETY: AVX2 is enabled and the helper preserves the high-bit
+                // zeroing semantics without clamping/fixing up the indices.
+                return unsafe { transize(avx2_pshufb_unchecked, self, idxs) };
+            }
+            if N == 64 {
+                return swizzle_dyn_split_unchecked::<64, 32>(self, idxs);
             }
         }
 
@@ -178,6 +231,40 @@ fn swizzle_dyn_split<const N: usize, const HALF: usize>(
     // The swizzle does nothing - it maps the elements right back where they already are.
     // There doesn't seem to be a more direct way to do this as of this writing.
     // TODO: simplify once a plain `concat` is available.
+    use crate::simd::Swizzle;
+    struct CombineHalves;
+    impl<const N: usize> Swizzle<N> for CombineHalves {
+        const INDEX: [usize; N] = const {
+            let mut index = [0; N];
+            let mut i = 0;
+            while i < N {
+                index[i] = i;
+                i += 1;
+            }
+            index
+        };
+    }
+
+    CombineHalves::concat_swizzle(output_low, output_high)
+}
+
+#[allow(dead_code, reason = "only used on some targets/features")]
+/// Implements an unchecked arbitrary shuffle over double the native vector width.
+fn swizzle_dyn_split_unchecked<const N: usize, const HALF: usize>(
+    bytes: Simd<u8, N>,
+    idxs: Simd<u8, N>,
+) -> Simd<u8, N> {
+    let table_low = bytes.extract::<0, HALF>();
+    let table_high = bytes.extract::<HALF, HALF>();
+    let idxs_low = idxs.extract::<0, HALF>();
+    let idxs_high = idxs.extract::<HALF, HALF>();
+    let table_high_offset = Simd::<u8, HALF>::splat(HALF as u8);
+
+    let output_low = table_low.swizzle_dyn_unchecked(idxs_low)
+        | table_high.swizzle_dyn_unchecked(idxs_low - table_high_offset);
+    let output_high = table_low.swizzle_dyn_unchecked(idxs_high)
+        | table_high.swizzle_dyn_unchecked(idxs_high - table_high_offset);
+
     use crate::simd::Swizzle;
     struct CombineHalves;
     impl<const N: usize> Swizzle<N> for CombineHalves {
@@ -321,6 +408,37 @@ unsafe fn avx2_pshufb(bytes: Simd<u8, 32>, idxs: Simd<u8, 32>) -> Simd<u8, 32> {
         // making the blend selection irrelevant for them.
         let select_bias = x86::_mm256_set_m128i(x86::_mm_set1_epi8(-112), x86::_mm_set1_epi8(16));
         let select_remote = x86::_mm256_add_epi8(control, select_bias);
+        x86::_mm256_blendv_epi8(local, remote, select_remote).into()
+    }
+}
+
+/// AVX2 shuffle for indices whose out-of-range values already have the high bit set.
+///
+/// # Safety
+/// This requires AVX2 to work.
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+#[inline]
+unsafe fn avx2_pshufb_unchecked(bytes: Simd<u8, 32>, idxs: Simd<u8, 32>) -> Simd<u8, 32> {
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86;
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64 as x86;
+    // SAFETY: Caller promised AVX2.
+    unsafe {
+        let bytes = bytes.into();
+        let indices = idxs.into();
+        let swapped = x86::_mm256_permute2x128_si256::<0x01>(bytes, bytes);
+        let local = x86::_mm256_shuffle_epi8(bytes, indices);
+        let remote = x86::_mm256_shuffle_epi8(swapped, indices);
+
+        // For valid indices, these biases select the correct 128-bit half.
+        // High-bit out-of-range indices are zeroed by VPSHUFB before blending.
+        let select_bias = x86::_mm256_set_m128i(
+            x86::_mm_set1_epi8(-16),
+            x86::_mm_set1_epi8(112),
+        );
+        let select_remote = x86::_mm256_add_epi8(indices, select_bias);
         x86::_mm256_blendv_epi8(local, remote, select_remote).into()
     }
 }

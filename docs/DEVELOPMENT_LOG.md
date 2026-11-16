@@ -1,3 +1,10 @@
+### 2026-11-16 — extend unchecked swizzle fast paths
+
+- Extended `swizzle_dyn_unchecked` beyond the SSSE3 16-byte case: AArch64 NEON uses TBL directly, ARMv7 NEON uses VTBL directly, and WebAssembly SIMD128 uses its native swizzle instruction. These instructions naturally zero out-of-range high-bit indices, so no regular-path index fixup is needed.
+- Added an AVX2 32-byte path using raw VPSHUFB controls. Since the API contract guarantees the high bit on out-of-range indices, VPSHUFB itself supplies zeroing and the regular-path saturating index adjustment is omitted. A 64-byte path composes two unchecked 32-byte shuffles.
+- Existing exhaustive high-bit tests cover all byte values 0x80..=0xff across the relevant widths; CI's target-feature matrix includes SSSE3 and AVX2 configurations.
+- Full validation is pending the queued CI run.
+
 ### 2026-11-16 — specialize algebraic SIMD reductions by float format
 
 - Corrected the unordered reduction implementation after reviewing its history: the compiler intrinsic does not support f16 on all relevant backends.
