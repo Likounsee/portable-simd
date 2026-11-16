@@ -1,9 +1,9 @@
 # Portable SIMD — project status and stabilization assessment
 
-**Assessment date:** 2026-11-15  
+**Assessment date:** 2026-11-16  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `72f95b444f237855eae7269aa3ff21eec2f8b323`
+**Assessed head:** `6d88cf5ab0098042c22855318a8eb33e1d678afb`
 
 ## Executive summary
 
@@ -95,7 +95,7 @@ The baseline commit and current head differ by 64 commits. The changes fall into
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
 
-The last fully green run confirmed here is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit `a15f086`: 30/30 jobs succeeded. The later full-matrix run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908), on `8cccd48`, completed with 29/30 jobs successful, zero failures, and one cancelled job (`wasm (firefox, default)`, release step). Thus the matrix is no longer red, but that run is not strictly 30/30 green. Subsequent commits on `main` continued with the Node 24 action migration and regression coverage; the newest main commits still require their own completed run before claiming the current head is fully green. The earlier run for `43b3bcd` was cancelled when a newer push superseded it.
+The last fully green run confirmed in the development log is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. Run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908), on 8cccd48, completed 29/30 with zero failures and one cancelled WASM release job. The current main head assessed here is 6d88cf5; its run [43944365944](https://github.com/Likounsee/portable-simd/actions/runs/43944365944) is pending with 56 jobs queued/running at the time of this update. No current-head green claim is made. The earlier run for `43b3bcd` was cancelled when a newer push superseded it.
 
 ## 3. Upstream issue triage
 
@@ -109,7 +109,7 @@ The following is the status of the 16 upstream issue references found in the for
 | [#463](https://github.com/rust-lang/portable-simd/issues/463) | Nondeterministic transcendental test precision | **Partially addressed / test policy improved.** ULP-based approximate comparisons are used for transcendental functions; deterministic operations remain exact. This stabilizes tests but does not make libm implementations identical. |
 | [#472](https://github.com/rust-lang/portable-simd/issues/472) | Mask code generation | **Open.** The validity assumption is intentionally retained. A compiler-level representation/bitmask improvement is not a safe library-only change. |
 | [#481](https://github.com/rust-lang/portable-simd/issues/481) | Missing unchecked integer SIMD operations | **Investigated, not implemented.** The scalar stabilization scope was checked; the SIMD API and compiler preconditions still need design/consensus. |
-| [#486](https://github.com/rust-lang/portable-simd/issues/486) | Dynamic swizzle out-of-range behavior / unchecked variant | **Partially addressed.** Exhaustive tests verify current zeroing semantics. No new unchecked or implementation-defined API has been added. |
+| [#486](https://github.com/rust-lang/portable-simd/issues/486) | Dynamic swizzle out-of-range behavior / unchecked variant | **Implemented in the fork with a constrained contract.** swizzle_dyn_unchecked is available, documents the high-bit out-of-range precondition/semantics, uses the SSSE3 fast path for u8x16, and falls back to the checked portable implementation elsewhere. Exhaustive checked-swizzle and unchecked high-bit tests are present. Cross-target validation remains required. |
 | [#494](https://github.com/rust-lang/portable-simd/issues/494) | Masked load/store code generation | **Partially addressed.** Fork-specific diagnostic, assembly/IR artifact, and all-enabled full-width fast paths now exist. Controlled timing data and broader target-specific inspection are still needed. |
 | [#495](https://github.com/rust-lang/portable-simd/issues/495) | Excessive alignment constraints for large vectors | **Open.** Layout documentation/tests were improved, but no demonstrated compiler-side alignment fix has been made. |
 | [#499](https://github.com/rust-lang/portable-simd/issues/499) | Rounding-related behavior/documentation | **Upstream closed; checked.** Relevant behavior/documentation was reviewed; no separate production fix is claimed in this fork. |
@@ -118,7 +118,7 @@ The following is the status of the 16 upstream issue references found in the for
 | [#524](https://github.com/rust-lang/portable-simd/issues/524) | Miri swizzle support | **Resolved by toolchain evolution upstream, not by this fork.** The reporter retested successfully on a newer nightly. |
 | [#527](https://github.com/rust-lang/portable-simd/issues/527) | Mask ordering | **Upstream closed; regression coverage added/checked.** Mask ordering coverage was strengthened, but this is not evidence of an upstream production defect being repaired here. |
 | [#537](https://github.com/rust-lang/portable-simd/issues/537) | `PrivateMethods` items reachable through `MaskElement` | **Substantially addressed in the fork.** Helpers remain crate-visible for sibling modules but are not intended as downstream API; compile-fail coverage checks external access. Final stable-API review remains necessary. |
-| [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | **Open.** Scalar algebraic intrinsics do not establish SIMD semantics; this needs compiler/API contract work. |
+| [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | **Partially implemented in the fork.** SimdFloat::algebraic_reduce_sum was added for f16/f32/f64 using scalar algebraic_add lane folds, with property tests. This does not establish vectorized codegen or a speedup; target-specific codegen and benchmarks remain open. |
 
 ### Additional codegen issue reviewed: upstream #321
 
@@ -176,7 +176,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 ### What is not yet established
 
 - The current head `8cccd48` still needs its own completed green CI run.
-- No full unsafe-code audit has been completed across all modules and architecture backends.
+- No full unsafe-code audit has been completed across all modules and architecture backends. A first-pass inventory has begun for vector.rs, masks.rs, select.rs, pointer SIMD modules, and std_float; it is not yet a reviewed safety audit.
 - Miri passing is valuable but does not prove absence of undefined behavior; target-specific hardware/emulator coverage also has limits.
 - The #427 historical compiler ICE lacks a minimal compiler reproducer.
 - #472, #495, and #539 depend substantially on compiler/backend or API-contract work.
@@ -263,3 +263,30 @@ The next priority is not to add arbitrary SIMD features. It is to finish the cur
 - Added a lane-width matrix for duplicate `scatter_select` destinations, checking the documented highest-enabled-lane winner and untouched out-of-slice tail elements. Validation is pending on the new main-branch CI run.
 - Re-inspected the fork-linked SSE2 artifact from run `43744268908`. Full-width all-enabled load/store paths lower to vector `movups` operations. Short-prefix handling retains a bounded copy path. Sparse masked stores lower to per-lane conditional stores on SSE2; this is expected without hardware masked stores but remains an optimization target for wider ISAs and improved lowering.
 - CI evidence: run `43744268908` completed 29/30 successful jobs, zero failures, and one cancelled default-WASM release job. The last fully green 30/30 run remains `43734489259` on `a15f086`. Do not describe the newer run as fully green.
+
+## 8. Work recorded after the previous assessment (through 2026-11-16)
+
+The development log records additional implementation and issue-triage work after the earlier assessment:
+
+- **#486:** added swizzle_dyn_unchecked with a documented high-bit out-of-range contract and an SSSE3 u8x16 fast path; other targets retain the portable fallback.
+- **#475:** confirmed that Simd::gather_unchecked is now present in the fork, with its in-bounds safety precondition documented.
+- **#479:** added numeric to_mask methods for signed, unsigned, and floating-point SIMD traits. Float NaN and signed-zero behavior is explicitly documented.
+- **#539:** added algebraic_reduce_sum for f16/f32/f64, with property tests. This is an API/semantics implementation; vectorized code generation and performance are not established.
+- **#366:** added a portable semantic maddubs example and scalar-reference tests. It is not evidence that LLVM emits the x86 pmaddubsw instruction.
+- **#426:** added an interleaved XYZ reduction reproducer and a structure-of-arrays comparison. Timing output is diagnostic, not a portable performance guarantee.
+- **#447, #373, #459, #146, #297, #242, #387, #14, #211, #369, #356, #286:** investigated against the current API/compiler discussions; the development log records whether the need is already covered, compiler-dependent, or unsuitable for a safe library-only workaround.
+- **Miri follow-up:** revised the algebraic_reduce_sum property-test tolerance after Miri exposed cancellation/subnormal false negatives. The latest fix still needs the current CI run to validate it.
+
+These additions change the fork's implementation and test inventory, but do not close all corresponding upstream discussions or establish stabilization readiness. Issue states must be checked again immediately before any upstream PR because maintainers may update them independently.
+
+## 9. First-pass unsafe audit status
+
+A source-level inventory has started, covering vector.rs, masks.rs, select.rs, simd/ptr.rs, simd/ptr/const_ptr.rs, simd/ptr/mut_ptr.rs, and std_float/src/lib.rs. This first pass found unsafe operations in the following broad categories:
+
+- SIMD intrinsic calls whose validity and lane-shape contracts must be matched to the compiler intrinsic documentation;
+- pointer loads/stores, gather/scatter, and unchecked slice operations requiring bounds, alignment, initialization, aliasing, and provenance arguments;
+- mask construction and conversion requiring a proof that every lane contains a valid mask representation;
+- pointer/address conversions and provenance exposure/reconstruction;
+- SimdElement and MaskElement unsafe trait implementations whose invariants must be checked against every supported scalar type.
+
+This is an inventory, **not a completed safety review**. No unsafe block is being marked sound solely because Miri or ordinary tests pass. The audit must continue through the remaining architecture-specific modules and every unsafe public API, with a written invariant and evidence for each site.
