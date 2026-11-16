@@ -970,6 +970,54 @@ macro_rules! impl_unsigned_tests {
             impl_common_integer_tests! { Vector, Scalar }
 
             test_helpers::test_lanes! {
+                fn div_euclid<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX - 1,
+                        4 => Scalar::MAX / 2,
+                        _ => 2,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MAX,
+                        3 => 2,
+                        4 => 3,
+                        _ => 1,
+                    });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .div_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].div_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn rem_euclid<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX - 1,
+                        4 => Scalar::MAX / 2,
+                        _ => 2,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MAX,
+                        3 => 2,
+                        4 => 3,
+                        _ => 1,
+                    });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .rem_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].rem_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
+                }
+            }
+
+            test_helpers::test_lanes! {
                 fn unchecked_add<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
                         0 => Scalar::MAX - 1,
