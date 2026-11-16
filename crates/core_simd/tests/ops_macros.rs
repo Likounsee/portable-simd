@@ -479,6 +479,36 @@ macro_rules! impl_signed_tests {
                         &Scalar::saturating_mul,
                         &|_, _| true,
                     );
+
+                    // Explicitly cover positive and negative saturation boundaries.
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MIN,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MIN,
+                        5 => -1,
+                        6 => Scalar::MIN,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => -1,
+                        1 => 2,
+                        2 => 2,
+                        3 => -1,
+                        4 => 1,
+                        5 => Scalar::MAX,
+                        6 => -1,
+                        _ => Scalar::MIN,
+                    });
+                    let expected =
+                        core::array::from_fn(|lane| lhs[lane].saturating_mul(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_mul(Vector::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
                 }
 
                 fn saturating_pow<const LANES: usize>() {
