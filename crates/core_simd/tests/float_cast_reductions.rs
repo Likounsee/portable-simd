@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(f16)]
 
 use core_simd::simd::{num::SimdFloat, Simd};
 
@@ -198,3 +199,98 @@ fn float_cast_f64_to_u16_matches_scalar_saturating_casts() {
     let expected = values.map(|value| value as u16);
     assert_eq!(vector.cast::<u16>().to_array(), expected);
 }
+
+#[test]
+fn float_cast_f16_to_i8_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -129.0_f16,
+        -128.0,
+        -1.5,
+        0.0,
+        1.5,
+        127.0,
+        f16::INFINITY,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as i8);
+    assert_eq!(vector.cast::<i8>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f16_to_u8_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -1.5_f16,
+        -0.0,
+        0.0,
+        1.5,
+        254.0,
+        255.0,
+        f16::NAN,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as u8);
+    assert_eq!(vector.cast::<u8>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f16_to_i16_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -32768.0_f16,
+        -1.5,
+        -0.0,
+        0.0,
+        1.5,
+        32752.0,
+        f16::INFINITY,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as i16);
+    assert_eq!(vector.cast::<i16>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f16_to_u16_matches_scalar_saturating_casts() {
+    let values = [
+        f16::NEG_INFINITY,
+        -1.5_f16,
+        -0.0,
+        0.0,
+        1.5,
+        32752.0,
+        65504.0,
+        f16::NAN,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as u16);
+    assert_eq!(vector.cast::<u16>().to_array(), expected);
+}
+
+#[test]
+fn float_reductions_f32_preserve_order_for_cancellation_and_infinity() {
+    let cancellation = [1.0e20_f32, -1.0e20, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let vector = Simd::from_array(cancellation);
+    let expected = cancellation.into_iter().fold(0.0_f32, |sum, value| sum + value);
+    assert_eq!(vector.reduce_sum().to_bits(), expected.to_bits());
+
+    let exceptional = [f32::INFINITY, f32::NEG_INFINITY, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let vector = Simd::from_array(exceptional);
+    let expected = exceptional.into_iter().fold(0.0_f32, |sum, value| sum + value);
+    assert_eq!(vector.reduce_sum().is_nan(), expected.is_nan());
+}
+
+#[test]
+fn float_reductions_f64_preserve_order_for_cancellation_and_infinity() {
+    let cancellation = [1.0e300_f64, -1.0e300, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let vector = Simd::from_array(cancellation);
+    let expected = cancellation.into_iter().fold(0.0_f64, |sum, value| sum + value);
+    assert_eq!(vector.reduce_sum().to_bits(), expected.to_bits());
+
+    let exceptional = [f64::INFINITY, f64::NEG_INFINITY, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let vector = Simd::from_array(exceptional);
+    let expected = exceptional.into_iter().fold(0.0_f64, |sum, value| sum + value);
+    assert_eq!(vector.reduce_sum().is_nan(), expected.is_nan());
+}
+
