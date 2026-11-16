@@ -76,6 +76,17 @@ jobs:
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=asm -o /tmp/gather-unchecked.s benchmarks/gather_unchecked.rs
       - name: Emit unchecked-gather optimized LLVM IR
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/gather-unchecked.ll benchmarks/gather_unchecked.rs
+      # AVX2 is required to compare the portable gather path with the hardware
+      # vpgather* lowering discussed in issue #475. Keep this separate from the
+      # baseline SSE2 build so the two codegen outputs cannot be confused.
+      - name: Compile unchecked-gather benchmark with AVX2
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked-avx2
+      - name: Run unchecked-gather AVX2 benchmark and semantic assertions
+        run: /tmp/gather-unchecked-avx2
+      - name: Emit unchecked-gather AVX2 optimized assembly
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=asm -o /tmp/gather-unchecked-avx2.s benchmarks/gather_unchecked.rs
+      - name: Emit unchecked-gather AVX2 optimized LLVM IR
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/gather-unchecked-avx2.ll benchmarks/gather_unchecked.rs
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -86,6 +97,8 @@ jobs:
             /tmp/masked-load-store.ll
             /tmp/gather-unchecked.s
             /tmp/gather-unchecked.ll
+            /tmp/gather-unchecked-avx2.s
+            /tmp/gather-unchecked-avx2.ll
           if-no-files-found: warn
           retention-days: 14
 
