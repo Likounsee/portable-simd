@@ -326,3 +326,5 @@ The latest test and diagnostic changes are on the main branch. CI is pending for
 - Correctness refinement: split vectors use the ordinary split helper unless a full-width ISA-specific path is available. This avoids treating valid cross-half indices as implementation-defined out-of-range indices.
 
 - #475 diagnostic now includes a runtime-gated AVX2 hardware gather reference for `u32x8`, allowing the generated code for the generic API to be compared against a known gather instruction baseline. No speedup is claimed before CI artifacts are inspected.
+
+- Additional regression coverage: gather_unchecked now has u8/u64/f64 cases and to_mask has signed/unsigned integer-width coverage. The new cases await CI execution.

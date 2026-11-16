@@ -1,7 +1,7 @@
 #![feature(portable_simd)]
 #![feature(f16)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
+use core_simd::simd::{Simd, num::{SimdFloat, SimdInt, SimdUint}};
 
 #[test]
 fn to_mask_maps_zero_and_nonzero_signed_integers() {
@@ -353,4 +353,17 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
         values.to_mask().to_array(),
         [true, true, true, true, true, false, false, true]
     );
+}
+
+#[test]
+fn to_mask_covers_all_integer_width_families() {
+    assert_eq!(Simd::from_array([0_i8, 1, -1, 0]).to_mask().to_array(), [false, true, true, false]);
+    assert_eq!(Simd::from_array([i16::MIN, 0, 1, -1]).to_mask().to_array(), [true, false, true, true]);
+    assert_eq!(Simd::from_array([0_i64, i64::MIN, 0, 1]).to_mask().to_array(), [false, true, false, true]);
+    assert_eq!(Simd::from_array([0_isize, -1, 1, 0]).to_mask().to_array(), [false, true, true, false]);
+
+    assert_eq!(Simd::from_array([0_u8, 1, u8::MAX, 0]).to_mask().to_array(), [false, true, true, false]);
+    assert_eq!(Simd::from_array([0_u16, u16::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
+    assert_eq!(Simd::from_array([0_u64, u64::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
+    assert_eq!(Simd::from_array([0_usize, usize::MAX, 0, 1]).to_mask().to_array(), [false, true, false, true]);
 }

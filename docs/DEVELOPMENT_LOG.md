@@ -1,3 +1,9 @@
+### 2026-11-16 — broaden gather and to_mask regression coverage
+
+- Added unchecked-gather tests for u8/u64 and bit-preservation tests for f64 (negative zero, subnormal, infinity, and NaN payload), complementing the existing i32/f32 cases.
+- Expanded to_mask coverage across signed and unsigned integer widths, including minimum signed values and maximum unsigned values.
+- These tests validate generic trait implementations beyond the initial i32/u32 examples; CI execution is still pending because GitHub has not assigned runners to the queued workflow jobs.
+
 ### 2026-11-16 — add an AVX2 hardware-gather reference
 
 - Extended the #475 diagnostic benchmark with a direct AVX2 `i32x8` gather reference, guarded by runtime feature detection. The test asserts that checked gather, unchecked gather, pointer gather, and the hardware gather all produce the same lane values.
