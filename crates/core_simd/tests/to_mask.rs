@@ -290,7 +290,6 @@ fn float_copysign_preserves_f64_payload_and_uses_each_sign_bit() {
     assert_eq!(magnitude.copysign(signs).to_bits().to_array(), expected);
 }
 
-
 #[test]
 fn float_signum_preserves_f32_nan_bits_and_matches_scalar_semantics() {
     let values = Simd::from_array([
@@ -303,7 +302,7 @@ fn float_signum_preserves_f32_nan_bits_and_matches_scalar_semantics() {
         2.5,
         f32::INFINITY,
     ]);
-    let expected = values.to_array().map(f32::signum).map(f32::to_bits);
+    let expected = values.to_array().map(|value| { if value.is_nan() { value.to_bits() } else { value.signum().to_bits() } });
 
     assert_eq!(values.signum().to_bits().to_array(), expected);
 }
@@ -320,7 +319,7 @@ fn float_signum_preserves_f64_nan_bits_and_matches_scalar_semantics() {
         2.5,
         f64::INFINITY,
     ]);
-    let expected = values.to_array().map(f64::signum).map(f64::to_bits);
+    let expected = values.to_array().map(|value| { if value.is_nan() { value.to_bits() } else { value.signum().to_bits() } });
 
     assert_eq!(values.signum().to_bits().to_array(), expected);
 }
