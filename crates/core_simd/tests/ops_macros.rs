@@ -399,6 +399,32 @@ macro_rules! impl_signed_tests {
                         &|a: Scalar, b: Scalar| (((a as i128) * (b as i128)) >> Scalar::BITS) as Scalar,
                         &|_, _| true,
                     );
+
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MIN,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MIN,
+                        4 => -1,
+                        _ => 1,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MIN,
+                        2 => Scalar::MIN,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| {
+                        (((lhs[lane] as i128) * (rhs[lane] as i128)) >> Scalar::BITS) as Scalar
+                    });
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .mul_high(Vector::<LANES>::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
                 }
 
                 fn saturating_mul<const LANES: usize>() {
@@ -948,6 +974,32 @@ macro_rules! impl_unsigned_tests {
                         &Vector::<LANES>::mul_high,
                         &|a: Scalar, b: Scalar| (((a as u128) * (b as u128)) >> Scalar::BITS) as Scalar,
                         &|_, _| true,
+                    );
+
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX / 2,
+                        2 => Scalar::MAX,
+                        3 => 1,
+                        4 => 0,
+                        _ => 2,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => 1,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MAX,
+                        _ => 3,
+                    });
+                    let expected = core::array::from_fn(|lane| {
+                        (((lhs[lane] as u128) * (rhs[lane] as u128)) >> Scalar::BITS) as Scalar
+                    });
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .mul_high(Vector::<LANES>::from_array(rhs))
+                            .to_array(),
+                        expected,
                     );
                 }
 
