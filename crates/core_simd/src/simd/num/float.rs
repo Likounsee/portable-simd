@@ -417,15 +417,21 @@ macro_rules! impl_trait {
 
             #[inline]
             fn is_subnormal(self) -> Self::Mask {
-                // On some architectures (e.g. armv7 and some ppc) subnormals are flushed to zero,
-                // so this comparison must be done with integers.
-                let not_zero = self.abs().to_bits().simd_ne(Self::splat(0.0).to_bits());
-                not_zero & (self.to_bits() & Self::splat(Self::Scalar::INFINITY).to_bits()).simd_eq(Simd::splat(0))
+                // Classify exponent and magnitude bits directly: floating-point
+                // comparisons may flush subnormal lanes to zero on some targets.
+                let bits = self.to_bits();
+                let magnitude = bits & Simd::splat(!0 >> 1);
+                let exponent = bits & Self::splat(Self::Scalar::INFINITY).to_bits();
+                magnitude.simd_ne(Simd::splat(0)) & exponent.simd_eq(Simd::splat(0))
             }
 
             #[inline]
             fn is_normal(self) -> Self::Mask {
-                !(self.abs().simd_eq(Self::splat(0.0)) | self.is_nan() | self.is_subnormal() | self.is_infinite())
+                // A normal value has a nonzero exponent that is not all ones.
+                // This bitwise test also avoids target-dependent denormal handling.
+                let exponent = self.to_bits() & Self::splat(Self::Scalar::INFINITY).to_bits();
+                let exponent_mask = Self::splat(Self::Scalar::INFINITY).to_bits();
+                exponent.simd_ne(Simd::splat(0)) & exponent.simd_ne(exponent_mask)
             }
 
             #[inline]
