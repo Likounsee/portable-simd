@@ -662,9 +662,7 @@ fn float_cast_f64_to_u32_matches_scalar_saturating_casts() {
 
 #[test]
 fn float_to_int_unchecked_f32_to_i8_matches_scalar_truncation() {
-    let values = [
-        -127.9_f32, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0,
-    ];
+    let values = [-127.9_f32, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable i8.
     let actual = unsafe { vector.to_int_unchecked::<i8>() };
@@ -700,9 +698,7 @@ fn float_to_int_unchecked_f32_to_i16_matches_scalar_truncation() {
 
 #[test]
 fn float_to_int_unchecked_f32_to_u16_matches_scalar_truncation() {
-    let values = [
-        0.0_f32, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0,
-    ];
+    let values = [0.0_f32, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable u16.
     let actual = unsafe { vector.to_int_unchecked::<u16>() };
@@ -711,9 +707,7 @@ fn float_to_int_unchecked_f32_to_u16_matches_scalar_truncation() {
 
 #[test]
 fn float_to_int_unchecked_f64_to_i8_matches_scalar_truncation() {
-    let values = [
-        -127.9_f64, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0,
-    ];
+    let values = [-127.9_f64, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable i8.
     let actual = unsafe { vector.to_int_unchecked::<i8>() };
@@ -749,9 +743,7 @@ fn float_to_int_unchecked_f64_to_i16_matches_scalar_truncation() {
 
 #[test]
 fn float_to_int_unchecked_f64_to_u16_matches_scalar_truncation() {
-    let values = [
-        0.0_f64, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0,
-    ];
+    let values = [0.0_f64, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable u16.
     let actual = unsafe { vector.to_int_unchecked::<u16>() };
@@ -816,9 +808,7 @@ fn float_to_int_unchecked_f16_to_i32_matches_scalar_truncation() {
 #[cfg(target_has_reliable_f16_math)]
 #[test]
 fn float_to_int_unchecked_f16_to_u32_matches_scalar_truncation() {
-    let values = [
-        0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0,
-    ];
+    let values = [0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable u32.
     let actual = unsafe { vector.to_int_unchecked::<u32>() };
