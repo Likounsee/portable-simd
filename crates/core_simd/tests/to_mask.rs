@@ -102,3 +102,60 @@ fn float_classification_handles_f64_subnormals_and_boundaries() {
         [false, false, false, true, true, false, false, false]
     );
 }
+
+
+#[test]
+fn float_classification_handles_f32_infinities_nans_and_finite_values() {
+    let values = Simd::from_array([
+        f32::NEG_INFINITY,
+        -f32::MAX,
+        -1.0,
+        -0.0,
+        0.0,
+        1.0,
+        f32::MAX,
+        f32::INFINITY,
+        f32::NAN,
+    ]);
+
+    assert_eq!(
+        values.is_nan().to_array(),
+        [false, false, false, false, false, false, false, false, true]
+    );
+    assert_eq!(
+        values.is_infinite().to_array(),
+        [true, false, false, false, false, false, false, true, false]
+    );
+    assert_eq!(
+        values.is_finite().to_array(),
+        [false, true, true, true, true, true, true, false, false]
+    );
+}
+
+#[test]
+fn float_classification_handles_f64_infinities_nans_and_finite_values() {
+    let values = Simd::from_array([
+        f64::NEG_INFINITY,
+        -f64::MAX,
+        -1.0,
+        -0.0,
+        0.0,
+        1.0,
+        f64::MAX,
+        f64::INFINITY,
+        f64::NAN,
+    ]);
+
+    assert_eq!(
+        values.is_nan().to_array(),
+        [false, false, false, false, false, false, false, false, true]
+    );
+    assert_eq!(
+        values.is_infinite().to_array(),
+        [true, false, false, false, false, false, false, true, false]
+    );
+    assert_eq!(
+        values.is_finite().to_array(),
+        [false, true, true, true, true, true, true, false, false]
+    );
+}

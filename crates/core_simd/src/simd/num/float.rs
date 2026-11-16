@@ -402,17 +402,26 @@ macro_rules! impl_trait {
 
             #[inline]
             fn is_nan(self) -> Self::Mask {
-                self.simd_ne(self)
+                // A NaN has an all-ones exponent and a nonzero mantissa.
+                let bits = self.to_bits();
+                let magnitude = bits & Simd::splat(!0 >> 1);
+                let exponent = bits & Self::splat(Self::Scalar::INFINITY).to_bits();
+                let exponent_mask = Self::splat(Self::Scalar::INFINITY).to_bits();
+                exponent.simd_eq(exponent_mask) & magnitude.simd_ne(exponent_mask)
             }
 
             #[inline]
             fn is_infinite(self) -> Self::Mask {
-                self.abs().simd_eq(Self::splat(Self::Scalar::INFINITY))
+                // The magnitude bits of either infinity equal the exponent mask.
+                let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
+                magnitude.simd_eq(Self::splat(Self::Scalar::INFINITY).to_bits())
             }
 
             #[inline]
             fn is_finite(self) -> Self::Mask {
-                self.abs().simd_lt(Self::splat(Self::Scalar::INFINITY))
+                // Finite values are exactly those whose exponent is not all ones.
+                let exponent = self.to_bits() & Self::splat(Self::Scalar::INFINITY).to_bits();
+                exponent.simd_ne(Self::splat(Self::Scalar::INFINITY).to_bits())
             }
 
             #[inline]
