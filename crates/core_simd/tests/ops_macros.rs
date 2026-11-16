@@ -555,6 +555,58 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn overflowing_shl<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 3,
+                        1 => -2,
+                        2 => 1,
+                        _ => Scalar::MAX,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::BITS as Scalar,
+                        _ => 2,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].overflowing_shl(rhs[lane] as u32));
+                    let (actual, overflow) =
+                        Vector::<LANES>::from_array(lhs).overflowing_shl(Vector::from_array(rhs));
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
+                fn overflowing_shr<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 12,
+                        1 => -8,
+                        2 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::BITS as Scalar,
+                        _ => 2,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].overflowing_shr(rhs[lane] as u32));
+                    let (actual, overflow) =
+                        Vector::<LANES>::from_array(lhs).overflowing_shr(Vector::from_array(rhs));
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::to_mask,
