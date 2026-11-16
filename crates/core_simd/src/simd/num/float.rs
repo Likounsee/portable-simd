@@ -67,6 +67,14 @@ pub impl(self) trait SimdFloat: Copy {
     /// Computes the remainder of corresponding lanes using relaxed algebraic semantics.
     fn algebraic_rem(self, other: Self) -> Self;
 
+    /// Computes `self * a + b` for each lane using relaxed fused multiply-add semantics.
+    ///
+    /// The compiler may use a fused instruction or separate multiplication and addition,
+    /// depending on the target and optimization context. The result may therefore differ
+    /// from both a strictly fused operation and a strictly unfused sequence.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn mul_add_relaxed(self, a: Self, b: Self) -> Self;
+
     /// Rounds toward zero and converts to the same-width integer type, assuming that
     /// the value is finite and fits in that type.
     ///
@@ -323,6 +331,12 @@ macro_rules! impl_trait {
                 Self::from_array(core::array::from_fn(|lane| {
                     self.as_array()[lane].algebraic_rem(other.as_array()[lane])
                 }))
+            }
+
+            #[inline]
+            fn mul_add_relaxed(self, a: Self, b: Self) -> Self {
+                // Safety: all three operands are SIMD vectors of supported float lanes.
+                unsafe { core::intrinsics::simd::simd_relaxed_fma(self, a, b) }
             }
 
             #[inline]
