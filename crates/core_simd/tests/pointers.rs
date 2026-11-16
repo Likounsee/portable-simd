@@ -201,12 +201,64 @@ mod const_ptr {
             assert_eq!(actual, expected);
         }
 
+        fn wrapping_add_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 20);
+            let base = storage.as_ptr();
+            let relocated = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .to_array();
+
+            // SAFETY: every offset selects an element in the same allocation.
+            let actual = unsafe { relocated.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
+        }
+
+        fn wrapping_sub_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 30);
+            let base = storage.as_ptr().wrapping_add(LANES - 1);
+            let relocated = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_sub(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .to_array();
+
+            // SAFETY: every offset selects an element in the same allocation.
+            let actual = unsafe { relocated.map(|pointer| *pointer) };
+            let expected = core::array::from_fn(|lane| storage[LANES - 1 - lane]);
+            assert_eq!(actual, expected);
+        }
+
+        fn wrapping_offset_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 40);
+            let midpoint = LANES / 2;
+            let base = storage.as_ptr().wrapping_add(midpoint);
+            let offsets = core::array::from_fn(|lane| lane as isize - midpoint as isize);
+            let relocated = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_offset(Simd::from_array(offsets))
+                .to_array();
+
+            // SAFETY: every signed offset selects an element in the same allocation.
+            let actual = unsafe { relocated.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
+        }
+
         fn with_exposed_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::with_exposed_provenance::<u32, LANES>,
                 &core::ptr::with_exposed_provenance::<u32>,
                 &|_| true,
             );
+        }
+
+        fn exposed_provenance_can_be_recovered_for_reads<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 50);
+            let base = storage.as_ptr();
+            let addresses = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .expose_provenance();
+            let recovered = ptr::with_exposed_provenance::<u32, LANES>(addresses).to_array();
+
+            // SAFETY: each address was exposed from a live pointer into storage.
+            let actual = unsafe { recovered.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
         }
 
         fn without_provenance<const LANES: usize>() {
@@ -294,12 +346,80 @@ mod mut_ptr {
             assert_eq!(storage, expected);
         }
 
+        fn wrapping_add_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr();
+            let relocated = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .to_array();
+
+            // SAFETY: every offset selects a distinct element in the allocation.
+            unsafe {
+                for (lane, pointer) in relocated.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 200);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 200));
+        }
+
+        fn wrapping_sub_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr().wrapping_add(LANES - 1);
+            let relocated = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_sub(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .to_array();
+
+            // SAFETY: every offset selects a distinct element in the allocation.
+            unsafe {
+                for (lane, pointer) in relocated.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 300);
+                }
+            }
+            let expected = core::array::from_fn(|lane| (LANES - 1 - lane) as u32 + 300);
+            assert_eq!(storage, expected);
+        }
+
+        fn wrapping_offset_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let midpoint = LANES / 2;
+            let base = storage.as_mut_ptr().wrapping_add(midpoint);
+            let offsets = core::array::from_fn(|lane| lane as isize - midpoint as isize);
+            let relocated = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_offset(Simd::from_array(offsets))
+                .to_array();
+
+            // SAFETY: every signed offset selects a distinct element in the allocation.
+            unsafe {
+                for (lane, pointer) in relocated.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 400);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 400));
+        }
+
         fn with_exposed_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::with_exposed_provenance_mut::<u32, LANES>,
                 &core::ptr::with_exposed_provenance_mut::<u32>,
                 &|_| true,
             );
+        }
+
+        fn exposed_provenance_can_be_recovered_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr();
+            let addresses = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .expose_provenance();
+            let recovered = ptr::with_exposed_provenance_mut::<u32, LANES>(addresses).to_array();
+
+            // SAFETY: each address was exposed from a distinct live pointer into storage.
+            unsafe {
+                for (lane, pointer) in recovered.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 500);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 500));
         }
 
         fn without_provenance<const LANES: usize>() {
