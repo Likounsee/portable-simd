@@ -659,4 +659,3 @@ fn float_cast_f64_to_u32_matches_scalar_saturating_casts() {
         values.map(|value| value as u32)
     );
 }
-

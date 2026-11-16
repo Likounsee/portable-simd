@@ -155,4 +155,3 @@ fn float_sign_operations_preserve_f64_nan_payloads_and_signed_zero() {
         }),
     );
 }
-
