@@ -473,6 +473,66 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn saturating_add<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MIN,
+                        2 => Scalar::MAX - 1,
+                        3 => Scalar::MIN + 1,
+                        4 => 12,
+                        5 => -12,
+                        6 => 0,
+                        _ => 1,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => -1,
+                        2 => 1,
+                        3 => -1,
+                        4 => 12,
+                        5 => -12,
+                        6 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].saturating_add(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_add(Vector::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
+                }
+
+                fn saturating_sub<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MIN + 1,
+                        3 => Scalar::MAX - 1,
+                        4 => -12,
+                        5 => 12,
+                        6 => 0,
+                        _ => 1,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => -1,
+                        2 => 1,
+                        3 => -1,
+                        4 => 12,
+                        5 => -12,
+                        6 => Scalar::MAX,
+                        _ => Scalar::MIN,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].saturating_sub(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_sub(Vector::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
+                }
+
                 fn saturating_mul<const LANES: usize>() {
                     test_helpers::test_binary_elementwise(
                         &Vector::<LANES>::saturating_mul,
@@ -1202,6 +1262,66 @@ macro_rules! impl_unsigned_tests {
                     assert_eq!(
                         Vector::<LANES>::from_array(lhs)
                             .mul_high(Vector::<LANES>::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
+                }
+
+                fn saturating_add<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX - 1,
+                        2 => Scalar::MAX / 2,
+                        3 => 0,
+                        4 => 1,
+                        5 => 12,
+                        6 => 0,
+                        _ => Scalar::MAX,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => 1,
+                        2 => 2,
+                        3 => 0,
+                        4 => Scalar::MAX,
+                        5 => 12,
+                        6 => Scalar::MAX,
+                        _ => 0,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].saturating_add(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_add(Vector::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
+                }
+
+                fn saturating_sub<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX - 1,
+                        4 => 12,
+                        5 => 0,
+                        6 => Scalar::MAX / 2,
+                        _ => Scalar::MAX,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => 0,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX,
+                        4 => 12,
+                        5 => Scalar::MAX,
+                        6 => 2,
+                        _ => 0,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].saturating_sub(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_sub(Vector::from_array(rhs))
                             .to_array(),
                         expected,
                     );
