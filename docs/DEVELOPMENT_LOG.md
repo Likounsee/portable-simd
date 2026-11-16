@@ -658,3 +658,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added relaxed fused-multiply-add contract coverage for f16, matching the existing f32/f64 checks.
 - Added algebraic reduction tests at additional vector widths (f32x8 and f64x2) to exercise more than the original four-lane examples.
 - These are semantic regression tests only; they do not establish backend vectorization or a performance improvement. CI validation is pending.
+
+
+### 2026-11-16 — clarify gather and algebraic code-generation evidence
+
+- Corrected the #475 assessment: `gather_unchecked` currently routes through an all-true mask and a `T::default()` passthrough into `simd_gather`; a distinct maskless intrinsic is not present in this fork. Generated code must establish whether the backend eliminates this machinery.
+- Clarified #539 implementation shape: lane-wise algebraic add/sub/mul/div/rem call scalar algebraic operations per lane; relaxed FMA uses the SIMD intrinsic; unordered reduction uses the SIMD intrinsic for f32/f64 and a scalar fold for f16.
+- These are source-level findings, not performance claims. CI and generated-code inspection remain pending.
