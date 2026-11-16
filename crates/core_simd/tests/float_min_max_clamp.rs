@@ -15,11 +15,9 @@ fn simd_min_matches_scalar_nan_handling_for_f32() {
         8.0,
     ]);
     let right = Simd::from_array([1.0, f32::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
-    let expected = left
-        .to_array()
-        .into_iter()
-        .zip(right.to_array())
-        .map(|(a, b)| a.min(b).to_bits());
+    let left = left.to_array();
+    let right = right.to_array();
+    let expected = core::array::from_fn(|i| left[i].min(right[i]).to_bits());
 
     assert_eq!(left.simd_min(right).to_bits().to_array(), expected);
 }
@@ -37,11 +35,9 @@ fn simd_max_matches_scalar_nan_handling_for_f32() {
         8.0,
     ]);
     let right = Simd::from_array([1.0, f32::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
-    let expected = left
-        .to_array()
-        .into_iter()
-        .zip(right.to_array())
-        .map(|(a, b)| a.max(b).to_bits());
+    let left = left.to_array();
+    let right = right.to_array();
+    let expected = core::array::from_fn(|i| left[i].max(right[i]).to_bits());
 
     assert_eq!(left.simd_max(right).to_bits().to_array(), expected);
 }
@@ -59,11 +55,9 @@ fn simd_min_matches_scalar_nan_handling_for_f64() {
         8.0,
     ]);
     let right = Simd::from_array([1.0, f64::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
-    let expected = left
-        .to_array()
-        .into_iter()
-        .zip(right.to_array())
-        .map(|(a, b)| a.min(b).to_bits());
+    let left = left.to_array();
+    let right = right.to_array();
+    let expected = core::array::from_fn(|i| left[i].min(right[i]).to_bits());
 
     assert_eq!(left.simd_min(right).to_bits().to_array(), expected);
 }
@@ -81,11 +75,9 @@ fn simd_max_matches_scalar_nan_handling_for_f64() {
         8.0,
     ]);
     let right = Simd::from_array([1.0, f64::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
-    let expected = left
-        .to_array()
-        .into_iter()
-        .zip(right.to_array())
-        .map(|(a, b)| a.max(b).to_bits());
+    let left = left.to_array();
+    let right = right.to_array();
+    let expected = core::array::from_fn(|i| left[i].max(right[i]).to_bits());
 
     assert_eq!(left.simd_max(right).to_bits().to_array(), expected);
 }
@@ -104,12 +96,10 @@ fn simd_clamp_matches_scalar_behavior_for_f32() {
     ]);
     let min = Simd::from_array([-2.0, -2.0, -2.0, -1.0, -1.0, 0.0, 2.0, 2.0]);
     let max = Simd::from_array([2.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 2.0]);
-    let expected = values
-        .to_array()
-        .into_iter()
-        .zip(min.to_array())
-        .zip(max.to_array())
-        .map(|((value, lower), upper)| value.clamp(lower, upper).to_bits());
+    let values = values.to_array();
+    let min = min.to_array();
+    let max = max.to_array();
+    let expected = core::array::from_fn(|i| values[i].clamp(min[i], max[i]).to_bits());
 
     assert_eq!(values.simd_clamp(min, max).to_bits().to_array(), expected);
 }
@@ -128,12 +118,10 @@ fn simd_clamp_matches_scalar_behavior_for_f64() {
     ]);
     let min = Simd::from_array([-2.0, -2.0, -2.0, -1.0, -1.0, 0.0, 2.0, 2.0]);
     let max = Simd::from_array([2.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 2.0]);
-    let expected = values
-        .to_array()
-        .into_iter()
-        .zip(min.to_array())
-        .zip(max.to_array())
-        .map(|((value, lower), upper)| value.clamp(lower, upper).to_bits());
+    let values = values.to_array();
+    let min = min.to_array();
+    let max = max.to_array();
+    let expected = core::array::from_fn(|i| values[i].clamp(min[i], max[i]).to_bits());
 
     assert_eq!(values.simd_clamp(min, max).to_bits().to_array(), expected);
 }
