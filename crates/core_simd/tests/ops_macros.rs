@@ -307,6 +307,26 @@ macro_rules! impl_signed_tests {
             impl_common_integer_tests! { Vector, Scalar }
 
             test_helpers::test_lanes! {
+                fn div_euclid<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| (lane as Scalar).wrapping_mul(7).wrapping_sub(19));
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .div_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].div_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn rem_euclid<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| (lane as Scalar).wrapping_mul(7).wrapping_sub(19));
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .rem_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].rem_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
+                }
+            }
+
+            test_helpers::test_lanes! {
                 fn unchecked_add<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
                         0 => Scalar::MAX - 1,
