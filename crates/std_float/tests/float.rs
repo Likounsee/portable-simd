@@ -156,7 +156,7 @@ fn mul_sub_uses_single_rounding_f32() {
 
     let fused = a.mul_sub(b, c);
     let unfused = (a * b) - c;
-    let expected = -2.0_f32.powi(-46);
+    let expected = f32::from_bits(0xa880_0000);
 
     assert_eq!(fused.to_array(), [expected; 4]);
     assert_eq!(unfused.to_array(), [0.0; 4]);
@@ -173,7 +173,7 @@ fn mul_sub_uses_single_rounding_f64() {
 
     let fused = a.mul_sub(b, c);
     let unfused = (a * b) - c;
-    let expected = -2.0_f64.powi(-104);
+    let expected = f64::from_bits(0xb970_0000_0000_0000);
 
     assert_eq!(fused.to_array(), [expected; 4]);
     assert_eq!(unfused.to_array(), [0.0; 4]);
