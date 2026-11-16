@@ -1261,6 +1261,108 @@ macro_rules! impl_unsigned_tests {
             }
 
             test_helpers::test_lanes! {
+                fn overflowing_add<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MAX - 1,
+                        3 => 0,
+                        4 => 1,
+                        5 => Scalar::MAX / 2,
+                        6 => 12,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => 0,
+                        2 => 1,
+                        3 => 0,
+                        4 => Scalar::MAX,
+                        5 => 2,
+                        6 => 12,
+                        _ => Scalar::MAX,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].overflowing_add(rhs[lane]));
+                    let (actual, overflow) =
+                        Vector::<LANES>::from_array(lhs).overflowing_add(Vector::from_array(rhs));
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
+                fn overflowing_sub<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 0,
+                        1 => 1,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MAX / 2,
+                        5 => 12,
+                        6 => Scalar::MAX,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 1,
+                        1 => 0,
+                        2 => Scalar::MAX,
+                        3 => 0,
+                        4 => 2,
+                        5 => 12,
+                        6 => Scalar::MAX,
+                        _ => 0,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].overflowing_sub(rhs[lane]));
+                    let (actual, overflow) =
+                        Vector::<LANES>::from_array(lhs).overflowing_sub(Vector::from_array(rhs));
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
+                fn overflowing_mul<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX / 2,
+                        2 => Scalar::MAX,
+                        3 => 0,
+                        4 => 1,
+                        5 => 2,
+                        6 => Scalar::MAX / 3,
+                        _ => 12,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 2,
+                        1 => 3,
+                        2 => 1,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MAX,
+                        5 => 2,
+                        6 => 3,
+                        _ => 12,
+                    });
+                    let expected = core::array::from_fn(|lane| lhs[lane].overflowing_mul(rhs[lane]));
+                    let (actual, overflow) =
+                        Vector::<LANES>::from_array(lhs).overflowing_mul(Vector::from_array(rhs));
+                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                    assert_eq!(
+                        overflow,
+                        Vector::<LANES>::from_array(
+                            expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                        )
+                        .to_mask(),
+                    );
+                }
+
                 fn overflowing_pow<const LANES: usize>() {
                     let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
