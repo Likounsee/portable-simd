@@ -24,10 +24,8 @@ pub impl(self) trait SimdUint: Copy {
     #[must_use]
     fn cast<T: SimdCast>(self) -> Self::Cast<T>;
 
-    /// Wrapping negation.
-    ///
-    /// Like [`u32::wrapping_neg`], all applications of this function will wrap, with the exception
-    /// of `-0`.
+    /// Computes the two's-complement negation of each lane, wrapping modulo the lane's
+    /// integer range. Zero remains zero.
     fn wrapping_neg(self) -> Self;
 
     /// Adds corresponding lanes without checking for overflow.
