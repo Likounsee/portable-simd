@@ -524,3 +524,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - **#387 (SIMD fused multiply-add):** the fork already exposes elementwise fused `mul_add` and `mul_sub` through `StdFloat` in `crates/std_float/src/lib.rs`, backed by the compiler's `simd_fma` intrinsic. This deliberately lives in the `std_float` layer because the current intrinsic may require runtime math-library support on targets without hardware support. The upstream request for a separate `no_std` operation with LLVM `fmuladd` semantics is not equivalent to the existing fused API; no substitute was added without a compiler intrinsic that guarantees the requested fallback semantics.
 - **#14 (SIMD special functions):** the current `StdFloat` surface already provides `sqrt`, `sin`, `cos`, `exp`, `exp2`, `ln`, `log`, `log2`, and `log10`, alongside rounding and truncation operations. These are compiler/runtime-backed operations, not a missing set of simple portable arithmetic methods. Extending the set requires checking intrinsic availability and target runtime requirements individually; no speculative polynomial approximations were introduced.
 - Outcome: the relevant functionality is already present in the `std_float` crate; the remaining no-std/runtime portability gap is compiler/intrinsic-level work rather than a safe local API duplication.
+
+
+### 2026-11-16 — audit upstream issue #447 (generic-lane-count aliases)
+
+- The fork already exports the requested shorthand aliases for every supported scalar lane type: `i8xN<N>`, `u32xN<N>`, `f32xN<N>`, and the corresponding signed, unsigned, pointer-sized, and floating-point variants.
+- The aliases are generated in `crates/core_simd/src/alias.rs` and publicly re-exported from `core_simd::simd` through `crates/core_simd/src/mod.rs`.
+- `crates/core_simd/tests/generic_aliases.rs` checks type equivalence for all scalar types and includes a generic function using `u32xN<N>` with a const-generic lane count.
+- The upstream inverse aliases (`Tx1<T>`, `Tx2<T>`, etc.) are not implemented. They were not added: they are optional, less ergonomic in generic code, and would broaden the public API without a demonstrated need.
+- Outcome: the central request in #447 is already implemented and covered by compile/runtime tests; no duplicate aliases were added.
