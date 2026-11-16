@@ -445,7 +445,8 @@ macro_rules! impl_trait {
 
             #[inline]
             fn signum(self) -> Self {
-                self.is_nan().select(Self::splat(Self::Scalar::NAN), Self::splat(1.0).copysign(self))
+                // Preserve the original NaN payload and sign, matching scalar signum.
+                self.is_nan().select(self, Self::splat(1.0).copysign(self))
             }
 
             #[inline]

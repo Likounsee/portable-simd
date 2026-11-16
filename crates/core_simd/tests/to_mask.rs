@@ -285,3 +285,38 @@ fn float_copysign_preserves_f64_payload_and_uses_each_sign_bit() {
     });
     assert_eq!(magnitude.copysign(signs).to_bits().to_array(), expected);
 }
+
+
+#[test]
+fn float_signum_preserves_f32_nan_bits_and_matches_scalar_semantics() {
+    let values = Simd::from_array([
+        f32::from_bits(0x7fc1_2345),
+        f32::from_bits(0xffc5_4321),
+        f32::NEG_INFINITY,
+        -3.5,
+        -0.0,
+        0.0,
+        2.5,
+        f32::INFINITY,
+    ]);
+    let expected = values.to_array().map(f32::signum).map(f32::to_bits);
+
+    assert_eq!(values.signum().to_bits().to_array(), expected);
+}
+
+#[test]
+fn float_signum_preserves_f64_nan_bits_and_matches_scalar_semantics() {
+    let values = Simd::from_array([
+        f64::from_bits(0x7ff8_1234_5678_9abc),
+        f64::from_bits(0xfff8_4321_8765_cba9),
+        f64::NEG_INFINITY,
+        -3.5,
+        -0.0,
+        0.0,
+        2.5,
+        f64::INFINITY,
+    ]);
+    let expected = values.to_array().map(f64::signum).map(f64::to_bits);
+
+    assert_eq!(values.signum().to_bits().to_array(), expected);
+}
