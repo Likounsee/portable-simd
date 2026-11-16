@@ -2157,6 +2157,13 @@ macro_rules! impl_float_tests {
                     let n_zero = Vector::<LANES>::splat(-0.);
                     assert!(p_zero.simd_min(n_zero).to_array().iter().all(|x| *x == 0.));
                     assert!(n_zero.simd_min(p_zero).to_array().iter().all(|x| *x == 0.));
+
+                    // A single NaN must not poison the numeric operand.
+                    let nan = Vector::<LANES>::splat(Scalar::NAN);
+                    let number = Vector::<LANES>::splat(3.0);
+                    assert_eq!(nan.simd_min(number), number);
+                    assert_eq!(number.simd_min(nan), number);
+                    assert!(nan.simd_min(nan).is_nan().all());
                 }
 
                 fn simd_max<const LANES: usize>() {
@@ -2180,6 +2187,13 @@ macro_rules! impl_float_tests {
                     let n_zero = Vector::<LANES>::splat(-0.);
                     assert!(p_zero.simd_max(n_zero).to_array().iter().all(|x| *x == 0.));
                     assert!(n_zero.simd_max(p_zero).to_array().iter().all(|x| *x == 0.));
+
+                    // A single NaN must not poison the numeric operand.
+                    let nan = Vector::<LANES>::splat(Scalar::NAN);
+                    let number = Vector::<LANES>::splat(3.0);
+                    assert_eq!(nan.simd_max(number), number);
+                    assert_eq!(number.simd_max(nan), number);
+                    assert!(nan.simd_max(nan).is_nan().all());
                 }
 
                 fn simd_clamp<const LANES: usize>() {
