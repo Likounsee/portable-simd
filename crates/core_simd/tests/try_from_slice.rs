@@ -31,7 +31,9 @@ where
 {
     let values: [T; LANES] =
         core::array::from_fn(|lane| T::from((lane as u8).wrapping_mul(17).wrapping_add(3)));
-    let vector = core_simd::simd::Simd::<T, LANES>::try_from(&values[..]).ok().expect("exact-length slice must convert");
+    let vector = core_simd::simd::Simd::<T, LANES>::try_from(&values[..])
+        .ok()
+        .expect("exact-length slice must convert");
     assert_eq!(vector.to_array(), values, "exact length, lanes={LANES}");
 
     assert!(
