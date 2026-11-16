@@ -990,7 +990,9 @@ macro_rules! impl_float_tests {
                         // under Miri. Bound the absolute error by the input magnitude
                         // instead, which remains meaningful when cancellation occurs.
                         let magnitude = x.iter().copied().map(Scalar::abs).sum::<Scalar>();
-                        let tolerance = magnitude * Scalar::EPSILON * 128.0;
+                        // Keep a nonzero tolerance when the input magnitude is subnormal:
+                        // multiplying a subnormal by EPSILON can underflow to zero.
+                        let tolerance = magnitude.max(Scalar::MIN_POSITIVE) * Scalar::EPSILON * 128.0;
                         proptest::prop_assert!(
                             (actual - expected).abs() <= tolerance,
                             "actual={actual:?}, expected={expected:?}, tolerance={tolerance:?}",
