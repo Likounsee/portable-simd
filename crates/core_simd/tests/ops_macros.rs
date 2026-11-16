@@ -2220,7 +2220,14 @@ macro_rules! impl_float_tests {
                         let result_vector = Vector::from_array(value).simd_clamp(min.into(), max.into()).to_array();
                         test_helpers::prop_assert_biteq!(result_vector, result_scalar, result_scalar_flush);
                         Ok(())
-                    })
+                    });
+
+                    // Comparisons with NaN are false, so clamping must preserve a NaN
+                    // value rather than replacing it with either bound.
+                    let nan = Vector::<LANES>::splat(Scalar::NAN);
+                    let min = Vector::<LANES>::splat(-1.0);
+                    let max = Vector::<LANES>::splat(1.0);
+                    assert!(nan.simd_clamp(min, max).is_nan().all());
                 }
 
                 fn reduce_sum<const LANES: usize>() {
