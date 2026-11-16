@@ -74,4 +74,53 @@ mod tests {
         assert!(values.reduce_min().is_nan());
         assert!(values.reduce_max().is_nan());
     }
+
+    #[test]
+    fn f16_reduce_sum_preserves_order_for_cancellation() {
+        let values = [2048.0_f16, -2048.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let expected = values.into_iter().fold(0.0_f16, |sum, value| sum + value);
+
+        assert_eq!(
+            Simd::from_array(values).reduce_sum().to_bits(),
+            expected.to_bits()
+        );
+    }
+
+    #[test]
+    fn f16_reduce_sum_propagates_invalid_infinity_sum() {
+        let values = [
+            f16::INFINITY,
+            f16::NEG_INFINITY,
+            1.0_f16,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ];
+        let expected = values.into_iter().fold(0.0_f16, |sum, value| sum + value);
+        let actual = Simd::from_array(values).reduce_sum();
+
+        assert_eq!(actual.is_nan(), expected.is_nan());
+    }
+
+    #[test]
+    fn f16_reduce_product_propagates_zero_times_infinity() {
+        let values = [
+            0.0_f16,
+            f16::INFINITY,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+        ];
+        let expected = values
+            .into_iter()
+            .fold(1.0_f16, |product, value| product * value);
+        let actual = Simd::from_array(values).reduce_product();
+
+        assert_eq!(actual.is_nan(), expected.is_nan());
+    }
 }
