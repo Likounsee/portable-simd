@@ -289,7 +289,10 @@ macro_rules! impl_trait {
 
             #[inline]
             fn to_mask(self) -> Self::Mask {
-                self.simd_ne(Self::splat(0.0))
+                // Compare the magnitude bits so subnormals remain nonzero even on targets
+                // that flush floating-point subnormal comparisons to zero.
+                let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
+                magnitude.simd_ne(Simd::splat(0))
             }
 
             #[inline]
