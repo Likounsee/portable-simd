@@ -77,6 +77,18 @@ macro_rules! common_tests {
                     &<*$constness u32>::wrapping_add,
                     &|_, _| true,
                 );
+
+                let mut storage = [0u32; LANES];
+                let base = storage.as_mut_ptr() as *$constness u32;
+                let counts: [usize; LANES] = core::array::from_fn(|lane| lane);
+                let actual = Simd::<*$constness u32, LANES>::splat(base)
+                    .wrapping_add(Simd::from_array(counts))
+                    .addr()
+                    .to_array();
+                let expected = core::array::from_fn(|lane| {
+                    base.wrapping_add(counts[lane]).addr()
+                });
+                assert_eq!(actual, expected);
             }
 
             fn wrapping_sub<const LANES: usize>() {
@@ -85,6 +97,19 @@ macro_rules! common_tests {
                     &<*$constness u32>::wrapping_sub,
                     &|_, _| true,
                 );
+
+                let mut storage = [0u32; LANES];
+                let base = storage.as_mut_ptr().wrapping_add(LANES - 1) as *$constness u32;
+                let counts: [usize; LANES] =
+                    core::array::from_fn(|lane| LANES - 1 - lane);
+                let actual = Simd::<*$constness u32, LANES>::splat(base)
+                    .wrapping_sub(Simd::from_array(counts))
+                    .addr()
+                    .to_array();
+                let expected = core::array::from_fn(|lane| {
+                    base.wrapping_sub(counts[lane]).addr()
+                });
+                assert_eq!(actual, expected);
             }
         }
     }
