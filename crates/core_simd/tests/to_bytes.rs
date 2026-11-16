@@ -21,7 +21,7 @@ fn byte_convert() {
 
 #[test]
 fn float_byte_conversions_preserve_f32_bit_patterns() {
-    let values = Simd::from_bits(Simd::<u32, 4>::from_array([
+    let values: Simd<f32, 4> = Simd::from_bits(Simd::<u32, 4>::from_array([
         0x0000_0000,
         0x8000_0000,
         0x7fc1_2345,
@@ -38,7 +38,7 @@ fn float_byte_conversions_preserve_f32_bit_patterns() {
 
 #[test]
 fn float_byte_conversions_preserve_f64_bit_patterns() {
-    let values = Simd::from_bits(Simd::<u64, 2>::from_array([
+    let values: Simd<f64, 2> = Simd::from_bits(Simd::<u64, 2>::from_array([
         0x0000_0000_0000_0000,
         0xfff8_1234_5678_9abc,
     ]));
