@@ -154,6 +154,18 @@ mod const_ptr {
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
 
+        fn cast_roundtrip_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 40);
+            let pointers = Simd::<*const u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of!(storage[lane])),
+            );
+            let roundtripped = pointers.cast::<u8>().cast::<u32>().to_array();
+
+            // SAFETY: the cast roundtrip preserves each pointer's provenance and address.
+            let actual = unsafe { roundtripped.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
+        }
+
         fn with_addr_preserves_provenance_for_dereference<const LANES: usize>() {
             let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 10);
             let base = storage.as_ptr();
@@ -211,6 +223,22 @@ mod mut_ptr {
             );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
+        }
+
+        fn cast_roundtrip_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let pointers = Simd::<*mut u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of_mut!(storage[lane])),
+            );
+            let roundtripped = pointers.cast::<u8>().cast::<u32>().to_array();
+
+            // SAFETY: the cast roundtrip preserves provenance and each lane is distinct.
+            unsafe {
+                for (lane, pointer) in roundtripped.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 400);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 400));
         }
 
         fn with_addr_preserves_provenance_for_writes<const LANES: usize>() {
