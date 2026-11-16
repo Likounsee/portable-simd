@@ -15,19 +15,13 @@ mod tests {
 
     #[test]
     fn f16_reduce_sum_matches_ordered_scalar_fold() {
-        let values = [
-            1.0_f16,
-            0.5,
-            -0.25,
-            2.0,
-            -1.0,
-            0.125,
-            4.0,
-            -2.0,
-        ];
+        let values = [1.0_f16, 0.5, -0.25, 2.0, -1.0, 0.125, 4.0, -2.0];
         let expected = values.into_iter().fold(0.0_f16, |sum, value| sum + value);
 
-        assert_eq!(Simd::from_array(values).reduce_sum().to_bits(), expected.to_bits());
+        assert_eq!(
+            Simd::from_array(values).reduce_sum().to_bits(),
+            expected.to_bits()
+        );
     }
 
     #[test]
@@ -41,7 +35,9 @@ mod tests {
     #[test]
     fn f16_reduce_product_matches_ordered_scalar_fold() {
         let values = [1.5_f16, 2.0, -0.5, 1.0, 0.25, 2.0, -1.0, 1.0];
-        let expected = values.into_iter().fold(1.0_f16, |product, value| product * value);
+        let expected = values
+            .into_iter()
+            .fold(1.0_f16, |product, value| product * value);
 
         assert_eq!(
             Simd::from_array(values).reduce_product().to_bits(),
@@ -125,16 +121,7 @@ mod tests {
 
     #[test]
     fn f16_reduce_product_propagates_zero_times_infinity() {
-        let values = [
-            0.0_f16,
-            f16::INFINITY,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-        ];
+        let values = [0.0_f16, f16::INFINITY, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         let expected = values
             .into_iter()
             .fold(1.0_f16, |product, value| product * value);

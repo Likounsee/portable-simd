@@ -106,16 +106,13 @@ mod tests {
             f16::from_bits(0x0001),
             f16::from_bits(0x8001),
         ]);
-        let signs = Simd::from_array([
-            -1.0_f16, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
-        ]);
+        let signs = Simd::from_array([-1.0_f16, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0]);
         let value_array = values.to_array();
         let sign_array = signs.to_array();
 
         let expected_abs = value_array.map(|value| value.to_bits() & 0x7fff);
         let expected_copy_sign = core::array::from_fn(|lane| {
-            (value_array[lane].to_bits() & 0x7fff)
-                | (sign_array[lane].to_bits() & 0x8000)
+            (value_array[lane].to_bits() & 0x7fff) | (sign_array[lane].to_bits() & 0x8000)
         });
         let expected_signum = value_array.map(|value| {
             if value.is_nan() {

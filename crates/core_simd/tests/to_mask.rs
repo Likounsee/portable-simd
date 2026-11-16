@@ -324,7 +324,13 @@ fn float_signum_preserves_f64_nan_bits_and_matches_scalar_semantics() {
         2.5,
         f64::INFINITY,
     ]);
-    let expected = values.to_array().map(|value| { if value.is_nan() { value.to_bits() } else { value.signum().to_bits() } });
+    let expected = values.to_array().map(|value| {
+        if value.is_nan() {
+            value.to_bits()
+        } else {
+            value.signum().to_bits()
+        }
+    });
 
     assert_eq!(values.signum().to_bits().to_array(), expected);
 }

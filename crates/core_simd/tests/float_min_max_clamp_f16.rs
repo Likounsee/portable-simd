@@ -27,13 +27,15 @@ mod tests {
             -2.0,
             8.0,
         ]);
-        let right_vector =
-            Simd::from_array([1.0_f16, f16::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
+        let right_vector = Simd::from_array([1.0_f16, f16::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
         let left = left_vector.to_array();
         let right = right_vector.to_array();
         let expected = core::array::from_fn(|i| left[i].min(right[i]).to_bits());
 
-        assert_eq!(left_vector.simd_min(right_vector).to_bits().to_array(), expected);
+        assert_eq!(
+            left_vector.simd_min(right_vector).to_bits().to_array(),
+            expected
+        );
     }
 
     #[test]
@@ -48,13 +50,15 @@ mod tests {
             -2.0,
             8.0,
         ]);
-        let right_vector =
-            Simd::from_array([1.0_f16, f16::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
+        let right_vector = Simd::from_array([1.0_f16, f16::NAN, 4.0, 7.0, -7.0, -0.5, 2.0, 9.0]);
         let left = left_vector.to_array();
         let right = right_vector.to_array();
         let expected = core::array::from_fn(|i| left[i].max(right[i]).to_bits());
 
-        assert_eq!(left_vector.simd_max(right_vector).to_bits().to_array(), expected);
+        assert_eq!(
+            left_vector.simd_max(right_vector).to_bits().to_array(),
+            expected
+        );
     }
 
     #[test]
