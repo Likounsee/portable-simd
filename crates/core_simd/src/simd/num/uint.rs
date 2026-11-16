@@ -218,7 +218,7 @@ pub impl(self) trait SimdUint: Copy {
     /// Reverses the byte order of each element.
     fn swap_bytes(self) -> Self;
 
-    /// Reverses the order of bits in each elemnent.
+    /// Reverses the order of bits in each element.
     /// The least significant bit becomes the most significant bit, second least-significant bit becomes second most-significant bit, etc.
     fn reverse_bits(self) -> Self;
 
