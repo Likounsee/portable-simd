@@ -154,6 +154,23 @@ mod const_ptr {
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
 
+        fn with_addr_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 10);
+            let pointers = Simd::<*const u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of!(storage[lane])),
+            );
+            let target_addresses = core::array::from_fn(|lane| {
+                core::ptr::addr_of!(storage[LANES - 1 - lane]).addr()
+            });
+            let relocated = pointers.with_addr(Simd::from_array(target_addresses)).to_array();
+
+            // SAFETY: every target belongs to the same allocation and each
+            // pointer retains provenance through with_addr.
+            let actual = unsafe { relocated.map(|pointer| *pointer) };
+            let expected = core::array::from_fn(|lane| storage[LANES - 1 - lane]);
+            assert_eq!(actual, expected);
+        }
+
         fn with_exposed_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::with_exposed_provenance::<u32, LANES>,
@@ -193,6 +210,28 @@ mod mut_ptr {
             );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
+        }
+
+        fn with_addr_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let pointers = Simd::<*mut u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of_mut!(storage[lane])),
+            );
+            let target_addresses = core::array::from_fn(|lane| {
+                core::ptr::addr_of_mut!(storage[LANES - 1 - lane]).addr()
+            });
+            let relocated = pointers.with_addr(Simd::from_array(target_addresses)).to_array();
+
+            // SAFETY: the target addresses are distinct elements of the
+            // allocation and each pointer retains provenance through with_addr.
+            unsafe {
+                for (lane, pointer) in relocated.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 100);
+                }
+            }
+
+            let expected = core::array::from_fn(|lane| (LANES - 1 - lane) as u32 + 100);
+            assert_eq!(storage, expected);
         }
 
         fn with_exposed_provenance<const LANES: usize>() {
