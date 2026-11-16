@@ -219,7 +219,10 @@ fn float_abs_preserves_f32_magnitude_bits_for_special_values() {
     let expected = values
         .to_array()
         .map(|value| f32::from_bits(value.to_bits() & 0x7fff_ffff));
-    assert_eq!(values.abs().to_bits().to_array(), expected.map(f32::to_bits));
+    assert_eq!(
+        values.abs().to_bits().to_array(),
+        expected.map(f32::to_bits)
+    );
 }
 
 #[test]
@@ -237,7 +240,10 @@ fn float_abs_preserves_f64_magnitude_bits_for_special_values() {
     let expected = values
         .to_array()
         .map(|value| f64::from_bits(value.to_bits() & 0x7fff_ffff_ffff_ffff));
-    assert_eq!(values.abs().to_bits().to_array(), expected.map(f64::to_bits));
+    assert_eq!(
+        values.abs().to_bits().to_array(),
+        expected.map(f64::to_bits)
+    );
 }
 
 #[test]
@@ -252,16 +258,12 @@ fn float_copysign_preserves_f32_payload_and_uses_each_sign_bit() {
         f32::from_bits(0x0000_0001),
         f32::from_bits(0x8000_0001),
     ]);
-    let signs = Simd::from_array([
-        -1.0_f32, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
-    ]);
+    let signs = Simd::from_array([-1.0_f32, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0]);
     let expected = magnitude
         .to_array()
         .into_iter()
         .zip(signs.to_array())
-        .map(|(value, sign)| {
-        (value.to_bits() & 0x7fff_ffff) | (sign.to_bits() & 0x8000_0000)
-    });
+        .map(|(value, sign)| (value.to_bits() & 0x7fff_ffff) | (sign.to_bits() & 0x8000_0000));
     assert_eq!(magnitude.copysign(signs).to_bits().to_array(), expected);
 }
 
@@ -277,12 +279,14 @@ fn float_copysign_preserves_f64_payload_and_uses_each_sign_bit() {
         f64::from_bits(0x0000_0000_0000_0001),
         f64::from_bits(0x8000_0000_0000_0001),
     ]);
-    let signs = Simd::from_array([
-        -1.0_f64, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
-    ]);
-    let expected = magnitude.to_array().zip(signs.to_array()).map(|(value, sign)| {
-        (value.to_bits() & 0x7fff_ffff_ffff_ffff) | (sign.to_bits() & 0x8000_0000_0000_0000)
-    });
+    let signs = Simd::from_array([-1.0_f64, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0]);
+    let expected = magnitude
+        .to_array()
+        .into_iter()
+        .zip(signs.to_array())
+        .map(|(value, sign)| {
+            (value.to_bits() & 0x7fff_ffff_ffff_ffff) | (sign.to_bits() & 0x8000_0000_0000_0000)
+        });
     assert_eq!(magnitude.copysign(signs).to_bits().to_array(), expected);
 }
 
