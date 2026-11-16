@@ -89,6 +89,13 @@ mod const_ptr {
             );
         }
 
+        fn cast_preserves_addresses<const LANES: usize>() {
+            let pointer = core::ptr::NonNull::<u32>::dangling().as_ptr();
+            let pointers = Simd::<*const u32, LANES>::splat(pointer);
+            let cast = pointers.cast::<u8>();
+            assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
+        }
+
         fn with_exposed_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::with_exposed_provenance::<u32, LANES>,
@@ -119,6 +126,13 @@ mod mut_ptr {
                 &<*mut u32>::cast_const,
                 &|_| true,
             );
+        }
+
+        fn cast_preserves_addresses<const LANES: usize>() {
+            let pointer = core::ptr::NonNull::<u32>::dangling().as_ptr();
+            let pointers = Simd::<*mut u32, LANES>::splat(pointer);
+            let cast = pointers.cast::<u8>();
+            assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
 
         fn with_exposed_provenance<const LANES: usize>() {
