@@ -492,10 +492,10 @@ macro_rules! impl_trait {
 
             #[inline]
             fn algebraic_reduce_sum(self) -> Self::Scalar {
-                self.as_array()
-                    .iter()
-                    .copied()
-                    .fold(0.0, |sum, lane| sum.algebraic_add(lane))
+                // SAFETY: `self` is a SIMD vector of supported floating-point lanes.
+                // The unordered reduction matches this method's relaxed algebraic contract:
+                // the compiler may reassociate additions and choose any reduction order.
+                unsafe { core::intrinsics::simd::simd_reduce_add_unordered(self) }
             }
 
             #[inline]

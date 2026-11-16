@@ -1,3 +1,10 @@
+### 2026-11-16 — use unordered SIMD reduction for algebraic float sums
+
+- Replaced the scalar lane-by-lane fold in `SimdFloat::algebraic_reduce_sum` with the compiler's `simd_reduce_add_unordered` intrinsic.
+- This matches the relaxed algebraic contract: the reduction may reassociate lanes and use a target-specific SIMD reduction instead of forcing a left-to-right scalar fold.
+- Expanded issue #539 tests to cover f16/f32/f64 arithmetic, relaxed multiply-add, and exact representable reductions. Tests no longer require bit-identical results for a particular reduction order.
+- Validation remains pending the CI run for this consolidated change.
+
 ### 2026-11-15 — rustfmt follow-up for issue #366
 
 - The next CI run caught formatting differences in the scalar reference expression and long test arrays in `issue_366_maddubs.rs`.

@@ -306,3 +306,8 @@ The following five upstream requests have been selected for a focused fork-side 
 | [#447](https://github.com/rust-lang/portable-simd/issues/447) | Generic-lane-count shorthand aliases | `i8xN<N>`, `u32xN<N>`, `f32xN<N>`, and corresponding integer/float aliases are already exported for all supported scalar types. Existing tests check type equivalence for all scalar types; added a const-generic f32 operation test. | The optional inverse aliases (`Tx1<T>`, `Tx2<T>`, etc.) were not part of the core request and remain intentionally omitted. Current-head CI must pass. |
 
 The latest test and diagnostic changes are on the main branch. CI is pending for commit `48fc06f`; no test-pass claim is made until that run completes successfully. This table records fork-side scope and explicit evidence gates, not upstream issue closure.
+
+## Follow-up implementation — algebraic reduction (2026-11-16)
+
+- Issue #539: `algebraic_reduce_sum` now uses the unordered SIMD reduction intrinsic rather than a scalar left fold. Tests cover f16/f32/f64 and no longer assume a fixed reduction order.
+- The five-issue sprint remains unverified until the current CI matrix completes. Issue #475 still requires review of generated code and benchmark results; a benchmark harness alone is not evidence of a speedup.
