@@ -533,6 +533,42 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn saturating_abs<const LANES: usize>() {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MIN + 1,
+                        2 => -1,
+                        3 => 0,
+                        4 => 1,
+                        5 => Scalar::MAX,
+                        6 => Scalar::MAX - 1,
+                        _ => -42,
+                    });
+                    let expected = values.map(Scalar::saturating_abs);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).saturating_abs().to_array(),
+                        expected,
+                    );
+                }
+
+                fn saturating_neg<const LANES: usize>() {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MIN + 1,
+                        2 => -1,
+                        3 => 0,
+                        4 => 1,
+                        5 => Scalar::MAX,
+                        6 => Scalar::MAX - 1,
+                        _ => 42,
+                    });
+                    let expected = values.map(Scalar::saturating_neg);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).saturating_neg().to_array(),
+                        expected,
+                    );
+                }
+
                 fn saturating_mul<const LANES: usize>() {
                     test_helpers::test_binary_elementwise(
                         &Vector::<LANES>::saturating_mul,
