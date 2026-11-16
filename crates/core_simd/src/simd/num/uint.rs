@@ -128,6 +128,16 @@ pub impl(self) trait SimdUint: Copy {
     /// Returns the remainder and a mask indicating lanes where remainder overflowed.
     ///
     /// Division by zero panics, matching the scalar integer operation.
+    /// Returns the quotient of each lane using Euclidean division.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn div_euclid(self, rhs: Self) -> Self;
+
+    /// Returns the remainder of each lane using Euclidean division.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn rem_euclid(self, rhs: Self) -> Self;
+
     fn overflowing_rem(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
     where
         Self: SimdPartialEq;
@@ -396,6 +406,20 @@ macro_rules! impl_trait {
                 )
                 .to_mask();
                 (values, overflow)
+            }
+
+            #[inline]
+            fn div_euclid(self, rhs: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].div_euclid(rhs.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn rem_euclid(self, rhs: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].rem_euclid(rhs.as_array()[lane])
+                }))
             }
 
             #[inline]
