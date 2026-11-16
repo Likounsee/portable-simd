@@ -104,23 +104,33 @@ pub impl(self) trait SimdUint: Copy {
     fn saturating_mul(self, second: Self) -> Self;
 
     /// Returns the wrapped sum and a mask indicating lanes where addition overflowed.
-    fn overflowing_add(self, second: Self) -> (Self, Self::Mask);
+    fn overflowing_add(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
 
     /// Returns the wrapped difference and a mask indicating lanes where subtraction overflowed.
-    fn overflowing_sub(self, second: Self) -> (Self, Self::Mask);
+    fn overflowing_sub(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
 
     /// Returns the wrapped product and a mask indicating lanes where multiplication overflowed.
-    fn overflowing_mul(self, second: Self) -> (Self, Self::Mask);
+    fn overflowing_mul(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
 
     /// Returns the quotient and a mask indicating lanes where division overflowed.
     ///
     /// Division by zero panics, matching the scalar integer operation.
-    fn overflowing_div(self, second: Self) -> (Self, Self::Mask);
+    fn overflowing_div(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
 
     /// Returns the remainder and a mask indicating lanes where remainder overflowed.
     ///
     /// Division by zero panics, matching the scalar integer operation.
-    fn overflowing_rem(self, second: Self) -> (Self, Self::Mask);
+    fn overflowing_rem(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
 
     /// Lanewise saturating subtract.
     ///
@@ -303,7 +313,10 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_add(self, second: Self) -> (Self, Self::Mask) {
+            fn overflowing_add(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
@@ -319,7 +332,10 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_sub(self, second: Self) -> (Self, Self::Mask) {
+            fn overflowing_sub(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
@@ -335,7 +351,10 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_mul(self, second: Self) -> (Self, Self::Mask) {
+            fn overflowing_mul(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
@@ -351,7 +370,10 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_div(self, second: Self) -> (Self, Self::Mask) {
+            fn overflowing_div(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
@@ -367,7 +389,10 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_rem(self, second: Self) -> (Self, Self::Mask) {
+            fn overflowing_rem(self, second: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
