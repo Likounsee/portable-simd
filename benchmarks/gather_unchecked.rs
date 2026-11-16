@@ -33,7 +33,6 @@ fn pointer_gather(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u3
     unsafe { Simd::gather_ptr(pointers) }
 }
 
-
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[target_feature(enable = "avx2")]
 #[inline(never)]
@@ -79,7 +78,6 @@ fn main() {
         assert_eq!(unsafe { avx2_gather(&values, avx2_indices) }, expected);
     }
 
-
     println!("portable-simd issue #475 gather diagnostic");
     println!("lanes={LANES}, iterations={ITERATIONS}");
     measure("checked gather", || {
@@ -98,5 +96,4 @@ fn main() {
             black_box(unsafe { avx2_gather(black_box(&values), black_box(avx2_indices)) });
         });
     }
-
 }
