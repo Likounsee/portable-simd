@@ -569,3 +569,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Started a source inventory of unsafe operations in `vector.rs`, `masks.rs`, `select.rs`, pointer SIMD modules, and `std_float/src/lib.rs`. The inventory identifies pointer/memory, mask-validity, intrinsic, provenance, and unsafe-trait areas for review; it is not yet a soundness verdict.
 - The last observed main CI run before this documentation update was run `43944365944` on `6d88cf5`, pending with 56 jobs. The current documentation commits must receive their own CI validation; no current-head green claim is made.
 - No Rust implementation or unsafe block was changed in this documentation/audit-start commit. The next audit step is to inspect each unsafe API's contract against its implementation and compiler intrinsic requirements, then add focused tests or fixes only where a concrete defect is demonstrated.
+
+
+### 2026-11-16 — clarify masked pointer load/store alignment contracts (#381)
+
+- Compared the fork's public unsafe wrappers with the Rust SIMD intrinsic safety documentation for `simd_masked_load` and `simd_masked_store`.
+- Both intrinsics use `SimdAlign::Element`, which requires the base pointer to be aligned to the SIMD element type independently of which lanes are enabled. The previous wrapper safety text described enabled-lane readability/writability but did not explicitly state this unconditional base-pointer alignment requirement.
+- Updated `Simd::load_select_ptr` and `Simd::store_select_ptr` safety sections to require `align_of::<T>()` alignment even when the mask is all false, and clarified the matching internal SAFETY comments.
+- This is a safety-contract/documentation correction for upstream #381; it does not change generated code or intrinsic behavior. No misaligned-pointer test was added because violating this contract would itself be undefined behavior. Full CI and Miri validation are pending.

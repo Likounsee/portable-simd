@@ -289,4 +289,6 @@ A source-level inventory has started, covering vector.rs, masks.rs, select.rs, s
 - pointer/address conversions and provenance exposure/reconstruction;
 - SimdElement and MaskElement unsafe trait implementations whose invariants must be checked against every supported scalar type.
 
+A concrete contract gap was found and corrected in the raw-pointer masked load/store wrappers: their intrinsics require base-pointer alignment even when all lanes are disabled. The public safety sections now state this requirement for `load_select_ptr` and `store_select_ptr`, in addition to enabled-lane access validity. This contributes to upstream #381 but does not close the broader safety-documentation review.
+
 This is an inventory, **not a completed safety review**. No unsafe block is being marked sound solely because Miri or ordinary tests pass. The audit must continue through the remaining architecture-specific modules and every unsafe public API, with a written invariant and evidence for each site.

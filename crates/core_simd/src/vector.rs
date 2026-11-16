@@ -569,7 +569,8 @@ where
     /// value from `or` is passed through.
     ///
     /// # Safety
-    /// Enabled `ptr` elements must be safe to read as if by `core::ptr::read`.
+    /// `ptr` must be aligned to `align_of::<T>()`, even when every lane is disabled.
+    /// Every enabled element must be safe to read as if by `core::ptr::read`.
     #[must_use]
     #[inline]
     pub unsafe fn load_select_ptr(
@@ -577,7 +578,8 @@ where
         enable: Mask<<T as SimdElement>::Mask, N>,
         or: Self,
     ) -> Self {
-        // SAFETY: The safety of reading elements through `ptr` is ensured by the caller.
+        // SAFETY: The caller guarantees element alignment (required by SimdAlign::Element)
+        // and that every enabled element is readable.
         unsafe {
             core::intrinsics::simd::simd_masked_load::<_, _, _, { SimdAlign::Element }>(
                 enable.to_simd(),
@@ -892,11 +894,13 @@ where
     ///
     /// # Safety
     ///
-    /// Memory addresses for element are calculated [`pointer::wrapping_offset`] and
+    /// `ptr` must be aligned to `align_of::<T>()`, even when every lane is disabled.
+    /// Memory addresses for elements are calculated with [`pointer::wrapping_offset`], and
     /// each enabled element must satisfy the same conditions as [`core::ptr::write`].
     #[inline]
     pub unsafe fn store_select_ptr(self, ptr: *mut T, enable: Mask<<T as SimdElement>::Mask, N>) {
-        // SAFETY: The safety of writing elements through `ptr` is ensured by the caller.
+        // SAFETY: The caller guarantees element alignment (required by SimdAlign::Element)
+        // and that every enabled element is writable.
         unsafe {
             core::intrinsics::simd::simd_masked_store::<_, _, _, { SimdAlign::Element }>(
                 enable.to_simd(),
