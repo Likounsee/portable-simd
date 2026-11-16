@@ -410,15 +410,21 @@ macro_rules! impl_signed_tests {
                 }
 
                 fn saturating_pow<const LANES: usize>() {
-                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MIN,
                         2 => -2,
-                        _ => 0,
+                        3 => -1,
+                        4 => 0,
+                        5 => 1,
+                        6 => 2,
+                        _ => 3,
                     });
-                    let expected = values.map(|value| value.saturating_pow(3));
-                    assert_eq!(Vector::<LANES>::from_array(values).saturating_pow(3).to_array(), expected);
-                    assert_eq!(Vector::<LANES>::from_array(values).saturating_pow(0).to_array(), [1; LANES]);
+                    let vector = Vector::<LANES>::from_array(values);
+                    for exp in [0, 1, 2, 3, 4, 7, u32::MAX] {
+                        let expected = values.map(|value| value.saturating_pow(exp));
+                        assert_eq!(vector.saturating_pow(exp).to_array(), expected);
+                    }
                 }
 
 
@@ -519,17 +525,29 @@ macro_rules! impl_signed_tests {
 
 
                 fn overflowing_pow<const LANES: usize>() {
-                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MIN,
                         2 => -2,
+                        3 => -1,
+                        4 => 0,
+                        5 => 1,
+                        6 => 2,
                         _ => 3,
                     });
-                    let expected = values.map(|value| value.overflowing_pow(3));
-                    let (actual, overflow) = Vector::<LANES>::from_array(values).overflowing_pow(3);
-                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
-                    assert_eq!(overflow, Vector::<LANES>::from_array(expected.map(|(_, did_overflow)| did_overflow as Scalar)).to_mask());
-                    assert_eq!(Vector::<LANES>::from_array(values).overflowing_pow(0).0.to_array(), [1; LANES]);
+                    let vector = Vector::<LANES>::from_array(values);
+                    for exp in [0, 1, 2, 3, 4, 7, u32::MAX] {
+                        let expected = values.map(|value| value.overflowing_pow(exp));
+                        let (actual, overflow) = vector.overflowing_pow(exp);
+                        assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                        assert_eq!(
+                            overflow,
+                            Vector::<LANES>::from_array(
+                                expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                            )
+                            .to_mask(),
+                        );
+                    }
                 }
 
                 fn overflowing_mul<const LANES: usize>() {
@@ -942,31 +960,49 @@ macro_rules! impl_unsigned_tests {
                 }
 
                 fn saturating_pow<const LANES: usize>() {
-                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MAX / 2,
-                        2 => 2,
-                        _ => 0,
+                        2 => Scalar::MAX - 1,
+                        3 => 0,
+                        4 => 1,
+                        5 => 2,
+                        6 => 3,
+                        _ => 4,
                     });
-                    let expected = values.map(|value| value.saturating_pow(3));
-                    assert_eq!(Vector::<LANES>::from_array(values).saturating_pow(3).to_array(), expected);
-                    assert_eq!(Vector::<LANES>::from_array(values).saturating_pow(0).to_array(), [1; LANES]);
+                    let vector = Vector::<LANES>::from_array(values);
+                    for exp in [0, 1, 2, 3, 4, 7, u32::MAX] {
+                        let expected = values.map(|value| value.saturating_pow(exp));
+                        assert_eq!(vector.saturating_pow(exp).to_array(), expected);
+                    }
                 }
             }
 
             test_helpers::test_lanes! {
                 fn overflowing_pow<const LANES: usize>() {
-                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MAX / 2,
-                        2 => 2,
-                        _ => 3,
+                        2 => Scalar::MAX - 1,
+                        3 => 0,
+                        4 => 1,
+                        5 => 2,
+                        6 => 3,
+                        _ => 4,
                     });
-                    let expected = values.map(|value| value.overflowing_pow(3));
-                    let (actual, overflow) = Vector::<LANES>::from_array(values).overflowing_pow(3);
-                    assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
-                    assert_eq!(overflow, Vector::<LANES>::from_array(expected.map(|(_, did_overflow)| did_overflow as Scalar)).to_mask());
-                    assert_eq!(Vector::<LANES>::from_array(values).overflowing_pow(0).0.to_array(), [1; LANES]);
+                    let vector = Vector::<LANES>::from_array(values);
+                    for exp in [0, 1, 2, 3, 4, 7, u32::MAX] {
+                        let expected = values.map(|value| value.overflowing_pow(exp));
+                        let (actual, overflow) = vector.overflowing_pow(exp);
+                        assert_eq!(actual.to_array(), expected.map(|(value, _)| value));
+                        assert_eq!(
+                            overflow,
+                            Vector::<LANES>::from_array(
+                                expected.map(|(_, did_overflow)| did_overflow as Scalar),
+                            )
+                            .to_mask(),
+                        );
+                    }
                 }
 
                 fn overflowing_shl<const LANES: usize>() {
