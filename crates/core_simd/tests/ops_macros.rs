@@ -373,6 +373,56 @@ macro_rules! impl_signed_tests {
             }
 
             test_helpers::test_lanes! {
+                fn unchecked_shl<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => -1,
+                        3 => Scalar::MIN,
+                        4 => Scalar::MAX,
+                        _ => 42,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
+                        0 => 0,
+                        1 => 1,
+                        _ => (Scalar::BITS - 1) as Scalar,
+                    });
+                    // SAFETY: Every shift count is strictly smaller than the scalar bit width.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_shl(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| unsafe {
+                        lhs[lane].unchecked_shl(rhs[lane] as u32)
+                    });
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_shr<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => -1,
+                        3 => Scalar::MIN,
+                        4 => Scalar::MAX,
+                        _ => -42,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
+                        0 => 0,
+                        1 => 1,
+                        _ => (Scalar::BITS - 1) as Scalar,
+                    });
+                    // SAFETY: Every shift count is strictly smaller than the scalar bit width.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_shr(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| unsafe {
+                        lhs[lane].unchecked_shr(rhs[lane] as u32)
+                    });
+                    assert_eq!(actual.to_array(), expected);
+                }
+
                 fn unchecked_add<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
                         0 => Scalar::MAX - 1,
@@ -1200,6 +1250,56 @@ macro_rules! impl_unsigned_tests {
             }
 
             test_helpers::test_lanes! {
+                fn unchecked_shl<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => 0,
+                        3 => 0,
+                        4 => Scalar::MAX,
+                        _ => 42,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
+                        0 => 0,
+                        1 => 1,
+                        _ => (Scalar::BITS - 1) as Scalar,
+                    });
+                    // SAFETY: Every shift count is strictly smaller than the scalar bit width.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_shl(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| unsafe {
+                        lhs[lane].unchecked_shl(rhs[lane] as u32)
+                    });
+                    assert_eq!(actual.to_array(), expected);
+                }
+
+                fn unchecked_shr<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => 0,
+                        3 => 0,
+                        4 => Scalar::MAX,
+                        _ => 42,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 3 {
+                        0 => 0,
+                        1 => 1,
+                        _ => (Scalar::BITS - 1) as Scalar,
+                    });
+                    // SAFETY: Every shift count is strictly smaller than the scalar bit width.
+                    let actual = unsafe {
+                        Vector::<LANES>::from_array(lhs)
+                            .unchecked_shr(Vector::<LANES>::from_array(rhs))
+                    };
+                    let expected = core::array::from_fn(|lane| unsafe {
+                        lhs[lane].unchecked_shr(rhs[lane] as u32)
+                    });
+                    assert_eq!(actual.to_array(), expected);
+                }
+
                 fn unchecked_add<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
                         0 => Scalar::MAX - 1,
