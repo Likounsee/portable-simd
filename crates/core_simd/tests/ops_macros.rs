@@ -985,7 +985,16 @@ macro_rules! impl_float_tests {
                         });
                         let actual = Vector::<LANES>::from_array(x).algebraic_reduce_sum();
                         let expected = x.iter().copied().fold(0.0, Scalar::algebraic_add);
-                        test_helpers::prop_assert_approxeq!(actual, expected, 16);
+
+                        // ULP distance is unstable around zero, especially for f16
+                        // under Miri. Bound the absolute error by the input magnitude
+                        // instead, which remains meaningful when cancellation occurs.
+                        let magnitude = x.iter().copied().map(Scalar::abs).sum::<Scalar>();
+                        let tolerance = magnitude * Scalar::EPSILON * 128.0;
+                        proptest::prop_assert!(
+                            (actual - expected).abs() <= tolerance,
+                            "actual={actual:?}, expected={expected:?}, tolerance={tolerance:?}",
+                        );
                         Ok(())
                     });
                 }
