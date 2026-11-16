@@ -94,10 +94,15 @@ fn float_reductions_f64_match_ordered_scalar_references() {
     let values = [1.5_f64, -2.0, 4.0, 0.5, -0.25, 3.0, 2.0, -1.0];
     let vector = Simd::from_array(values);
     let expected_sum = values.into_iter().fold(-0.0, |sum, value| sum + value);
-    let expected_product = values.into_iter().fold(1.0, |product, value| product * value);
+    let expected_product = values
+        .into_iter()
+        .fold(1.0, |product, value| product * value);
 
     assert_eq!(vector.reduce_sum().to_bits(), expected_sum.to_bits());
-    assert_eq!(vector.reduce_product().to_bits(), expected_product.to_bits());
+    assert_eq!(
+        vector.reduce_product().to_bits(),
+        expected_product.to_bits()
+    );
 }
 
 #[test]
@@ -207,7 +212,10 @@ fn float_cast_f64_to_u16_matches_scalar_saturating_casts() {
     assert_eq!(vector.cast::<u16>().to_array(), expected);
 }
 
-#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 #[test]
 fn float_cast_f16_to_i8_matches_scalar_saturating_casts() {
     let values = [
@@ -299,7 +307,9 @@ fn float_reductions_f32_preserve_order_for_cancellation_and_infinity() {
         0.0,
     ];
     let vector = Simd::from_array(exceptional);
-    let expected = exceptional.into_iter().fold(0.0_f32, |sum, value| sum + value);
+    let expected = exceptional
+        .into_iter()
+        .fold(0.0_f32, |sum, value| sum + value);
     assert_eq!(vector.reduce_sum().is_nan(), expected.is_nan());
 }
 
@@ -323,13 +333,24 @@ fn float_reductions_f64_preserve_order_for_cancellation_and_infinity() {
         0.0,
     ];
     let vector = Simd::from_array(exceptional);
-    let expected = exceptional.into_iter().fold(0.0_f64, |sum, value| sum + value);
+    let expected = exceptional
+        .into_iter()
+        .fold(0.0_f64, |sum, value| sum + value);
     assert_eq!(vector.reduce_sum().is_nan(), expected.is_nan());
 }
 
 #[test]
 fn float_to_int_unchecked_f32_to_i32_matches_scalar_truncation() {
-    let values = [-2147483520.0_f32, -19.75, -0.5, 0.0, 19.75, 2147483520.0, 1.0, -1.0];
+    let values = [
+        -2147483520.0_f32,
+        -19.75,
+        -0.5,
+        0.0,
+        19.75,
+        2147483520.0,
+        1.0,
+        -1.0,
+    ];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable i32.
     let actual = unsafe { vector.to_int_unchecked::<i32>() };
@@ -338,7 +359,16 @@ fn float_to_int_unchecked_f32_to_i32_matches_scalar_truncation() {
 
 #[test]
 fn float_to_int_unchecked_f32_to_u32_matches_scalar_truncation() {
-    let values = [-0.5_f32, 0.0, 1.0, 19.75, 255.5, 65535.0, 2147483648.0, 4294967040.0];
+    let values = [
+        -0.5_f32,
+        0.0,
+        1.0,
+        19.75,
+        255.5,
+        65535.0,
+        2147483648.0,
+        4294967040.0,
+    ];
     let vector = Simd::from_array(values);
     // SAFETY: every value is finite and truncates to a representable u32.
     let actual = unsafe { vector.to_int_unchecked::<u32>() };
