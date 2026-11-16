@@ -36,7 +36,7 @@ jobs:
       - name: Run rustfmt
         run: cargo fmt --all -- --check
       - name: Check standalone benchmark formatting
-        run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs
+        run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
           cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
@@ -75,6 +75,14 @@ jobs:
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
       - name: Emit optimized LLVM IR
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
+      - name: Compile unchecked-gather benchmark against the fork
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked
+      - name: Run unchecked-gather benchmark and semantic assertions
+        run: /tmp/gather-unchecked
+      - name: Emit unchecked-gather optimized assembly
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=asm -o /tmp/gather-unchecked.s benchmarks/gather_unchecked.rs
+      - name: Emit unchecked-gather optimized LLVM IR
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" -L dependency=target/debug/deps --emit=llvm-ir -o /tmp/gather-unchecked.ll benchmarks/gather_unchecked.rs
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -83,6 +91,8 @@ jobs:
           path: |
             /tmp/masked-load-store.s
             /tmp/masked-load-store.ll
+            /tmp/gather-unchecked.s
+            /tmp/gather-unchecked.ll
           if-no-files-found: warn
           retention-days: 14
 

@@ -26,6 +26,14 @@ fn unchecked(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LA
     unsafe { Simd::gather_unchecked(values, indices) }
 }
 
+
+#[inline(never)]
+fn pointer_gather(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LANES> {
+    // SAFETY: the fixed indices used by main are all below LANES.
+    let pointers = Simd::splat(values.as_ptr()).wrapping_add(indices);
+    unsafe { Simd::gather_ptr(pointers) }
+}
+
 fn measure(label: &str, mut f: impl FnMut()) {
     let start = Instant::now();
     for _ in 0..ITERATIONS {
@@ -45,6 +53,7 @@ fn main() {
 
     assert_eq!(checked(&values, indices), expected);
     assert_eq!(unchecked(&values, indices), expected);
+    assert_eq!(pointer_gather(&values, indices), expected);
 
     println!("portable-simd issue #475 gather diagnostic");
     println!("lanes={LANES}, iterations={ITERATIONS}");
@@ -53,5 +62,8 @@ fn main() {
     });
     measure("unchecked gather", || {
         black_box(unchecked(black_box(&values), black_box(indices)));
+    });
+    measure("pointer gather", || {
+        black_box(pointer_gather(black_box(&values), black_box(indices)));
     });
 }

@@ -1,3 +1,11 @@
+### 2026-11-16 — specialize algebraic SIMD reductions by float format
+
+- Corrected the unordered reduction implementation after reviewing its history: the compiler intrinsic does not support f16 on all relevant backends.
+- f32 and f64 now use the unordered SIMD reduction intrinsic; f16 retains the scalar algebraic fold. This avoids reintroducing the previously reverted f16 backend failure.
+- Expanded the #475 diagnostic benchmark to compare checked slice gather, unchecked slice gather, and direct pointer gather while asserting identical results.
+- Wired the gather benchmark into the quality-check CI job: rustfmt, optimized compilation, execution, assembly and LLVM IR emission, and artifact upload. This makes generated code inspectable under a fixed x86-64/SSE2 target.
+- No performance improvement is claimed until CI artifacts and measurements are available.
+
 ### 2026-11-16 — use unordered SIMD reduction for algebraic float sums
 
 - Replaced the scalar lane-by-lane fold in `SimdFloat::algebraic_reduce_sum` with the compiler's `simd_reduce_add_unordered` intrinsic.

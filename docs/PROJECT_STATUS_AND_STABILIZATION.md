@@ -311,3 +311,9 @@ The latest test and diagnostic changes are on the main branch. CI is pending for
 
 - Issue #539: `algebraic_reduce_sum` now uses the unordered SIMD reduction intrinsic rather than a scalar left fold. Tests cover f16/f32/f64 and no longer assume a fixed reduction order.
 - The five-issue sprint remains unverified until the current CI matrix completes. Issue #475 still requires review of generated code and benchmark results; a benchmark harness alone is not evidence of a speedup.
+
+## SIMD follow-up — reduction backend guard and gather codegen diagnostics (2026-11-16)
+
+- algebraic_reduce_sum now selects unordered SIMD reduction for f32/f64, with the scalar algebraic fold retained for f16 because the compiler intrinsic does not support f16 on all backends.
+- Issue #475's benchmark compares checked gather, unchecked gather, and pointer gather. CI compiles/runs it and uploads optimized assembly and LLVM IR for review.
+- Issue #475 remains unverified until generated code and timing are inspected. The five-issue sprint remains subject to the full CI matrix.

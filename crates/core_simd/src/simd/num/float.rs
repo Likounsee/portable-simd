@@ -277,6 +277,33 @@ pub impl(self) trait SimdFloat: Copy {
     fn reduce_min(self) -> Self::Scalar;
 }
 
+trait AlgebraicReduce: SimdElement {
+    fn reduce<const N: usize>(value: Simd<Self, N>) -> Self;
+}
+
+impl AlgebraicReduce for f16 {
+    #[inline]
+    fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
+        value.as_array().iter().copied().fold(0.0, |sum, lane| sum.algebraic_add(lane))
+    }
+}
+
+impl AlgebraicReduce for f32 {
+    #[inline]
+    fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
+        // SAFETY: value is a supported f32 SIMD vector; algebraic reduction permits reassociation.
+        unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+    }
+}
+
+impl AlgebraicReduce for f64 {
+    #[inline]
+    fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
+        // SAFETY: value is a supported f64 SIMD vector; algebraic reduction permits reassociation.
+        unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+    }
+}
+
 macro_rules! impl_trait {
     { $($ty:ty { bits: $bits_ty:ty, mask: $mask_ty:ty }),* } => {
         $(
@@ -492,10 +519,7 @@ macro_rules! impl_trait {
 
             #[inline]
             fn algebraic_reduce_sum(self) -> Self::Scalar {
-                // SAFETY: `self` is a SIMD vector of supported floating-point lanes.
-                // The unordered reduction matches this method's relaxed algebraic contract:
-                // the compiler may reassociate additions and choose any reduction order.
-                unsafe { core::intrinsics::simd::simd_reduce_add_unordered(self) }
+                <$ty as AlgebraicReduce>::reduce(self)
             }
 
             #[inline]
