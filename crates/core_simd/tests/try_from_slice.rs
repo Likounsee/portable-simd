@@ -26,7 +26,7 @@ fn try_from_slice() {
 
 fn check_try_from_slice_lane_count<T, const LANES: usize>()
 where
-    T: Copy + core::fmt::Debug + PartialEq + From<u8> + core_simd::simd::SimdElement,
+    T: Copy + core::fmt::Debug + PartialEq + From<u8> + core_simd::simd::SimdElement + 'static,
     for<'a> core_simd::simd::Simd<T, LANES>: core::convert::TryFrom<&'a [T]>,
     <core_simd::simd::Simd<T, LANES> as core::convert::TryFrom<&'static [T]>>::Error: core::fmt::Debug,
 {
