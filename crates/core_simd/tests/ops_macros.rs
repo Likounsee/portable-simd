@@ -314,11 +314,57 @@ macro_rules! impl_signed_tests {
                         .div_euclid(Vector::from_array(rhs));
                     let expected = core::array::from_fn(|lane| lhs[lane].div_euclid(rhs[lane]));
                     assert_eq!(actual.to_array(), expected);
+
+                    // Exercise negative divisors and integer boundaries. Avoid the
+                    // overflowing MIN / -1 pair, which panics for scalar integers.
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => -7,
+                        3 => 7,
+                        4 => -1,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => -3,
+                        1 => -3,
+                        2 => 3,
+                        3 => -3,
+                        4 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .div_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].div_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
                 }
 
                 fn rem_euclid<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| (lane as Scalar).wrapping_mul(7).wrapping_sub(19));
                     let rhs: [Scalar; LANES] = core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });
+                    let actual = Vector::<LANES>::from_array(lhs)
+                        .rem_euclid(Vector::from_array(rhs));
+                    let expected = core::array::from_fn(|lane| lhs[lane].rem_euclid(rhs[lane]));
+                    assert_eq!(actual.to_array(), expected);
+
+                    // Exercise negative divisors and integer boundaries. Avoid the
+                    // overflowing MIN / -1 pair, which panics for scalar integers.
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MAX,
+                        2 => -7,
+                        3 => 7,
+                        4 => -1,
+                        _ => 0,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => -3,
+                        1 => -3,
+                        2 => 3,
+                        3 => -3,
+                        4 => Scalar::MIN,
+                        _ => Scalar::MAX,
+                    });
                     let actual = Vector::<LANES>::from_array(lhs)
                         .rem_euclid(Vector::from_array(rhs));
                     let expected = core::array::from_fn(|lane| lhs[lane].rem_euclid(rhs[lane]));
