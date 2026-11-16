@@ -129,3 +129,72 @@ fn float_min_max_reductions_f64_skip_single_nan_lanes() {
     assert!(Simd::splat(f64::NAN).reduce_min().is_nan());
     assert!(Simd::splat(f64::NAN).reduce_max().is_nan());
 }
+
+
+#[test]
+fn float_cast_f32_to_i8_matches_scalar_saturating_casts() {
+    let values = [
+        f32::NEG_INFINITY,
+        -129.0,
+        -128.0,
+        -1.9,
+        0.0,
+        1.9,
+        127.0,
+        f32::INFINITY,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as i8);
+    assert_eq!(vector.cast::<i8>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f32_to_u8_matches_scalar_saturating_casts() {
+    let values = [
+        f32::NEG_INFINITY,
+        -1.9,
+        -0.0,
+        0.0,
+        1.9,
+        254.9,
+        255.0,
+        f32::NAN,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as u8);
+    assert_eq!(vector.cast::<u8>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f64_to_i16_matches_scalar_saturating_casts() {
+    let values = [
+        f64::NEG_INFINITY,
+        -32769.0,
+        -32768.0,
+        -1.9,
+        0.0,
+        1.9,
+        32767.0,
+        f64::INFINITY,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as i16);
+    assert_eq!(vector.cast::<i16>().to_array(), expected);
+}
+
+#[test]
+fn float_cast_f64_to_u16_matches_scalar_saturating_casts() {
+    let values = [
+        f64::NEG_INFINITY,
+        -1.9,
+        -0.0,
+        0.0,
+        1.9,
+        65534.9,
+        65535.0,
+        f64::NAN,
+    ];
+    let vector = Simd::from_array(values);
+    let expected = values.map(|value| value as u16);
+    assert_eq!(vector.cast::<u16>().to_array(), expected);
+}
