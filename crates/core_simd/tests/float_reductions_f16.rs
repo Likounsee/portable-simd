@@ -31,6 +31,14 @@ mod tests {
     }
 
     #[test]
+    fn f16_reduce_sum_preserves_negative_zero() {
+        let values = [-0.0_f16; 8];
+        let actual = Simd::from_array(values).reduce_sum();
+
+        assert_eq!(actual.to_bits(), (-0.0_f16).to_bits());
+    }
+
+    #[test]
     fn f16_reduce_product_matches_ordered_scalar_fold() {
         let values = [1.5_f16, 2.0, -0.5, 1.0, 0.25, 2.0, -1.0, 1.0];
         let expected = values.into_iter().fold(1.0_f16, |product, value| product * value);
