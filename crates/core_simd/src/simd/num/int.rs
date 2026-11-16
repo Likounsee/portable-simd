@@ -124,11 +124,35 @@ pub impl(self) trait SimdInt: Copy {
     /// Returns the wrapped negation and a mask indicating lanes where negation overflowed.
     ///
     /// The overflow mask is true for lanes containing the signed minimum value.
+    ///
+    /// # Examples
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::prelude::*;
+    /// let x = i32x4::from_array([i32::MIN, -2, 0, i32::MAX]);
+    /// let (value, overflow) = x.overflowing_neg();
+    /// assert_eq!(value, i32x4::from_array([i32::MIN, 2, 0, -i32::MAX]));
+    /// assert_eq!(overflow.to_array(), [true, false, false, false]);
+    /// ```
     fn overflowing_neg(self) -> (Self, Self::Mask);
 
     /// Returns the wrapped absolute value and a mask indicating lanes where absolute value overflowed.
     ///
     /// The overflow mask is true for lanes containing the signed minimum value.
+    ///
+    /// # Examples
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::prelude::*;
+    /// let x = i32x4::from_array([i32::MIN, -2, 0, i32::MAX]);
+    /// let (value, overflow) = x.overflowing_abs();
+    /// assert_eq!(value, i32x4::from_array([i32::MIN, 2, 0, i32::MAX]));
+    /// assert_eq!(overflow.to_array(), [true, false, false, false]);
+    /// ```
     fn overflowing_abs(self) -> (Self, Self::Mask);
 
     /// Lanewise saturating subtract.
