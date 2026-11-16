@@ -979,7 +979,9 @@ macro_rules! impl_signed_tests {
                         3 => 0,
                         _ => Scalar::MAX,
                     });
-                    let expected = values.map(Scalar::abs);
+                    // SIMD abs wraps for the signed minimum value, unlike scalar abs
+                    // in debug builds, which panics on overflow.
+                    let expected = values.map(Scalar::wrapping_abs);
                     assert_eq!(
                         Vector::<LANES>::from_array(values).abs().to_array(),
                         expected,
