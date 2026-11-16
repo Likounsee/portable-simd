@@ -511,3 +511,10 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - The unsigned trait does not expose its mask as an associated type, so its method returns the mask type from `SimdPartialEq` under an explicit trait bound rather than adding a new associated type to `SimdUint`.
 - Float semantics are documented: NaN compares unequal to zero and therefore maps to `true`; both signed zeros map to `false`.
 - This is a convenience API only; it does not reinterpret the underlying bits or promise a particular instruction sequence. CI validation is pending.
+
+### 2026-11-16 — audit upstream issues #475, #211 and #369
+
+- **#475 (`Simd::gather_unchecked`):** the fork already exposes this API in `crates/core_simd/src/vector.rs`. It documents the in-bounds precondition and delegates to the masked pointer gather with all lanes enabled. No duplicate implementation was needed.
+- **#211 (horizontal min/max index):** no dedicated reduction-with-index API was added. The upstream discussion notes that the native instruction is not available consistently across targets or LLVM's portable IR. The fork already provides `Mask::first_set()`, which can find the first matching lane after comparing against `reduce_min()` or `reduce_max()`; this is the portable composition and keeps tie behavior explicit.
+- **#369 (saturating narrowing casts):** no new public cast API was added. The upstream discussion confirms that `simd_clamp(...).cast()` already expresses the saturation pattern and that the relevant LLVM lowering fixes landed in LLVM 18/19. Adding a parallel API would duplicate the portable operation without a demonstrated compiler/codegen benefit.
+- Outcome: all three requests were checked against the current fork and upstream discussion. Existing APIs or compiler lowering address the practical need; no speculative public API change was justified.
