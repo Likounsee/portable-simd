@@ -55,7 +55,7 @@
 <a href=#55 id=55 data-nosnippet>55</a>    <span class="doccomment">/// Shifts each lane right without masking the shift amount.
 <a href=#56 id=56 data-nosnippet>56</a>    ///
 <a href=#57 id=57 data-nosnippet>57</a>    /// # Safety
-<a href=#58 id=58 data-nosnippet>58</a>    /// Every lane's shift amount must be less than the lane bit width.
+<a href=#58 id=58 data-nosnippet>58</a>    /// Every lane's shift amount must be nonnegative and less than the lane bit width.
 <a href=#59 id=59 data-nosnippet>59</a>    </span><span class="kw">unsafe fn </span>unchecked_shr(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self</span>;
 <a href=#60 id=60 data-nosnippet>60</a>
 <a href=#61 id=61 data-nosnippet>61</a>    <span class="doccomment">/// Rotates every lane's bits to the left by the same number of bits.
@@ -425,7 +425,7 @@
 <a href=#425 id=425 data-nosnippet>425</a>            <span class="attr">#[inline]
 <a href=#426 id=426 data-nosnippet>426</a>            </span><span class="kw">unsafe fn </span>unchecked_shl(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
 <a href=#427 id=427 data-nosnippet>427</a>                Simd::&lt;<span class="macro-nonterminal">$ty</span>, N&gt;::from_array(core::array::from_fn(|lane| {
-<a href=#428 id=428 data-nosnippet>428</a>                    <span class="comment">// SAFETY: The caller guarantees every shift amount is less than the lane width.
+<a href=#428 id=428 data-nosnippet>428</a>                    <span class="comment">// SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
 <a href=#429 id=429 data-nosnippet>429</a>                    </span><span class="kw">unsafe </span>{ <span class="self">self</span>.as_array()[lane].unchecked_shl(rhs.as_array()[lane] <span class="kw">as </span>u32) }
 <a href=#430 id=430 data-nosnippet>430</a>                }))
 <a href=#431 id=431 data-nosnippet>431</a>            }
@@ -433,7 +433,7 @@
 <a href=#433 id=433 data-nosnippet>433</a>            <span class="attr">#[inline]
 <a href=#434 id=434 data-nosnippet>434</a>            </span><span class="kw">unsafe fn </span>unchecked_shr(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self </span>{
 <a href=#435 id=435 data-nosnippet>435</a>                Simd::&lt;<span class="macro-nonterminal">$ty</span>, N&gt;::from_array(core::array::from_fn(|lane| {
-<a href=#436 id=436 data-nosnippet>436</a>                    <span class="comment">// SAFETY: The caller guarantees every shift amount is less than the lane width.
+<a href=#436 id=436 data-nosnippet>436</a>                    <span class="comment">// SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
 <a href=#437 id=437 data-nosnippet>437</a>                    </span><span class="kw">unsafe </span>{ <span class="self">self</span>.as_array()[lane].unchecked_shr(rhs.as_array()[lane] <span class="kw">as </span>u32) }
 <a href=#438 id=438 data-nosnippet>438</a>                }))
 <a href=#439 id=439 data-nosnippet>439</a>            }
