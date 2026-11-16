@@ -28,11 +28,10 @@ fn check_try_from_slice_lane_count<T, const LANES: usize>()
 where
     T: Copy + core::fmt::Debug + PartialEq + From<u8> + core_simd::simd::SimdElement + 'static,
     for<'a> core_simd::simd::Simd<T, LANES>: core::convert::TryFrom<&'a [T]>,
-    <core_simd::simd::Simd<T, LANES> as core::convert::TryFrom<&'static [T]>>::Error: core::fmt::Debug,
 {
     let values: [T; LANES] =
         core::array::from_fn(|lane| T::from((lane as u8).wrapping_mul(17).wrapping_add(3)));
-    let vector = core_simd::simd::Simd::<T, LANES>::try_from(&values[..]).unwrap();
+    let vector = core_simd::simd::Simd::<T, LANES>::try_from(&values[..]).ok().expect("exact-length slice must convert");
     assert_eq!(vector.to_array(), values, "exact length, lanes={LANES}");
 
     assert!(
