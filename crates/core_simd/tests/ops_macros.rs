@@ -2042,6 +2042,23 @@ macro_rules! impl_float_tests {
                     );
                 }
 
+                fn sign_predicates_cover_signed_zero_and_nan<const LANES: usize>() {
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0.0,
+                        1 => -0.0,
+                        2 => Scalar::INFINITY,
+                        3 => Scalar::NEG_INFINITY,
+                        4 => Scalar::NAN,
+                        _ => -Scalar::NAN,
+                    });
+                    let vector = Vector::<LANES>::from_array(values);
+                    let expected_positive = values.map(Scalar::is_sign_positive);
+                    let expected_negative = values.map(Scalar::is_sign_negative);
+
+                    assert_eq!(vector.is_sign_positive().to_array(), expected_positive);
+                    assert_eq!(vector.is_sign_negative().to_array(), expected_negative);
+                }
+
                 fn is_finite<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::is_finite,
