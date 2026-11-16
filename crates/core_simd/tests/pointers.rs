@@ -154,6 +154,23 @@ mod const_ptr {
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
 
+        fn cast_mut_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let base = storage.as_mut_ptr();
+            let pointers = Simd::<*const u32, LANES>::splat(base as *const u32)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .cast_mut()
+                .to_array();
+
+            // SAFETY: each pointer targets a distinct element of the mutable allocation.
+            unsafe {
+                for (lane, pointer) in pointers.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 500);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 500));
+        }
+
         fn cast_roundtrip_preserves_provenance_for_dereference<const LANES: usize>() {
             let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 40);
             let pointers = Simd::<*const u32, LANES>::from_array(
@@ -223,6 +240,19 @@ mod mut_ptr {
             );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
+        }
+
+        fn cast_const_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 600);
+            let base = storage.as_ptr() as *mut u32;
+            let pointers = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_add(Simd::from_array(core::array::from_fn(|lane| lane)))
+                .cast_const()
+                .to_array();
+
+            // SAFETY: each pointer targets an initialized element of the live allocation.
+            let actual = unsafe { pointers.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
         }
 
         fn cast_roundtrip_preserves_provenance_for_writes<const LANES: usize>() {
