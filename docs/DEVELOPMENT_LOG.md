@@ -584,3 +584,14 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Added `benchmarks/gather_unchecked.rs` to compare the safe `gather_or_default` path with `gather_unchecked` on identical, in-bounds indices.
 - The benchmark asserts result equivalence before timing and documents that optimized assembly, compiler version, CPU, and target features must be captured before making a performance claim.
 - This makes the original issue's bounds-check/codegen concern reproducible in the fork. It does not yet establish that the unchecked implementation emits better machine code; that requires running the diagnostic on the intended targets.
+
+
+### 2026-11-16 — five-issue focused implementation pass (#475, #479, #486, #539, #447)
+
+- Added `gather_unchecked.rs` regression coverage for permuted/repeated indices and bit-exact float lane movement (#475).
+- Added a focused optimized-codegen/timing diagnostic for checked versus unchecked gathers. Performance conclusions are intentionally deferred until it is run and assembly is inspected (#475).
+- Extended `to_mask.rs` with f16 subnormal, infinity, NaN, and signed-zero cases; existing f32/f64 tests already exercise the same classification edges (#479).
+- Added `algebraic_float.rs` tests for all five lane-wise algebraic arithmetic operations on f32/f64 and for scalar-algebraic-fold equivalence of the reductions (#539).
+- Extended dynamic swizzle regression tests to sweep every high-bit byte index from 0x80 through 0xff at widths around native vector boundaries (#486).
+- Extended generic alias tests with a const-generic f32 computation; the pre-existing suite already verifies every scalar alias type (#447).
+- CI for the latest main commit `48fc06f` was queued at the time of this entry. These changes are not considered validated until the complete run finishes. The benchmark has not yet produced measurements, so #475's performance claim remains open.
