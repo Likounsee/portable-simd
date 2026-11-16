@@ -55,6 +55,20 @@ macro_rules! common_tests {
                     &<*$constness u32>::wrapping_offset,
                     &|_, _| true,
                 );
+
+                let storage = [0u32; LANES];
+                let midpoint = LANES / 2;
+                let base = unsafe { storage.as_ptr().add(midpoint) } as *$constness u32;
+                let offsets: [isize; LANES] =
+                    core::array::from_fn(|lane| lane as isize - midpoint as isize);
+                let actual = Simd::<*$constness u32, LANES>::splat(base)
+                    .wrapping_offset(Simd::from_array(offsets))
+                    .addr()
+                    .to_array();
+                let expected = core::array::from_fn(|lane| {
+                    base.wrapping_offset(offsets[lane]).addr()
+                });
+                assert_eq!(actual, expected);
             }
 
             fn wrapping_add<const LANES: usize>() {
