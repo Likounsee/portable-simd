@@ -425,7 +425,7 @@ macro_rules! impl_trait {
             #[inline]
             unsafe fn unchecked_shl(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees every shift amount is less than the lane width.
+                    // SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
                     unsafe { self.as_array()[lane].unchecked_shl(rhs.as_array()[lane] as u32) }
                 }))
             }
@@ -433,7 +433,7 @@ macro_rules! impl_trait {
             #[inline]
             unsafe fn unchecked_shr(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees every shift amount is less than the lane width.
+                    // SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
                     unsafe { self.as_array()[lane].unchecked_shr(rhs.as_array()[lane] as u32) }
                 }))
             }
