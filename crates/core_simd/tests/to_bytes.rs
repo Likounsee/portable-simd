@@ -46,9 +46,18 @@ fn float_byte_conversions_preserve_f64_bit_patterns() {
     let big = values.to_be_bytes();
     let little = values.to_le_bytes();
 
-    assert_eq!(Simd::<f64, 2>::from_ne_bytes(native).to_bits(), values.to_bits());
-    assert_eq!(Simd::<f64, 2>::from_be_bytes(big).to_bits(), values.to_bits());
-    assert_eq!(Simd::<f64, 2>::from_le_bytes(little).to_bits(), values.to_bits());
+    assert_eq!(
+        Simd::<f64, 2>::from_ne_bytes(native).to_bits(),
+        values.to_bits()
+    );
+    assert_eq!(
+        Simd::<f64, 2>::from_be_bytes(big).to_bits(),
+        values.to_bits()
+    );
+    assert_eq!(
+        Simd::<f64, 2>::from_le_bytes(little).to_bits(),
+        values.to_bits()
+    );
 }
 
 #[test]

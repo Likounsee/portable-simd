@@ -262,8 +262,7 @@ fn float_copysign_preserves_f32_payload_and_uses_each_sign_bit() {
     let magnitude_values = magnitude.to_array();
     let sign_values = signs.to_array();
     let expected = core::array::from_fn(|i| {
-        (magnitude_values[i].to_bits() & 0x7fff_ffff)
-            | (sign_values[i].to_bits() & 0x8000_0000)
+        (magnitude_values[i].to_bits() & 0x7fff_ffff) | (sign_values[i].to_bits() & 0x8000_0000)
     });
     assert_eq!(magnitude.copysign(signs).to_bits().to_array(), expected);
 }
@@ -302,7 +301,13 @@ fn float_signum_preserves_f32_nan_bits_and_matches_scalar_semantics() {
         2.5,
         f32::INFINITY,
     ]);
-    let expected = values.to_array().map(|value| { if value.is_nan() { value.to_bits() } else { value.signum().to_bits() } });
+    let expected = values.to_array().map(|value| {
+        if value.is_nan() {
+            value.to_bits()
+        } else {
+            value.signum().to_bits()
+        }
+    });
 
     assert_eq!(values.signum().to_bits().to_array(), expected);
 }
