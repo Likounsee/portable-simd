@@ -4,7 +4,6 @@
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![allow(unused_features)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
 
 // FIXME: f16 SIMD operations can hang on wasm simd; keep this suite gated
 // consistently with the existing f16 operation tests.
@@ -13,7 +12,7 @@ use core_simd::simd::{Simd, num::SimdFloat};
     not(all(target_arch = "wasm32", target_feature = "simd128"))
 ))]
 mod tests {
-    use super::*;
+    use core_simd::simd::{Simd, num::SimdFloat};
 
     #[test]
     fn simd_min_matches_scalar_nan_handling_for_f16() {
