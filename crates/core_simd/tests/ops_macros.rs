@@ -532,17 +532,25 @@ macro_rules! impl_signed_tests {
 
 
                 fn overflowing_div<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MIN,
                         1 => Scalar::MAX,
                         2 => -21,
-                        _ => 21,
+                        3 => 21,
+                        4 => -1,
+                        5 => 0,
+                        6 => Scalar::MIN,
+                        _ => Scalar::MAX,
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
-                        0 => -1,
-                        1 => 2,
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => -1, // The sole signed division overflow case.
+                        1 => -1,
                         2 => 5,
-                        _ => -7,
+                        3 => -7,
+                        4 => Scalar::MIN,
+                        5 => -1,
+                        6 => 2,
+                        _ => -3,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_div(rhs[lane]));
                     let (actual, overflow) =
@@ -555,17 +563,25 @@ macro_rules! impl_signed_tests {
                 }
 
                 fn overflowing_rem<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MIN,
                         1 => Scalar::MAX,
                         2 => -21,
-                        _ => 21,
+                        3 => 21,
+                        4 => -1,
+                        5 => 0,
+                        6 => Scalar::MIN,
+                        _ => Scalar::MAX,
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
-                        0 => -1,
-                        1 => 2,
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => -1, // The sole signed remainder overflow case.
+                        1 => -1,
                         2 => 5,
-                        _ => -7,
+                        3 => -7,
+                        4 => Scalar::MIN,
+                        5 => -1,
+                        6 => 2,
+                        _ => -3,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_rem(rhs[lane]));
                     let (actual, overflow) =
