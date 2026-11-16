@@ -1143,6 +1143,32 @@ macro_rules! impl_unsigned_tests {
                         &Scalar::saturating_mul,
                         &|_, _| true,
                     );
+
+                    // Explicitly cover the saturation boundary for every lane width.
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => Scalar::MAX,
+                        1 => Scalar::MAX,
+                        2 => Scalar::MAX / 2,
+                        3 => Scalar::MAX / 2,
+                        4 => 0,
+                        _ => 1,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 2,
+                        1 => Scalar::MAX,
+                        2 => 3,
+                        3 => 2,
+                        4 => Scalar::MAX,
+                        _ => Scalar::MAX,
+                    });
+                    let expected =
+                        core::array::from_fn(|lane| lhs[lane].saturating_mul(rhs[lane]));
+                    assert_eq!(
+                        Vector::<LANES>::from_array(lhs)
+                            .saturating_mul(Vector::from_array(rhs))
+                            .to_array(),
+                        expected,
+                    );
                 }
 
                 fn saturating_pow<const LANES: usize>() {
