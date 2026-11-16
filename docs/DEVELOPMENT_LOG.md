@@ -1,3 +1,9 @@
+### 2026-11-16 — simplify standalone benchmark linking
+
+- Corrected the CI diagnostic build to pass the generated core_simd rlib once to rustc. The previous duplicate --extern entries for the same crate name could shadow the linkable artifact with metadata-only output.
+- Updated both benchmark reproduction comments to use the rlib only.
+- Clarified that the AVX2 unchecked swizzle fast path currently covers 32-byte vectors; wider x86 vectors intentionally retain the regular correctness-preserving fallback.
+
 ### 2026-11-16 — tighten unchecked swizzle split semantics
 
 - Kept direct unchecked paths for architectures whose single instruction handles the full vector width (AArch64 TBL, ARMv7 VTBL, WebAssembly 16-byte swizzle, x86 SSSE3 16-byte and AVX2 32-byte).

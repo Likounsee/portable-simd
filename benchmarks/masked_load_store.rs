@@ -27,7 +27,7 @@
 //!   CORE_SIMD_RLIB="${CORE_SIMD_ARTIFACTS[0]}"
 //!   CORE_SIMD_RMETA="${CORE_SIMD_ARTIFACTS[1]}"
 //!   rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 \
-//!     --extern core_simd="$CORE_SIMD_RLIB" --extern core_simd="$CORE_SIMD_RMETA" \
+//!     --extern core_simd="$CORE_SIMD_RLIB" \
 //!     -L dependency=target/debug/deps benchmarks/masked_load_store.rs -o /tmp/masked-load-store
 //!
 //! Inspect optimized assembly and LLVM IR with the same --extern / -L flags and
