@@ -26,7 +26,6 @@ fn unchecked(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LA
     unsafe { Simd::gather_unchecked(values, indices) }
 }
 
-
 #[inline(never)]
 fn pointer_gather(values: &[u32; LANES], indices: Simd<usize, LANES>) -> Simd<u32, LANES> {
     // SAFETY: the fixed indices used by main are all below LANES.

@@ -165,7 +165,7 @@ impl<const N: usize> Simd<u8, N> {
                 return unsafe { transize(wasm::i8x16_swizzle, self, idxs) };
             }
             if N == 32 {
-                return swizzle_dyn_split_unchecked::<32, 16>(self, idxs);
+                return swizzle_dyn_split::<32, 16>(self, idxs);
             }
         }
 
@@ -196,9 +196,6 @@ impl<const N: usize> Simd<u8, N> {
                 // SAFETY: AVX2 is enabled and the helper preserves the high-bit
                 // zeroing semantics without clamping/fixing up the indices.
                 return unsafe { transize(avx2_pshufb_unchecked, self, idxs) };
-            }
-            if N == 64 {
-                return swizzle_dyn_split_unchecked::<64, 32>(self, idxs);
             }
         }
 
@@ -231,40 +228,6 @@ fn swizzle_dyn_split<const N: usize, const HALF: usize>(
     // The swizzle does nothing - it maps the elements right back where they already are.
     // There doesn't seem to be a more direct way to do this as of this writing.
     // TODO: simplify once a plain `concat` is available.
-    use crate::simd::Swizzle;
-    struct CombineHalves;
-    impl<const N: usize> Swizzle<N> for CombineHalves {
-        const INDEX: [usize; N] = const {
-            let mut index = [0; N];
-            let mut i = 0;
-            while i < N {
-                index[i] = i;
-                i += 1;
-            }
-            index
-        };
-    }
-
-    CombineHalves::concat_swizzle(output_low, output_high)
-}
-
-#[allow(dead_code, reason = "only used on some targets/features")]
-/// Implements an unchecked arbitrary shuffle over double the native vector width.
-fn swizzle_dyn_split_unchecked<const N: usize, const HALF: usize>(
-    bytes: Simd<u8, N>,
-    idxs: Simd<u8, N>,
-) -> Simd<u8, N> {
-    let table_low = bytes.extract::<0, HALF>();
-    let table_high = bytes.extract::<HALF, HALF>();
-    let idxs_low = idxs.extract::<0, HALF>();
-    let idxs_high = idxs.extract::<HALF, HALF>();
-    let table_high_offset = Simd::<u8, HALF>::splat(HALF as u8);
-
-    let output_low = table_low.swizzle_dyn_unchecked(idxs_low)
-        | table_high.swizzle_dyn_unchecked(idxs_low - table_high_offset);
-    let output_high = table_low.swizzle_dyn_unchecked(idxs_high)
-        | table_high.swizzle_dyn_unchecked(idxs_high - table_high_offset);
-
     use crate::simd::Swizzle;
     struct CombineHalves;
     impl<const N: usize> Swizzle<N> for CombineHalves {

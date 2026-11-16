@@ -1,3 +1,8 @@
+### 2026-11-16 — tighten unchecked swizzle split semantics
+
+- Kept direct unchecked paths for architectures whose single instruction handles the full vector width (AArch64 TBL, ARMv7 VTBL, WebAssembly 16-byte swizzle, x86 SSSE3 16-byte and AVX2 32-byte).
+- Removed an attempted unchecked split for wider vectors: a valid global index can be out of range for one half, and the API permits arbitrary results for those per-half indices, so OR-combining the halves could corrupt a valid result. WebAssembly's 32-byte split now uses the regular split helper, whose native 16-byte swizzles already provide the desired zeroing without x86-style index fixup. Wider x86 widths retain the correct fallback until a direct full-width implementation is available.
+
 ### 2026-11-16 — extend unchecked swizzle fast paths
 
 - Extended `swizzle_dyn_unchecked` beyond the SSSE3 16-byte case: AArch64 NEON uses TBL directly, ARMv7 NEON uses VTBL directly, and WebAssembly SIMD128 uses its native swizzle instruction. These instructions naturally zero out-of-range high-bit indices, so no regular-path index fixup is needed.

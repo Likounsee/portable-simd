@@ -284,7 +284,11 @@ trait AlgebraicReduce: SimdElement {
 impl AlgebraicReduce for f16 {
     #[inline]
     fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
-        value.as_array().iter().copied().fold(0.0, |sum, lane| sum.algebraic_add(lane))
+        value
+            .as_array()
+            .iter()
+            .copied()
+            .fold(0.0, |sum, lane| sum.algebraic_add(lane))
     }
 }
 

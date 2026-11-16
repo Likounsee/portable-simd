@@ -322,3 +322,5 @@ The latest test and diagnostic changes are on the main branch. CI is pending for
 
 - Extended the fast path to AArch64 NEON, ARMv7 NEON, WebAssembly SIMD128, and AVX2 (32/64-byte vectors), using each ISA's native high-bit/out-of-range zeroing semantics to avoid the ordinary index-fixup path.
 - The existing test matrix checks every high-bit index value and CI has explicit SSSE3 and AVX2 target-feature configurations. Results remain pending CI.
+
+- Correctness refinement: split vectors use the ordinary split helper unless a full-width ISA-specific path is available. This avoids treating valid cross-half indices as implementation-defined out-of-range indices.
