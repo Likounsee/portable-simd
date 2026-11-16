@@ -159,3 +159,49 @@ fn float_classification_handles_f64_infinities_nans_and_finite_values() {
         [false, true, true, true, true, true, true, false, false]
     );
 }
+
+#[test]
+fn float_sign_predicates_preserve_f32_sign_bits_for_special_values() {
+    let values = Simd::from_array([
+        f32::from_bits(0x0000_0000),
+        f32::from_bits(0x8000_0000),
+        f32::from_bits(0x7f80_0000),
+        f32::from_bits(0xff80_0000),
+        f32::from_bits(0x7fc1_2345),
+        f32::from_bits(0xffc5_4321),
+        f32::from_bits(0x0000_0001),
+        f32::from_bits(0x8000_0001),
+    ]);
+
+    assert_eq!(
+        values.is_sign_positive().to_array(),
+        [true, false, true, false, true, false, true, false]
+    );
+    assert_eq!(
+        values.is_sign_negative().to_array(),
+        [false, true, false, true, false, true, false, true]
+    );
+}
+
+#[test]
+fn float_sign_predicates_preserve_f64_sign_bits_for_special_values() {
+    let values = Simd::from_array([
+        f64::from_bits(0x0000_0000_0000_0000),
+        f64::from_bits(0x8000_0000_0000_0000),
+        f64::from_bits(0x7ff0_0000_0000_0000),
+        f64::from_bits(0xfff0_0000_0000_0000),
+        f64::from_bits(0x7ff8_1234_5678_9abc),
+        f64::from_bits(0xfff8_4321_8765_cba9),
+        f64::from_bits(0x0000_0000_0000_0001),
+        f64::from_bits(0x8000_0000_0000_0001),
+    ]);
+
+    assert_eq!(
+        values.is_sign_positive().to_array(),
+        [true, false, true, false, true, false, true, false]
+    );
+    assert_eq!(
+        values.is_sign_negative().to_array(),
+        [false, true, false, true, false, true, false, true]
+    );
+}
