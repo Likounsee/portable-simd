@@ -2307,6 +2307,22 @@ macro_rules! impl_float_tests {
                 }
             }
 
+            test_helpers::test_lanes_panic! {
+                fn simd_clamp_panics_when_bounds_are_reversed<const LANES: usize>() {
+                    let value = Vector::<LANES>::splat(0.0);
+                    let min = Vector::<LANES>::splat(1.0);
+                    let max = Vector::<LANES>::splat(-1.0);
+                    let _ = value.simd_clamp(min, max);
+                }
+
+                fn simd_clamp_panics_when_bounds_contain_nan<const LANES: usize>() {
+                    let value = Vector::<LANES>::splat(0.0);
+                    let min = Vector::<LANES>::splat(Scalar::NAN);
+                    let max = Vector::<LANES>::splat(1.0);
+                    let _ = value.simd_clamp(min, max);
+                }
+            }
+
             #[cfg(feature = "std")]
             mod std {
                 use std_float::StdFloat;
