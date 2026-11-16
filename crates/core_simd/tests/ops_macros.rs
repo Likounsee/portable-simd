@@ -1245,6 +1245,19 @@ macro_rules! impl_unsigned_tests {
             }
 
             test_helpers::test_lanes_panic! {
+                fn div_by_all_zeros_panics<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(42);
+                    let b = Vector::<LANES>::splat(0);
+                    let _ = a / b;
+                }
+
+                fn div_by_one_zero_panics<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(42);
+                    let mut b = Vector::<LANES>::splat(21);
+                    b.set(0, 0);
+                    let _ = a / b;
+                }
+
                 fn rem_zero_panic<const LANES: usize>() {
                     let a = Vector::<LANES>::splat(42);
                     let b = Vector::<LANES>::splat(0);
