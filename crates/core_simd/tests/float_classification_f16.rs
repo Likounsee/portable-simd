@@ -1,7 +1,9 @@
 #![feature(portable_simd)]
 #![feature(f16)]
+#![expect(internal_features)]
 #![feature(cfg_target_has_reliable_f16_f128)]
 
+#[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
 use core_simd::simd::{Simd, num::SimdFloat};
 
 #[cfg(all(target_has_reliable_f16_math, not(all(target_arch = "wasm32", target_feature = "simd128"))))]
