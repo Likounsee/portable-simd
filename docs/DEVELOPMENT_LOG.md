@@ -542,3 +542,13 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - **#146 (ARMv7 NEON boolean reduction codegen):** the report uses Rust/LLVM 1.55/12 from 2021. The follow-up discussion reports partial LLVM-side fixes with optimization-level sensitivity, so the historical assembly is not sufficient evidence of a current regression. This needs a current ARMv7 compiler/assembly reproducer before a source workaround is justified.
 - **#297 (i64/u64 SIMD summation performance):** the upstream discussion explains that integer scalar loops are associative and can already auto-vectorize with target-aware widths, while manually fixed-width SIMD can inhibit that choice. This is not evidence of incorrect integer SIMD arithmetic or a missing API. Performance comparisons need optimized assembly and representative workloads; no redundant API was added.
 - Outcome: these requests are either target/compiler policy questions or depend on Rust layout guarantees. The fork retains explicit lane-count selection and avoids promising unsupported layout or performance behavior.
+
+
+### 2026-11-16 — audit upstream issue #242 (dynamic swizzling)
+
+- The fork already implements byte-level runtime swizzling through `Simd<u8, N>::swizzle_dyn` in `crates/core_simd/src/swizzle_dyn.rs`.
+- The implementation has target-specific paths for AArch64 NEON, ARMv7 NEON, WebAssembly SIMD128, LoongArch LSX/LASX, and x86 SSSE3/AVX2/AVX-512 VBMI, with a scalar fallback for unsupported widths/features.
+- A separate `swizzle_dyn_unchecked` path documents the high-bit out-of-bounds contract and uses the SSSE3 byte-shuffle behavior where available.
+- `crates/core_simd/tests/swizzle_dyn.rs` compares against a scalar reference, exhaustively checks all byte indices at lane-width boundaries from 1 to 64, and tests high-bit out-of-range indices for the unchecked variant.
+- The remaining gap in #242 is the compiler/LLVM-level portable intrinsic and target-independent lowering, not the absence of usable library functionality in this fork. No duplicate intrinsic or inline-assembly workaround was added.
+- Outcome: current library implementation and regression tests already cover the practical API request; upstream compiler integration remains separate work.
