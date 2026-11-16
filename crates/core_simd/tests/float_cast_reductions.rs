@@ -794,3 +794,60 @@ fn float_to_int_unchecked_f64_to_u32_matches_scalar_truncation() {
     assert_eq!(actual.to_array(), values.map(|value| value as u32));
 }
 
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn float_to_int_unchecked_f16_to_i32_matches_scalar_truncation() {
+    let values = [
+        -65504.0_f16,
+        -1000.5,
+        -1.9,
+        0.0,
+        1.9,
+        1000.7,
+        32767.0,
+        65504.0,
+    ];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i32.
+    let actual = unsafe { vector.to_int_unchecked::<i32>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i32));
+}
+
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn float_to_int_unchecked_f16_to_u32_matches_scalar_truncation() {
+    let values = [0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u32.
+    let actual = unsafe { vector.to_int_unchecked::<u32>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u32));
+}
+
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn float_to_int_unchecked_f16_to_i64_matches_scalar_truncation() {
+    let values = [
+        -65504.0_f16,
+        -1000.5,
+        -1.9,
+        0.0,
+        1.9,
+        1000.7,
+        32767.0,
+        65504.0,
+    ];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i64.
+    let actual = unsafe { vector.to_int_unchecked::<i64>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i64));
+}
+
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn float_to_int_unchecked_f16_to_u64_matches_scalar_truncation() {
+    let values = [0.0_f16, 0.9, 1.9, 255.7, 1024.5, 32767.0, 60000.0, 65504.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u64.
+    let actual = unsafe { vector.to_int_unchecked::<u64>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u64));
+}
