@@ -659,3 +659,112 @@ fn float_cast_f64_to_u32_matches_scalar_saturating_casts() {
         values.map(|value| value as u32)
     );
 }
+
+#[test]
+fn float_to_int_unchecked_f32_to_i8_matches_scalar_truncation() {
+    let values = [-127.9_f32, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i8.
+    let actual = unsafe { vector.to_int_unchecked::<i8>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i8));
+}
+
+#[test]
+fn float_to_int_unchecked_f32_to_u8_matches_scalar_truncation() {
+    let values = [0.0_f32, 0.9, 1.9, 42.7, 127.5, 200.9, 254.9, 255.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u8.
+    let actual = unsafe { vector.to_int_unchecked::<u8>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u8));
+}
+
+#[test]
+fn float_to_int_unchecked_f32_to_i16_matches_scalar_truncation() {
+    let values = [-32767.9_f32, -1000.5, -1.9, 0.0, 1.9, 1000.7, 32766.9, 32767.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i16.
+    let actual = unsafe { vector.to_int_unchecked::<i16>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i16));
+}
+
+#[test]
+fn float_to_int_unchecked_f32_to_u16_matches_scalar_truncation() {
+    let values = [0.0_f32, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u16.
+    let actual = unsafe { vector.to_int_unchecked::<u16>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u16));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_i8_matches_scalar_truncation() {
+    let values = [-127.9_f64, -100.5, -1.9, 0.0, 1.9, 42.7, 126.9, 127.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i8.
+    let actual = unsafe { vector.to_int_unchecked::<i8>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i8));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_u8_matches_scalar_truncation() {
+    let values = [0.0_f64, 0.9, 1.9, 42.7, 127.5, 200.9, 254.9, 255.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u8.
+    let actual = unsafe { vector.to_int_unchecked::<u8>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u8));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_i16_matches_scalar_truncation() {
+    let values = [-32767.9_f64, -1000.5, -1.9, 0.0, 1.9, 1000.7, 32766.9, 32767.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i16.
+    let actual = unsafe { vector.to_int_unchecked::<i16>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i16));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_u16_matches_scalar_truncation() {
+    let values = [0.0_f64, 0.9, 1.9, 255.7, 1024.5, 32767.9, 65534.9, 65535.0];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u16.
+    let actual = unsafe { vector.to_int_unchecked::<u16>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u16));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_i32_matches_scalar_truncation() {
+    let values = [
+        -2147483647.9_f64,
+        -100000.5,
+        -1.9,
+        0.0,
+        1.9,
+        100000.7,
+        2147483646.9,
+        2147483647.0,
+    ];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable i32.
+    let actual = unsafe { vector.to_int_unchecked::<i32>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as i32));
+}
+
+#[test]
+fn float_to_int_unchecked_f64_to_u32_matches_scalar_truncation() {
+    let values = [
+        0.0_f64,
+        0.9,
+        1.9,
+        100000.7,
+        2147483647.9,
+        3000000000.9,
+        4294967294.9,
+        4294967295.0,
+    ];
+    let vector = Simd::from_array(values);
+    // SAFETY: every value is finite and truncates to a representable u32.
+    let actual = unsafe { vector.to_int_unchecked::<u32>() };
+    assert_eq!(actual.to_array(), values.map(|value| value as u32));
+}
+
