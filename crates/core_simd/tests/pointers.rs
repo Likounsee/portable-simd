@@ -14,6 +14,15 @@ macro_rules! common_tests {
                     &<*$constness u32>::is_null,
                     &|_| true,
                 );
+
+                let dangling = core::ptr::NonNull::<u32>::dangling().as_ptr() as *$constness u32;
+                let pointers: [*$constness u32; LANES] =
+                    core::array::from_fn(|lane| if lane % 2 == 0 { core::ptr::null() } else { dangling });
+                let actual = Simd::<*$constness u32, LANES>::from_array(pointers)
+                    .is_null()
+                    .to_array();
+                let expected = core::array::from_fn(|lane| lane % 2 == 0);
+                assert_eq!(actual, expected);
             }
 
             fn addr<const LANES: usize>() {
