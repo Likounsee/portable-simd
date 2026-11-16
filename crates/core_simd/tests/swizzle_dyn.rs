@@ -138,9 +138,11 @@ fn swizzle_dyn_unchecked_accepts_high_bit_out_of_bounds_indices() {
     check_unchecked_swizzle_high_bit_indices::<15>();
     check_unchecked_swizzle_high_bit_indices::<16>();
     check_unchecked_swizzle_high_bit_indices::<17>();
+    check_unchecked_swizzle_high_bit_indices::<24>();
     check_unchecked_swizzle_high_bit_indices::<31>();
     check_unchecked_swizzle_high_bit_indices::<32>();
     check_unchecked_swizzle_high_bit_indices::<33>();
+    check_unchecked_swizzle_high_bit_indices::<48>();
     check_unchecked_swizzle_high_bit_indices::<63>();
     check_unchecked_swizzle_high_bit_indices::<64>();
 }
