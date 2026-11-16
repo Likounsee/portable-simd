@@ -111,6 +111,16 @@ pub impl(self) trait SimdInt: Copy {
     /// Returns the wrapped product and a mask indicating lanes where multiplication overflowed.
     fn overflowing_mul(self, second: Self) -> (Self, Self::Mask);
 
+    /// Returns the quotient and a mask indicating lanes where division overflowed.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn overflowing_div(self, second: Self) -> (Self, Self::Mask);
+
+    /// Returns the remainder and a mask indicating lanes where remainder overflowed.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn overflowing_rem(self, second: Self) -> (Self, Self::Mask);
+
     /// Lanewise saturating subtract.
     ///
     /// # Examples
@@ -436,6 +446,38 @@ macro_rules! impl_trait {
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let (value, did_overflow) =
                         self.as_array()[lane].overflowing_mul(second.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_div(self, second: Self) -> (Self, Self::Mask) {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_div(second.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_rem(self, second: Self) -> (Self, Self::Mask) {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_rem(second.as_array()[lane]);
                     overflow[lane] = did_overflow;
                     value
                 }));
