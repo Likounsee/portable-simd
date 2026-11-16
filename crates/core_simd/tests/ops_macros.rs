@@ -653,16 +653,24 @@ macro_rules! impl_signed_tests {
                 }
 
                 fn overflowing_mul<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MIN,
-                        2 => Scalar::MAX / 2,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MIN,
+                        4 => Scalar::MIN,
+                        5 => -Scalar::MAX,
+                        6 => 0,
                         _ => -12,
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => 2,
                         1 => 2,
-                        2 => 3,
+                        2 => 1,
+                        3 => 1,
+                        4 => -1,
+                        5 => -1,
+                        6 => Scalar::MIN,
                         _ => 3,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_mul(rhs[lane]));
