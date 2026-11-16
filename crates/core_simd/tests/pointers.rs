@@ -90,8 +90,10 @@ mod const_ptr {
         }
 
         fn cast_preserves_addresses<const LANES: usize>() {
-            let pointer = core::ptr::NonNull::<u32>::dangling().as_ptr();
-            let pointers = Simd::<*const u32, LANES>::splat(pointer);
+            let storage = [0u32; LANES];
+            let pointers = Simd::<*const u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of!(storage[lane])),
+            );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
@@ -129,8 +131,10 @@ mod mut_ptr {
         }
 
         fn cast_preserves_addresses<const LANES: usize>() {
-            let pointer = core::ptr::NonNull::<u32>::dangling().as_ptr();
-            let pointers = Simd::<*mut u32, LANES>::splat(pointer);
+            let mut storage = [0u32; LANES];
+            let pointers = Simd::<*mut u32, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of_mut!(storage[lane])),
+            );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
