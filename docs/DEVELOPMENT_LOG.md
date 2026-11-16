@@ -652,3 +652,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 - The workflow for commit `48fc06f` began, but the repository's concurrency policy cancelled that run after the subsequent documentation commit was pushed. This is a cancelled run, not a test failure and not a passing result.
 - No further source changes are planned in this sprint pass so that the current-head CI run can execute without being superseded by another push.
+
+### 2026-11-16 — broaden algebraic floating-point regression coverage (#539)
+
+- Added relaxed fused-multiply-add contract coverage for f16, matching the existing f32/f64 checks.
+- Added algebraic reduction tests at additional vector widths (f32x8 and f64x2) to exercise more than the original four-lane examples.
+- These are semantic regression tests only; they do not establish backend vectorization or a performance improvement. CI validation is pending.
