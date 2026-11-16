@@ -55,7 +55,7 @@ pub impl(self) trait SimdInt: Copy {
     /// Shifts each lane right without masking the shift amount.
     ///
     /// # Safety
-    /// Every lane's shift amount must be less than the lane bit width.
+    /// Every lane's shift amount must be nonnegative and less than the lane bit width.
     unsafe fn unchecked_shr(self, rhs: Self) -> Self;
 
     /// Rotates every lane's bits to the left by the same number of bits.
