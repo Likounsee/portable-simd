@@ -754,6 +754,13 @@ macro_rules! impl_float_tests {
                     );
                 }
 
+                fn mul_add_relaxed<const LANES: usize>() {
+                    let a = Vector::<LANES>::splat(2.0);
+                    let b = Vector::<LANES>::splat(3.0);
+                    let c = Vector::<LANES>::splat(1.0);
+                    assert_eq!(a.mul_add_relaxed(b, c), Vector::<LANES>::splat(7.0));
+                }
+
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
                         &Vector::<LANES>::to_mask,
