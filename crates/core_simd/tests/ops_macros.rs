@@ -126,6 +126,34 @@ macro_rules! impl_common_integer_tests {
                 );
             }
 
+            fn rotate_left<const LANES: usize>() {
+                let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    0 => 0,
+                    1 => 1,
+                    2 => Scalar::MAX,
+                    _ => Scalar::MIN,
+                });
+                let vector = $vector::<LANES>::from_array(values);
+                for shift in [0, 1, Scalar::BITS - 1, Scalar::BITS, Scalar::BITS + 1] {
+                    let expected = core::array::from_fn(|lane| values[lane].rotate_left(shift));
+                    assert_eq!(vector.rotate_left(shift).to_array(), expected);
+                }
+            }
+
+            fn rotate_right<const LANES: usize>() {
+                let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    0 => 0,
+                    1 => 1,
+                    2 => Scalar::MAX,
+                    _ => Scalar::MIN,
+                });
+                let vector = $vector::<LANES>::from_array(values);
+                for shift in [0, 1, Scalar::BITS - 1, Scalar::BITS, Scalar::BITS + 1] {
+                    let expected = core::array::from_fn(|lane| values[lane].rotate_right(shift));
+                    assert_eq!(vector.rotate_right(shift).to_array(), expected);
+                }
+            }
+
             fn reduce_sum<const LANES: usize>() {
                 test_helpers::test_1(&|x| {
                     use test_helpers::subnormals::{flush, flush_in};

@@ -60,6 +60,20 @@ pub impl(self) trait SimdUint: Copy {
     /// Every lane's shift amount must be less than the lane bit width.
     unsafe fn unchecked_shr(self, rhs: Self) -> Self;
 
+    /// Rotates every lane's bits to the left by the same number of bits.
+    ///
+    /// The rotation amount is reduced modulo the lane bit width, matching the
+    /// corresponding scalar integer method.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn rotate_left(self, rhs: u32) -> Self;
+
+    /// Rotates every lane's bits to the right by the same number of bits.
+    ///
+    /// The rotation amount is reduced modulo the lane bit width, matching the
+    /// corresponding scalar integer method.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn rotate_right(self, rhs: u32) -> Self;
+
     /// Returns the high half of each unsigned lane's full-width product.
     ///
     /// The result is the full product shifted right by the lane bit width.
@@ -224,6 +238,20 @@ macro_rules! impl_trait {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees every shift amount is less than the lane width.
                     unsafe { self.as_array()[lane].unchecked_shr(rhs.as_array()[lane] as u32) }
+                }))
+            }
+
+            #[inline]
+            fn rotate_left(self, rhs: u32) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].rotate_left(rhs)
+                }))
+            }
+
+            #[inline]
+            fn rotate_right(self, rhs: u32) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].rotate_right(rhs)
                 }))
             }
 
