@@ -23,6 +23,18 @@ fn float_classification_preserves_subnormal_and_zero_lanes_f32() {
         values.is_subnormal().to_array(),
         [true, true, false, false, false, false, false, false],
     );
+    assert_eq!(
+        values.is_normal().to_array(),
+        [false, false, false, false, false, false, false, true],
+    );
+    assert_eq!(
+        values.is_finite().to_array(),
+        [true, true, true, true, false, false, false, true],
+    );
+    assert_eq!(
+        values.is_nan().to_array(),
+        [false, false, false, false, false, false, true, false],
+    );
 }
 
 #[test]
@@ -45,5 +57,17 @@ fn float_classification_preserves_subnormal_and_zero_lanes_f64() {
     assert_eq!(
         values.is_subnormal().to_array(),
         [true, true, false, false, false, false, false, false],
+    );
+    assert_eq!(
+        values.is_normal().to_array(),
+        [false, false, false, false, false, false, false, true],
+    );
+    assert_eq!(
+        values.is_finite().to_array(),
+        [true, true, true, true, false, false, false, true],
+    );
+    assert_eq!(
+        values.is_nan().to_array(),
+        [false, false, false, false, false, false, true, false],
     );
 }
