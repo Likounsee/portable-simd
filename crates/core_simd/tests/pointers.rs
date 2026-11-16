@@ -197,6 +197,20 @@ mod const_ptr {
             assert_eq!(actual, expected);
         }
 
+        fn wrapping_offset_preserves_provenance_for_dereference<const LANES: usize>() {
+            let storage = core::array::from_fn::<_, LANES, _>(|lane| lane as u32 + 40);
+            let midpoint = LANES / 2;
+            let base = storage.as_ptr().wrapping_add(midpoint);
+            let offsets = core::array::from_fn(|lane| lane as isize - midpoint as isize);
+            let relocated = Simd::<*const u32, LANES>::splat(base)
+                .wrapping_offset(Simd::from_array(offsets))
+                .to_array();
+
+            // SAFETY: every signed offset selects an element in the same allocation.
+            let actual = unsafe { relocated.map(|pointer| *pointer) };
+            assert_eq!(actual, storage);
+        }
+
         fn with_exposed_provenance<const LANES: usize>() {
             test_helpers::test_unary_elementwise(
                 &ptr::with_exposed_provenance::<u32, LANES>,
@@ -292,6 +306,24 @@ mod mut_ptr {
             }
             let expected = core::array::from_fn(|lane| (LANES - 1 - lane) as u32 + 300);
             assert_eq!(storage, expected);
+        }
+
+        fn wrapping_offset_preserves_provenance_for_writes<const LANES: usize>() {
+            let mut storage = [0u32; LANES];
+            let midpoint = LANES / 2;
+            let base = storage.as_mut_ptr().wrapping_add(midpoint);
+            let offsets = core::array::from_fn(|lane| lane as isize - midpoint as isize);
+            let relocated = Simd::<*mut u32, LANES>::splat(base)
+                .wrapping_offset(Simd::from_array(offsets))
+                .to_array();
+
+            // SAFETY: every signed offset selects a distinct element in the allocation.
+            unsafe {
+                for (lane, pointer) in relocated.into_iter().enumerate() {
+                    pointer.write(lane as u32 + 400);
+                }
+            }
+            assert_eq!(storage, core::array::from_fn(|lane| lane as u32 + 400));
         }
 
         fn with_exposed_provenance<const LANES: usize>() {
