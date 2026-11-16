@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(f16)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -333,4 +334,23 @@ fn float_signum_preserves_f64_nan_bits_and_matches_scalar_semantics() {
     });
 
     assert_eq!(values.signum().to_bits().to_array(), expected);
+}
+
+#[test]
+fn to_mask_classifies_f16_subnormals_and_special_values() {
+    let values = Simd::from_array([
+        f16::from_bits(0x0001),
+        f16::from_bits(0x8001),
+        f16::INFINITY,
+        f16::NEG_INFINITY,
+        f16::NAN,
+        0.0_f16,
+        -0.0_f16,
+        1.0_f16,
+    ]);
+
+    assert_eq!(
+        values.to_mask().to_array(),
+        [true, true, true, true, true, false, false, true]
+    );
 }
