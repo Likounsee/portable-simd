@@ -381,6 +381,14 @@ macro_rules! impl_signed_tests {
                     );
                 }
 
+                fn saturating_mul<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::saturating_mul,
+                        &Scalar::saturating_mul,
+                        &|_, _| true,
+                    );
+                }
+
                 fn neg<const LANES: usize>() {
                     test_helpers::test_unary_elementwise(
                         &<Vector::<LANES> as core::ops::Neg>::neg,
@@ -665,6 +673,14 @@ macro_rules! impl_unsigned_tests {
                     test_helpers::test_binary_elementwise(
                         &Vector::<LANES>::mul_high,
                         &|a: Scalar, b: Scalar| (((a as u128) * (b as u128)) >> Scalar::BITS) as Scalar,
+                        &|_, _| true,
+                    );
+                }
+
+                fn saturating_mul<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise(
+                        &Vector::<LANES>::saturating_mul,
+                        &Scalar::saturating_mul,
                         &|_, _| true,
                     );
                 }
