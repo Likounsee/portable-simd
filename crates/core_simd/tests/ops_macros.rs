@@ -1830,6 +1830,20 @@ macro_rules! impl_unsigned_tests {
                         &Scalar::wrapping_neg,
                         &|_| true,
                     );
+
+                    let values: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => Scalar::MAX,
+                        4 => Scalar::MAX - 1,
+                        _ => Scalar::MAX / 2 + 1,
+                    });
+                    let expected = values.map(Scalar::wrapping_neg);
+                    assert_eq!(
+                        Vector::<LANES>::from_array(values).wrapping_neg().to_array(),
+                        expected,
+                    );
                 }
 
                 fn abs_diff<const LANES: usize>() {
