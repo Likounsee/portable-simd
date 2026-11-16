@@ -151,9 +151,9 @@ fn mul_sub_uses_single_rounding_f32() {
     use std_float::StdFloat;
 
     let epsilon = 2.0_f32.powi(-23);
-    let a = Simd::<f32, 4>::splat(1.0 + epsilon);
-    let b = Simd::<f32, 4>::splat(1.0 - epsilon);
-    let c = Simd::<f32, 4>::splat(1.0);
+    let a = core_simd::simd::Simd::<f32, 4>::splat(1.0 + epsilon);
+    let b = core_simd::simd::Simd::<f32, 4>::splat(1.0 - epsilon);
+    let c = core_simd::simd::Simd::<f32, 4>::splat(1.0);
 
     let fused = a.mul_sub(b, c);
     let unfused = (a * b) - c;
@@ -168,9 +168,9 @@ fn mul_sub_uses_single_rounding_f64() {
     use std_float::StdFloat;
 
     let epsilon = 2.0_f64.powi(-52);
-    let a = Simd::<f64, 4>::splat(1.0 + epsilon);
-    let b = Simd::<f64, 4>::splat(1.0 - epsilon);
-    let c = Simd::<f64, 4>::splat(1.0);
+    let a = core_simd::simd::Simd::<f64, 4>::splat(1.0 + epsilon);
+    let b = core_simd::simd::Simd::<f64, 4>::splat(1.0 - epsilon);
+    let c = core_simd::simd::Simd::<f64, 4>::splat(1.0);
 
     let fused = a.mul_sub(b, c);
     let unfused = (a * b) - c;
