@@ -579,17 +579,25 @@ macro_rules! impl_signed_tests {
 
 
                 fn overflowing_add<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MIN,
-                        2 => Scalar::MAX / 2,
-                        _ => -12,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MIN,
+                        4 => Scalar::MAX / 2,
+                        5 => Scalar::MIN / 2,
+                        6 => -12,
+                        _ => 0,
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => 1,
                         1 => -1,
-                        2 => 2,
-                        _ => 12,
+                        2 => 0,
+                        3 => 0,
+                        4 => 2,
+                        5 => -2,
+                        6 => 12,
+                        _ => Scalar::MIN,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_add(rhs[lane]));
                     let (actual, overflow) =
@@ -602,17 +610,25 @@ macro_rules! impl_signed_tests {
                 }
 
                 fn overflowing_sub<const LANES: usize>() {
-                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => Scalar::MAX,
                         1 => Scalar::MIN,
-                        2 => Scalar::MIN / 2,
-                        _ => -12,
+                        2 => Scalar::MAX,
+                        3 => Scalar::MIN,
+                        4 => Scalar::MIN / 2,
+                        5 => Scalar::MAX / 2,
+                        6 => -12,
+                        _ => 0,
                     });
-                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
                         0 => -1,
                         1 => 1,
-                        2 => 2,
-                        _ => -12,
+                        2 => 0,
+                        3 => 0,
+                        4 => 2,
+                        5 => -2,
+                        6 => -12,
+                        _ => Scalar::MIN,
                     });
                     let expected = core::array::from_fn(|lane| lhs[lane].overflowing_sub(rhs[lane]));
                     let (actual, overflow) =
