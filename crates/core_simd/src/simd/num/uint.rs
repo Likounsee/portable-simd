@@ -97,6 +97,12 @@ pub impl(self) trait SimdUint: Copy {
     /// ```
     fn saturating_add(self, second: Self) -> Self;
 
+    /// Lanewise saturating multiplication.
+    ///
+    /// Each lane is multiplied independently. If the mathematical product exceeds
+    /// the element type's maximum value, the result is clamped to that maximum.
+    fn saturating_mul(self, second: Self) -> Self;
+
     /// Lanewise saturating subtract.
     ///
     /// # Examples
@@ -268,6 +274,13 @@ macro_rules! impl_trait {
             fn saturating_add(self, second: Self) -> Self {
                 // Safety: `self` is a vector
                 unsafe { core::intrinsics::simd::simd_saturating_add(self, second) }
+            }
+
+            #[inline]
+            fn saturating_mul(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].saturating_mul(second.as_array()[lane])
+                }))
             }
 
             #[inline]
