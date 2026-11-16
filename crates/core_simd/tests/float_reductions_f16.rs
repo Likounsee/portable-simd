@@ -4,7 +4,6 @@
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![allow(unused_features)]
 
-
 #[cfg(all(
     target_has_reliable_f16_math,
     not(all(target_arch = "wasm32", target_feature = "simd128"))
