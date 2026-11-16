@@ -595,3 +595,9 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Extended dynamic swizzle regression tests to sweep every high-bit byte index from 0x80 through 0xff at widths around native vector boundaries (#486).
 - Extended generic alias tests with a const-generic f32 computation; the pre-existing suite already verifies every scalar alias type (#447).
 - CI for the latest main commit `48fc06f` was queued at the time of this entry. These changes are not considered validated until the complete run finishes. The benchmark has not yet produced measurements, so #475's performance claim remains open.
+
+
+### 2026-11-16 — CI queue note for the five-issue sprint
+
+- The workflow for commit `48fc06f` began, but the repository's concurrency policy cancelled that run after the subsequent documentation commit was pushed. This is a cancelled run, not a test failure and not a passing result.
+- No further source changes are planned in this sprint pass so that the current-head CI run can execute without being superseded by another push.
