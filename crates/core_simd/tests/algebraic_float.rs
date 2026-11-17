@@ -17,7 +17,12 @@ fn assert_f64_close(actual: [f64; 4], expected: [f64; 4]) {
 
 fn assert_f16_close(actual: [f16; 4], expected: [f16; 4]) {
     for i in 0..4 {
-        assert!((actual[i] - expected[i]).abs() <= 0.1_f16);
+        assert!(
+            (actual[i] - expected[i]).abs() <= 0.1_f16,
+            "lane {i}: actual={:?}, expected={:?}",
+            actual[i],
+            expected[i],
+        );
     }
 }
 
