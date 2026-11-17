@@ -353,7 +353,7 @@ macro_rules! impl_trait {
                         // through a two-entry table. This avoids the miscompiled f16
                         // scalar integer comparisons seen on Windows GNU.
                         let is_nonzero = magnitude.wrapping_neg() >> 15;
-                        [false, true][usize::from(is_nonzero)]
+                        [false, true][is_nonzero as usize]
                     });
                     Mask::from_array(nonzero)
                 } else {
