@@ -349,7 +349,7 @@ macro_rules! impl_trait {
                     // comparison used below. Keep f16 classification scalar and bit-exact.
                     let nonzero = self
                         .to_array()
-                        .map(|value| (value.to_bits() & (!0 >> 1)) != 0);
+                        .map(|value| value.to_bits().wrapping_shl(1) != 0);
                     Mask::from_array(nonzero)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
