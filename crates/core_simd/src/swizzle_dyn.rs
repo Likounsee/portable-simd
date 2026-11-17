@@ -382,6 +382,7 @@ unsafe fn avx2_pshufb(bytes: Simd<u8, 32>, idxs: Simd<u8, 32>) -> Simd<u8, 32> {
 /// This requires AVX2 to work.
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[target_feature(enable = "avx2")]
+#[allow(unused)]
 #[inline]
 unsafe fn avx2_pshufb_unchecked(bytes: Simd<u8, 32>, idxs: Simd<u8, 32>) -> Simd<u8, 32> {
     #[cfg(target_arch = "x86")]
