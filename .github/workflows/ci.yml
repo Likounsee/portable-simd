@@ -56,7 +56,7 @@ jobs:
                   except json.JSONDecodeError:
                       continue
                   target = message.get("target", {})
-                  if message.get("reason") != "compiler-artifact" or target.get("name") != "core_simd" or "lib" not in target.get("kind", []):
+                  if message.get("reason") != "compiler-artifact" or target.get("name") != "core_simd":
                       continue
                   filenames = message.get("filenames", [])
                   rlib = next((name for name in filenames if name.endswith(".rlib")), rlib)
