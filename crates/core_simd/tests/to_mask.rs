@@ -3,7 +3,7 @@
 
 use core_simd::simd::{
     Simd,
-    num::{SimdFloat, SimdInt, SimdUint},
+    num::SimdFloat,
 };
 
 #[test]
