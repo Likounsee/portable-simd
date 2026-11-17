@@ -351,7 +351,9 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
 
     assert_eq!(
         values.to_array().map(|value| value.to_bits()),
-        [0x0001, 0x8001, 0x7c00, 0xfc00, 0x7e00, 0x0000, 0x8000, 0x3c00],
+        [
+            0x0001, 0x8001, 0x7c00, 0xfc00, 0x7e00, 0x0000, 0x8000, 0x3c00
+        ],
         "the SIMD-to-array roundtrip must preserve every f16 bit pattern",
     );
     assert_eq!(
