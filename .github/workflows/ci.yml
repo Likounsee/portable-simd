@@ -39,7 +39,7 @@ jobs:
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
-          CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
+          export CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
           cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR" --message-format=json-render-diagnostics > /tmp/core-simd-build.json
           # Cargo may omit the final .rlib from compiler-artifact JSON when
           # this fork is built as a workspace package. Resolve it from the
