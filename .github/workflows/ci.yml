@@ -50,36 +50,48 @@ jobs:
             exit 1
           fi
           CORE_SIMD_DEPS="$(dirname "$CORE_SIMD_RLIB")"
+          # With -Zembed-metadata=no the rlib is only a linkable stub;
+          # rustc needs the matching full metadata file to compile consumers.
+          CORE_SIMD_RMETA="$(find "$CARGO_TARGET_DIR" -type f -name 'libcore_simd-*.rmeta' -print -quit)"
+          if [[ -z "$CORE_SIMD_RMETA" ]]; then
+            echo "Cargo did not produce full core_simd metadata; available matching files:"
+            find "$CARGO_TARGET_DIR" -type f -name 'libcore_simd-*' -print
+            exit 1
+          fi
+          CORE_SIMD_RMETA_DEPS="$(dirname "$CORE_SIMD_RMETA")"
           echo "Using fork library artifact: $CORE_SIMD_RLIB"
+          echo "Using full crate metadata: $CORE_SIMD_RMETA"
           echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"
+          echo "CORE_SIMD_RMETA=$CORE_SIMD_RMETA" >> "$GITHUB_ENV"
           echo "CORE_SIMD_DEPS=$CORE_SIMD_DEPS" >> "$GITHUB_ENV"
+          echo "CORE_SIMD_RMETA_DEPS=$CORE_SIMD_RMETA_DEPS" >> "$GITHUB_ENV"
       - name: Compile masked memory benchmark against the fork
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/masked_load_store.rs -o /tmp/masked-load-store
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" benchmarks/masked_load_store.rs -o /tmp/masked-load-store
       - name: Run masked memory benchmark and semantic assertions
         run: /tmp/masked-load-store
       - name: Emit optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
       - name: Emit optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
       - name: Compile unchecked-gather benchmark against the fork
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked
       - name: Run unchecked-gather benchmark and semantic assertions
         run: /tmp/gather-unchecked
       - name: Emit unchecked-gather optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/gather-unchecked.s benchmarks/gather_unchecked.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=asm -o /tmp/gather-unchecked.s benchmarks/gather_unchecked.rs
       - name: Emit unchecked-gather optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked.ll benchmarks/gather_unchecked.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked.ll benchmarks/gather_unchecked.rs
       # AVX2 is required to compare the portable gather path with the hardware
       # vpgather* lowering discussed in issue #475. Keep this separate from the
       # baseline SSE2 build so the two codegen outputs cannot be confused.
       - name: Compile unchecked-gather benchmark with AVX2
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked-avx2
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked-avx2
       - name: Run unchecked-gather AVX2 benchmark and semantic assertions
         run: /tmp/gather-unchecked-avx2
       - name: Emit unchecked-gather AVX2 optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/gather-unchecked-avx2.s benchmarks/gather_unchecked.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=asm -o /tmp/gather-unchecked-avx2.s benchmarks/gather_unchecked.rs
       - name: Emit unchecked-gather AVX2 optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked-avx2.ll benchmarks/gather_unchecked.rs
+        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RMETA" -L dependency="$CORE_SIMD_DEPS" -L dependency="$CORE_SIMD_RMETA_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked-avx2.ll benchmarks/gather_unchecked.rs
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
