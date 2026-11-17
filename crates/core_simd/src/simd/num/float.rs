@@ -345,12 +345,14 @@ macro_rules! impl_trait {
                 // Compare the magnitude bits so subnormals remain nonzero even on targets
                 // that flush floating-point subnormal comparisons to zero.
                 if size_of::<$ty>() == 2 {
-                    // Some Windows GNU targets currently miscompile the f16 SIMD integer
-                    // comparison used below. Keep f16 classification scalar and bit-exact.
-                    // Read the raw integer lanes directly. Converting f16 SIMD lanes
-                    // to a scalar f16 array is miscompiled on some Windows GNU targets.
-                    let nonzero = self.to_bits().to_array().map(|bits| bits & 0x7fff != 0);
-                    Mask::from_array(nonzero)
+                    // Classify the raw f16 bit patterns lane by lane. Build the
+                    // final i16 mask directly to avoid the affected Windows GNU SIMD
+                    // mask-construction path.
+                    let bits = self.to_bits().to_array();
+                    let lanes: [$mask_ty; N] =
+                        bits.map(|bits| if bits & 0x7fff != 0 { -1 } else { 0 });
+                    // SAFETY: every lane is exactly the canonical all-ones or zero mask.
+                    unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                     magnitude.simd_ne(Simd::splat(0))
