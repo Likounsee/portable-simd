@@ -2,26 +2,59 @@
 #![feature(float_algebraic)]
 #![feature(f16)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
+use core_simd::simd::{
+    Simd,
+    num::SimdFloat,
+};
 
 fn assert_f32_lanewise(a: [f32; 4], b: [f32; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_eq!(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_eq!(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_eq!(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_eq!(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_eq!(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_eq!(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i]))
+    );
 }
 
 fn assert_f64_lanewise(a: [f64; 4], b: [f64; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_eq!(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_eq!(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_eq!(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_eq!(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_eq!(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_eq!(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i]))
+    );
 }
 
 #[test]
@@ -40,11 +73,26 @@ fn f16_algebraic_lanewise_operations_match_scalar_contract() {
     let b = [0.5_f16, 2.0, -0.25, 4.0];
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_eq!(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_eq!(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_eq!(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_eq!(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_eq!(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_eq!(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i]))
+    );
+    assert_eq!(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i]))
+    );
 }
 
 #[test]
@@ -55,9 +103,11 @@ fn f32_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let actual = Simd::from_array(x)
         .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
         .to_array();
-    let fused = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
-    let separate = core::array::from_fn(|i| x[i] * a[i] + b[i]);
-    for i in 0..4 { assert!(actual[i] == fused[i] || actual[i] == separate[i]); }
+    let fused: [f32; 4] = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
+    let separate: [f32; 4] = core::array::from_fn(|i| x[i] * a[i] + b[i]);
+    for i in 0..4 {
+        assert!(actual[i] == fused[i] || actual[i] == separate[i]);
+    }
 }
 
 #[test]
@@ -68,24 +118,33 @@ fn f64_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let actual = Simd::from_array(x)
         .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
         .to_array();
-    let fused = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
-    let separate = core::array::from_fn(|i| x[i] * a[i] + b[i]);
+    let fused: [f64; 4] = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
+    let separate: [f64; 4] = core::array::from_fn(|i| x[i] * a[i] + b[i]);
     for i in 0..4 { assert!(actual[i] == fused[i] || actual[i] == separate[i]); }
 }
 
 #[test]
 fn f32_algebraic_reduce_sum_is_correct_for_exact_inputs() {
-    assert_eq!(Simd::from_array([1.0_f32, 2.0, 4.0, 8.0]).algebraic_reduce_sum(), 15.0);
+    assert_eq!(
+        Simd::from_array([1.0_f32, 2.0, 4.0, 8.0]).algebraic_reduce_sum(),
+        15.0
+    );
 }
 
 #[test]
 fn f64_algebraic_reduce_sum_is_correct_for_exact_inputs() {
-    assert_eq!(Simd::from_array([1.0_f64, 2.0, 4.0, 8.0]).algebraic_reduce_sum(), 15.0);
+    assert_eq!(
+        Simd::from_array([1.0_f64, 2.0, 4.0, 8.0]).algebraic_reduce_sum(),
+        15.0
+    );
 }
 
 #[test]
 fn f16_algebraic_reduce_sum_is_correct_for_exact_inputs() {
-    assert_eq!(Simd::from_array([1.0_f16, 2.0, 4.0, 8.0]).algebraic_reduce_sum(), 15.0_f16);
+    assert_eq!(
+        Simd::from_array([1.0_f16, 2.0, 4.0, 8.0]).algebraic_reduce_sum(),
+        15.0_f16
+    );
 }
 
 #[test]
@@ -96,8 +155,8 @@ fn f16_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let actual = Simd::from_array(x)
         .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
         .to_array();
-    let fused = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
-    let separate = core::array::from_fn(|i| x[i] * a[i] + b[i]);
+    let fused: [f16; 4] = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
+    let separate: [f16; 4] = core::array::from_fn(|i| x[i] * a[i] + b[i]);
     for i in 0..4 {
         assert!(actual[i] == fused[i] || actual[i] == separate[i]);
     }
@@ -106,16 +165,12 @@ fn f16_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
 #[test]
 fn f32_algebraic_reduce_sum_supports_eight_lanes() {
     assert_eq!(
-        Simd::from_array([1.0_f32, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0])
-            .algebraic_reduce_sum(),
+        Simd::from_array([1.0_f32, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]).algebraic_reduce_sum(),
         255.0
     );
 }
 
 #[test]
 fn f64_algebraic_reduce_sum_supports_two_lanes() {
-    assert_eq!(
-        Simd::from_array([1.0_f64, 2.0]).algebraic_reduce_sum(),
-        3.0
-    );
+    assert_eq!(Simd::from_array([1.0_f64, 2.0]).algebraic_reduce_sum(), 3.0);
 }

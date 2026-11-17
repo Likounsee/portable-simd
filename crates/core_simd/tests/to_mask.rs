@@ -1,7 +1,10 @@
 #![feature(portable_simd)]
 #![feature(f16)]
 
-use core_simd::simd::{Simd, num::{SimdFloat, SimdInt, SimdUint}};
+use core_simd::simd::{
+    Simd,
+    num::{SimdFloat, SimdInt, SimdUint},
+};
 
 #[test]
 fn to_mask_maps_zero_and_nonzero_signed_integers() {
@@ -373,5 +376,8 @@ fn to_mask_covers_all_integer_width_families() {
     let unsigned64 = Simd::from_array([0_u64, u64::MAX, 0, 1]);
     assert_eq!(unsigned64.to_mask().to_array(), [false, true, false, true]);
     let unsigned_size = Simd::from_array([0_usize, usize::MAX, 0, 1]);
-    assert_eq!(unsigned_size.to_mask().to_array(), [false, true, false, true]);
+    assert_eq!(
+        unsigned_size.to_mask().to_array(),
+        [false, true, false, true]
+    );
 }

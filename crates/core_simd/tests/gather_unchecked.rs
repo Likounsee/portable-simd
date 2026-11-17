@@ -37,7 +37,10 @@ fn gather_unchecked_supports_other_integer_element_widths() {
     let bytes = [3_u8, 5, 7, 11];
     let byte_indices = Simd::from_array([3_usize, 0, 2, 1]);
     // SAFETY: all indices are below the four-element slice length.
-    assert_eq!(unsafe { Simd::gather_unchecked(&bytes, byte_indices) }.to_array(), [11, 3, 7, 5]);
+    assert_eq!(
+        unsafe { Simd::gather_unchecked(&bytes, byte_indices) }.to_array(),
+        [11, 3, 7, 5]
+    );
 
     let words = [13_u64, 17, 19, 23];
     let word_indices = Simd::from_array([2_usize, 3, 0, 1]);
@@ -59,6 +62,11 @@ fn gather_unchecked_preserves_f64_lane_bits() {
     let actual = unsafe { Simd::gather_unchecked(&values, indices) };
     assert_eq!(
         actual.to_array().map(f64::to_bits),
-        [0x7ff8_1234_5678_9abc, 0x0000_0000_0000_0001, 0x8000_0000_0000_0000, 0x7ff0_0000_0000_0000]
+        [
+            0x7ff8_1234_5678_9abc,
+            0x0000_0000_0000_0001,
+            0x8000_0000_0000_0000,
+            0x7ff0_0000_0000_0000,
+        ]
     );
 }

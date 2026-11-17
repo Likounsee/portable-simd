@@ -81,13 +81,11 @@ fn masked_load_store_boundary_masks() {
 
     // Exact-size all-true stores must write every lane.
     let mut exact_destination = [0u32; 4];
-    u32x4::from_array([11, 22, 33, 44])
-        .store_select(&mut exact_destination, Mask::splat(true));
+    u32x4::from_array([11, 22, 33, 44]).store_select(&mut exact_destination, Mask::splat(true));
     assert_eq!(exact_destination, [11, 22, 33, 44]);
 
     // Active lanes past a one-element destination are ignored.
     let mut short_destination = [0u32];
-    u32x4::from_array([55, 66, 77, 88])
-        .store_select(&mut short_destination, Mask::splat(true));
+    u32x4::from_array([55, 66, 77, 88]).store_select(&mut short_destination, Mask::splat(true));
     assert_eq!(short_destination, [55]);
 }
