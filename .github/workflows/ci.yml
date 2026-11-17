@@ -40,30 +40,11 @@ jobs:
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
           CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
-          CARGO_BUILD_OUTPUT="$RUNNER_TEMP/core-simd-build.jsonl"
-          cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR" --message-format=json > "$CARGO_BUILD_OUTPUT"
-          # Read Cargo's compiler-artifact message instead of guessing where the
-          # artifact lives. Cargo may emit valid crate outputs outside deps/.
-          CORE_SIMD_RLIB="$(python3 - "$CARGO_BUILD_OUTPUT" <<'PY'
-          import json
-          import sys
-
-          with open(sys.argv[1], encoding="utf-8") as build_output:
-              for line in build_output:
-                  message = json.loads(line)
-                  target = message.get("target", {})
-                  if message.get("reason") != "compiler-artifact":
-                      continue
-                  if target.get("name") != "core_simd" or "lib" not in target.get("kind", []):
-                      continue
-                  for filename in message.get("filenames", []):
-                      if filename.endswith(".rlib"):
-                          print(filename)
-                          raise SystemExit(0)
-          raise SystemExit("Cargo did not report a core_simd rlib artifact")
-          PY
-          )"
-          if [[ ! -f "$CORE_SIMD_RLIB" ]]; then
+          cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR"
+          # Locate the artifact Cargo actually emitted. In this workspace it can
+          # live under debug/build/<package>/<hash>/out rather than debug/deps.
+          CORE_SIMD_RLIB="$(find "$CARGO_TARGET_DIR" -type f -name 'libcore_simd-*.rlib' -print -quit)"
+          if [[ -z "$CORE_SIMD_RLIB" ]]; then
             echo "Cargo did not produce a core_simd rlib artifact; available matching files:"
             find "$CARGO_TARGET_DIR" -type f \( -name '*core_simd*' -o -name '*.rlib' \) -print
             exit 1
