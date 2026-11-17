@@ -15,11 +15,11 @@ fn assert_f64_close(actual: [f64; 4], expected: [f64; 4]) {
     }
 }
 
-fn assert_f16_close(actual: [f16; 4], expected: [f16; 4]) {
+fn assert_f16_close(actual: [f16; 4], expected: [f16; 4], operation: &str) {
     for i in 0..4 {
         assert!(
             (actual[i] - expected[i]).abs() <= 0.1_f16,
-            "lane {i}: actual={:?}, expected={:?}",
+            "{operation}, lane {i}: actual={:?}, expected={:?}",
             actual[i],
             expected[i],
         );
@@ -32,22 +32,27 @@ fn assert_f32_lanewise(a: [f32; 4], b: [f32; 4]) {
     assert_f32_close(
         va.algebraic_add(vb).to_array(),
         core::array::from_fn(|i| a[i].algebraic_add(b[i])),
+        "add",
     );
     assert_f32_close(
         va.algebraic_sub(vb).to_array(),
         core::array::from_fn(|i| a[i].algebraic_sub(b[i])),
+        "sub",
     );
     assert_f32_close(
         va.algebraic_mul(vb).to_array(),
         core::array::from_fn(|i| a[i].algebraic_mul(b[i])),
+        "mul",
     );
     assert_f32_close(
         va.algebraic_div(vb).to_array(),
         core::array::from_fn(|i| a[i].algebraic_div(b[i])),
+        "div",
     );
     assert_f32_close(
         va.algebraic_rem(vb).to_array(),
         core::array::from_fn(|i| a[i].algebraic_rem(b[i])),
+        "rem",
     );
 }
 

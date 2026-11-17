@@ -348,13 +348,14 @@ macro_rules! impl_trait {
                     // Some Windows GNU targets currently miscompile the f16 SIMD integer
                     // comparison used below. Keep f16 classification scalar and bit-exact.
                     let nonzero = core::array::from_fn(|lane| {
-                        // Use a bit-preserving scalar transmute: the Windows GNU
-                        // backend currently mishandles f16 SIMD bit extraction.
+                        // Read the scalar representation directly: Windows GNU currently
+                        // miscompiles both f16 SIMD extraction and scalar f16 bitcasts.
                         let value = self.as_array()[lane];
-                        // This bitcast intentionally avoids the Windows GNU f16::to_bits lowering.
-                        #[allow(unnecessary_transmutes)]
-                        // SAFETY: the macro pairs each float type with its same-width unsigned bit type.
-                        let bits: $bits_ty = unsafe { core::mem::transmute(value) };
+                        // SAFETY: this macro pairs each float type with its same-width unsigned
+                        // bit type, and read_unaligned accepts the scalar's address.
+                        let bits: $bits_ty = unsafe {
+                            core::ptr::read_unaligned(core::ptr::addr_of!(value).cast::<$bits_ty>())
+                        };
                         (bits & (!0 >> 1)) != 0
                     });
                     Mask::from_array(nonzero)
