@@ -50,7 +50,7 @@ jobs:
                       continue
                   target = message.get("target", {})
                   if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd" and "lib" in target.get("kind", []):
-                      rlib = next((name for name in message.get("filenames", []) if name.endswith(".rlib")), None)
+                      rlib = next((name for name in message.get("filenames", []) if name.endswith(".rlib") and "/deps/" in name), None)
                       if rlib:
                           print(rlib)
                           raise SystemExit(0)
