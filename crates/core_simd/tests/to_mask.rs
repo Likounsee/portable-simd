@@ -350,7 +350,12 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
     ]);
 
     let expected = [true, true, true, true, true, false, false, true];
-    let scalar_classification = values.to_bits().to_array().map(|bits| bits & 0x7fff != 0);
+    // Inspect the stored lane bits without invoking the affected SIMD bitcast.
+    // SAFETY: f16 and u16 have identical size and alignment.
+    let raw_bits = unsafe {
+        &*(values.as_array() as *const [f16; 8] as *const [u16; 8])
+    };
+    let scalar_classification = raw_bits.map(|bits| bits & 0x7fff != 0);
     assert_eq!(
         scalar_classification, expected,
         "scalar f16 bit classification must distinguish both zero encodings",
