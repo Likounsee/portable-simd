@@ -295,16 +295,38 @@ impl AlgebraicReduce for f16 {
 impl AlgebraicReduce for f32 {
     #[inline]
     fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
-        // SAFETY: value is a supported f32 SIMD vector; algebraic reduction permits reassociation.
-        unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+        #[cfg(miri)]
+        {
+            return value
+                .as_array()
+                .iter()
+                .copied()
+                .fold(0.0, |sum, lane| sum.algebraic_add(lane));
+        }
+        #[cfg(not(miri))]
+        {
+            // SAFETY: value is a supported f32 SIMD vector; algebraic reduction permits reassociation.
+            unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+        }
     }
 }
 
 impl AlgebraicReduce for f64 {
     #[inline]
     fn reduce<const N: usize>(value: Simd<Self, N>) -> Self {
-        // SAFETY: value is a supported f64 SIMD vector; algebraic reduction permits reassociation.
-        unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+        #[cfg(miri)]
+        {
+            return value
+                .as_array()
+                .iter()
+                .copied()
+                .fold(0.0, |sum, lane| sum.algebraic_add(lane));
+        }
+        #[cfg(not(miri))]
+        {
+            // SAFETY: value is a supported f64 SIMD vector; algebraic reduction permits reassociation.
+            unsafe { core::intrinsics::simd::simd_reduce_add_unordered(value) }
+        }
     }
 }
 
