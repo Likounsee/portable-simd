@@ -39,25 +39,13 @@ jobs:
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
-          cargo build -p core_simd --features as_crate --lib --message-format=json > /tmp/core-simd-build.json
-          CORE_SIMD_RLIB="$(python3 - <<'PY'
-          import json
-          with open("/tmp/core-simd-build.json") as build_output:
-              for line in build_output:
-                  try:
-                      message = json.loads(line)
-                  except json.JSONDecodeError:
-                      continue
-                  target = message.get("target", {})
-                  if message.get("reason") == "compiler-artifact" and target.get("name") == "core_simd":
-                      rlib = next((name for name in message.get("filenames", []) if name.endswith(".rlib") and "/deps/" in name), None)
-                      if rlib:
-                          print(rlib)
-                          raise SystemExit(0)
-          raise SystemExit("Cargo did not report a core_simd rlib artifact")
-          PY
-          )"
-          test -n "$CORE_SIMD_RLIB"
+          cargo build -p core_simd --features as_crate --lib
+          CORE_SIMD_RLIB="$(find target/debug/deps -maxdepth 1 -type f -name 'libcore_simd-*.rlib' -print -quit)"
+          if [[ -z "$CORE_SIMD_RLIB" ]]; then
+            echo "Cargo did not produce a core_simd rlib artifact; available matching files:"
+            find target/debug -type f \( -name '*core_simd*' -o -name '*.rlib' \) -print
+            exit 1
+          fi
           echo "Using fork library artifact: $CORE_SIMD_RLIB"
           echo "CORE_SIMD_RLIB=$CORE_SIMD_RLIB" >> "$GITHUB_ENV"
       - name: Compile masked memory benchmark against the fork
