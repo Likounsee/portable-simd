@@ -347,17 +347,9 @@ macro_rules! impl_trait {
                 if size_of::<$ty>() == 2 {
                     // Some Windows GNU targets currently miscompile the f16 SIMD integer
                     // comparison used below. Keep f16 classification scalar and bit-exact.
-                    let nonzero = core::array::from_fn(|lane| {
-                        // Read the scalar representation directly: Windows GNU currently
-                        // miscompiles both f16 SIMD extraction and scalar f16 bitcasts.
-                        let value = self.as_array()[lane];
-                        // SAFETY: this macro pairs each float type with its same-width unsigned
-                        // bit type, and read_unaligned accepts the scalar's address.
-                        let bits: $bits_ty = unsafe {
-                            core::ptr::read_unaligned(core::ptr::addr_of!(value).cast::<$bits_ty>())
-                        };
-                        (bits & (!0 >> 1)) != 0
-                    });
+                    let nonzero = self
+                        .to_array()
+                        .map(|value| (value.to_bits() & (!0 >> 1)) != 0);
                     Mask::from_array(nonzero)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
