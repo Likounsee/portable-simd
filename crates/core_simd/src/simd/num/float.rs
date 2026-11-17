@@ -350,11 +350,12 @@ macro_rules! impl_trait {
                     // Windows GNU targets, including both zero encodings.
                     // SAFETY: f16 and u16 have identical size and alignment, and
                     // Simd::as_array exposes the vector's initialized lane storage.
-                    let bits = unsafe {
-                        &*(self.as_array() as *const [$ty; N] as *const [$bits_ty; N])
-                    };
+                    let bits = self.as_array().as_ptr().cast::<$bits_ty>();
                     let lanes: [$mask_ty; N] = core::array::from_fn(|i| {
-                        if bits[i] & 0x7fff != 0 { -1 } else { 0 }
+                        // SAFETY: the f16 lane storage has the same size and alignment as u16;
+                        // read_unaligned avoids creating a reference with a different element type.
+                        let lane_bits = unsafe { bits.add(i).read_unaligned() };
+                        if lane_bits & 0x7fff != 0 { -1 } else { 0 }
                     });
                     // SAFETY: every lane is exactly the canonical all-ones or zero mask.
                     unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
