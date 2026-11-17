@@ -41,7 +41,10 @@ jobs:
         run: |
           CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
           cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR"
-          CORE_SIMD_RLIB="$(find "$CARGO_TARGET_DIR/debug/deps" -maxdepth 1 -type f -name 'libcore_simd-*.rlib' -print -quit)"
+          # Cargo may place artifacts under a target-triple subdirectory when a
+          # workspace config selects a default target. Search only deps directories
+          # so build-script metadata stubs under debug/build are never selected.
+          CORE_SIMD_RLIB="$(find "$CARGO_TARGET_DIR" -type f -path '*/debug/deps/libcore_simd-*.rlib' -print -quit)"
           if [[ -z "$CORE_SIMD_RLIB" ]]; then
             echo "Cargo did not produce a core_simd rlib artifact; available matching files:"
             find "$CARGO_TARGET_DIR" -type f \( -name '*core_simd*' -o -name '*.rlib' \) -print
