@@ -353,10 +353,8 @@ macro_rules! impl_trait {
                     let bits = unsafe {
                         &*(self.as_array() as *const [$ty; N] as *const [$bits_ty; N])
                     };
-                    let lanes: [$mask_ty; N] =
-                        bits.map(|bits| if bits & 0x7fff != 0 { -1 } else { 0 });
-                    // SAFETY: every lane is exactly the canonical all-ones or zero mask.
-                    unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
+                    let lanes: [bool; N] = bits.map(|bits| bits & 0x7fff != 0);
+                    Mask::from_array(lanes)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                     magnitude.simd_ne(Simd::splat(0))
