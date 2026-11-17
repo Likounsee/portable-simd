@@ -7,6 +7,11 @@ keywords = ["core", "simd", "intrinsics"]
 categories = ["hardware-support", "no-std"]
 license = "MIT OR Apache-2.0"
 
+[lib]
+name = "core_simd"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
 [features]
 default = ["as_crate", "std"]
 as_crate = []
