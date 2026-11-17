@@ -361,7 +361,9 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
     });
     assert_eq!(
         observed_bits,
-        [0x0001, 0x8001, 0x7c00, 0xfc00, 0x7e00, 0x0000, 0x8000, 0x3c00],
+        [
+            0x0001, 0x8001, 0x7c00, 0xfc00, 0x7e00, 0x0000, 0x8000, 0x3c00
+        ],
         "raw f16 lane storage must preserve the input bit patterns",
     );
     let scalar_classification = observed_bits.map(|bits| bits & 0x7fff != 0);
