@@ -349,11 +349,8 @@ macro_rules! impl_trait {
                     // The SIMD bitcast and comparison paths are miscompiled for f16
                     // on some Windows GNU targets, including both zero encodings.
                     let values = self.to_array();
-                    let lanes: [$mask_ty; N] = core::array::from_fn(|i| {
-                        if values[i].to_bits() & 0x7fff != 0 { -1 } else { 0 }
-                    });
-                    // SAFETY: every lane is exactly the canonical all-ones or zero mask.
-                    unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
+                    let lanes = core::array::from_fn(|i| values[i].to_bits() & 0x7fff != 0);
+                    Mask::from_array(lanes)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                     magnitude.simd_ne(Simd::splat(0))
