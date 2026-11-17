@@ -348,8 +348,13 @@ macro_rules! impl_trait {
                     // Extract the lanes before inspecting their scalar bit patterns.
                     // The SIMD bitcast and comparison paths are miscompiled for f16
                     // on some Windows GNU targets, including both zero encodings.
-                    let values = self.to_array();
-                    let lanes = core::array::from_fn(|i| values[i].to_bits() & 0x7fff != 0);
+                    let raw_bits = self.as_array().as_ptr().cast::<u16>();
+                    let lanes = core::array::from_fn(|i| {
+                        // SAFETY: this branch is only taken for 16-bit float lanes;
+                        // u16 has the same size, and read_unaligned avoids imposing
+                        // an alignment requirement on the cast pointer.
+                        unsafe { raw_bits.add(i).read_unaligned() & 0x7fff != 0 }
+                    });
                     Mask::from_array(lanes)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
