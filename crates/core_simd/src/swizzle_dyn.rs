@@ -165,7 +165,8 @@ impl<const N: usize> Simd<u8, N> {
                 return unsafe { transize(wasm::i8x16_swizzle, self, idxs) };
             }
             if N == 32 {
-                return swizzle_dyn_split::<32, 16>(self, idxs);
+                // SAFETY: The branch proves N == 32; transize bridges the const-generic width.
+                return unsafe { transize(swizzle_dyn_split::<32, 16>, self, idxs) };
             }
         }
 
