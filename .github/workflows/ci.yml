@@ -39,7 +39,7 @@ jobs:
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
       - name: Build forked SIMD crate for codegen diagnostics
         run: |
-          cargo build -p core_simd --features as_crate --lib
+          cargo build -p core_simd --features as_crate --lib --target-dir target
           CORE_SIMD_RLIB="$(find target/debug/deps -maxdepth 1 -type f -name 'libcore_simd-*.rlib' -print -quit)"
           if [[ -z "$CORE_SIMD_RLIB" ]]; then
             echo "Cargo did not produce a core_simd rlib artifact; available matching files:"
