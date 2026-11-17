@@ -171,8 +171,7 @@ fn f16_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let separate: [f16; 4] = core::array::from_fn(|i| x[i] * a[i] + b[i]);
     for i in 0..4 {
         assert!(
-            (actual[i] - fused[i]).abs() <= 0.1_f16
-                || (actual[i] - separate[i]).abs() <= 0.1_f16,
+            (actual[i] - fused[i]).abs() <= 0.1_f16 || (actual[i] - separate[i]).abs() <= 0.1_f16,
             "lane {i}: actual={:?}, fused={:?}, separate={:?}",
             actual[i],
             fused[i],
@@ -183,8 +182,8 @@ fn f16_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
 
 #[test]
 fn f32_algebraic_reduce_sum_supports_eight_lanes() {
-    let actual = Simd::from_array([1.0_f32, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0])
-        .algebraic_reduce_sum();
+    let actual =
+        Simd::from_array([1.0_f32, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]).algebraic_reduce_sum();
     assert!((actual - 255.0).abs() <= 1e-3);
 }
 

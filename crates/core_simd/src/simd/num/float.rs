@@ -344,8 +344,17 @@ macro_rules! impl_trait {
             fn to_mask(self) -> Self::Mask {
                 // Compare the magnitude bits so subnormals remain nonzero even on targets
                 // that flush floating-point subnormal comparisons to zero.
-                let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
-                magnitude.simd_ne(Simd::splat(0))
+                if size_of::<$ty>() == 2 {
+                    // Some Windows GNU targets currently miscompile the f16 SIMD integer
+                    // comparison used below. Keep f16 classification scalar and bit-exact.
+                    let nonzero = self.to_array().map(|value| {
+                        (value.to_bits() & ((!0 as $bits_ty) >> 1)) != 0
+                    });
+                    Mask::from_array(nonzero)
+                } else {
+                    let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
+                    magnitude.simd_ne(Simd::splat(0))
+                }
             }
 
             #[inline]
