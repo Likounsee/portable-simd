@@ -121,6 +121,10 @@ fn assert_f16_lanewise(a: [f16; 4], b: [f16; 4]) {
     );
 }
 
+// Miri's current f16 interpreter produces results several representable
+// values away from the scalar f16 operation, so keep this numerical conformance
+// test on native execution where the target's f16 arithmetic is exercised.
+#[cfg_attr(miri, ignore = "Miri f16 arithmetic emulation is not numerically reliable")]
 #[test]
 fn f16_algebraic_lanewise_operations_remain_close_to_scalar_results() {
     assert_f16_lanewise([1.25_f16, -8.0, 0.125, 64.0], [0.5_f16, 2.0, -0.25, 4.0]);
