@@ -48,7 +48,7 @@ jobs:
           import os
           import sys
 
-          rlib = None
+          rlibs = []
           with open("/tmp/core-simd-build.json", encoding="utf-8") as build_output:
               for line in build_output:
                   try:
@@ -58,10 +58,16 @@ jobs:
                   target = message.get("target", {})
                   if message.get("reason") != "compiler-artifact" or target.get("name") != "core_simd":
                       continue
-                  filenames = message.get("filenames", [])
-                  rlib = next((name for name in filenames if name.endswith(".rlib")), rlib)
+                  for filename in message.get("filenames", []):
+                      normalized = filename.replace("\\\\", "/")
+                      if filename.endswith(".rlib") and "/deps/" in normalized:
+                          rlibs.append(filename)
+          # Build-script OUT_DIR can contain metadata-only copies of the crate.
+          # Only a dependency-directory artifact is suitable for rustc --extern.
+          rlib = next((name for name in reversed(rlibs) if os.path.isfile(name)), None)
           if not rlib:
-              print("Cargo did not report a core_simd rlib artifact.", file=sys.stderr)
+              print("Cargo did not report a usable core_simd rlib in the deps directory.", file=sys.stderr)
+              print(f"Reported candidates: {rlibs}", file=sys.stderr)
               sys.exit(1)
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
               env.write(f"CORE_SIMD_RLIB={rlib}\n")
