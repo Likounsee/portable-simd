@@ -345,17 +345,12 @@ macro_rules! impl_trait {
                 // Compare the magnitude bits so subnormals remain nonzero even on targets
                 // that flush floating-point subnormal comparisons to zero.
                 if size_of::<$ty>() == 2 {
-                    // Read the lane storage through an integer array reference.
-                    // The SIMD bitcast/to_array path is miscompiled for f16 on some
-                    // Windows GNU targets, including both zero encodings.
-                    // SAFETY: f16 and u16 have identical size and alignment, and
-                    // Simd::as_array exposes the vector's initialized lane storage.
-                    let bits = self.as_array().as_ptr().cast::<$bits_ty>();
+                    // Extract the lanes before inspecting their scalar bit patterns.
+                    // The SIMD bitcast and comparison paths are miscompiled for f16
+                    // on some Windows GNU targets, including both zero encodings.
+                    let values = self.to_array();
                     let lanes: [$mask_ty; N] = core::array::from_fn(|i| {
-                        // SAFETY: the f16 lane storage has the same size and alignment as u16;
-                        // read_unaligned avoids creating a reference with a different element type.
-                        let lane_bits = unsafe { bits.add(i).read_unaligned() };
-                        if lane_bits & 0x7fff != 0 { -1 } else { 0 }
+                        if values[i].to_bits() & 0x7fff != 0 { -1 } else { 0 }
                     });
                     // SAFETY: every lane is exactly the canonical all-ones or zero mask.
                     unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
