@@ -50,12 +50,26 @@ jobs:
           import sys
 
           target_debug = os.path.join(os.environ["CARGO_TARGET_DIR"], "debug")
+          build_json = "/tmp/core-simd-build.json"
+          with open(build_json, encoding="utf-8") as build_output:
+              for line in build_output:
+                  try:
+                      message = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  if message.get("reason") == "compiler-artifact":
+                      target = message.get("target", {})
+                      if target.get("name") == "core_simd":
+                          print(f"Cargo core_simd artifact: {message.get('filenames', [])}")
           candidates = sorted(
               path
-              for path in glob.glob(os.path.join(target_debug, "**", "libcore_simd*.rlib"), recursive=True)
+              for path in glob.glob(os.path.join(target_debug, "**", "libcore_simd*"), recursive=True)
               if os.path.isfile(path)
           )
-          rlib = candidates[-1] if candidates else None
+          for path in candidates:
+              print(f"core_simd output: {path} ({os.path.getsize(path)} bytes)")
+          rlibs = [path for path in candidates if path.endswith(".rlib")]
+          rlib = rlibs[-1] if rlibs else None
           if not rlib:
               print(f"No linkable core_simd rlib found under {target_debug}.", file=sys.stderr)
               for root, _, files in os.walk(target_debug):
