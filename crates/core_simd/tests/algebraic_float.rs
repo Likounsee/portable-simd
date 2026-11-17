@@ -17,46 +17,88 @@ fn assert_f64_close(actual: [f64; 4], expected: [f64; 4]) {
 
 fn assert_f16_close(actual: [f16; 4], expected: [f16; 4]) {
     for i in 0..4 {
-        assert!((f32::from(actual[i]) - f32::from(expected[i])).abs() <= 1e-2);
+        assert!((actual[i] - expected[i]).abs() <= 0.01_f16);
     }
 }
 
 fn assert_f32_lanewise(a: [f32; 4], b: [f32; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_f32_close(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_f32_close(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_f32_close(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_f32_close(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_f32_close(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_f32_close(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i])),
+    );
+    assert_f32_close(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i])),
+    );
+    assert_f32_close(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i])),
+    );
+    assert_f32_close(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i])),
+    );
+    assert_f32_close(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i])),
+    );
 }
 
 fn assert_f64_lanewise(a: [f64; 4], b: [f64; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_f64_close(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_f64_close(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_f64_close(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_f64_close(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_f64_close(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_f64_close(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i])),
+    );
+    assert_f64_close(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i])),
+    );
+    assert_f64_close(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i])),
+    );
+    assert_f64_close(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i])),
+    );
+    assert_f64_close(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i])),
+    );
 }
 
 fn assert_f16_lanewise(a: [f16; 4], b: [f16; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
-    assert_f16_close(va.algebraic_add(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_add(b[i])));
-    assert_f16_close(va.algebraic_sub(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_sub(b[i])));
-    assert_f16_close(va.algebraic_mul(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_mul(b[i])));
-    assert_f16_close(va.algebraic_div(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_div(b[i])));
-    assert_f16_close(va.algebraic_rem(vb).to_array(), core::array::from_fn(|i| a[i].algebraic_rem(b[i])));
+    assert_f16_close(
+        va.algebraic_add(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_add(b[i])),
+    );
+    assert_f16_close(
+        va.algebraic_sub(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_sub(b[i])),
+    );
+    assert_f16_close(
+        va.algebraic_mul(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_mul(b[i])),
+    );
+    assert_f16_close(
+        va.algebraic_div(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_div(b[i])),
+    );
+    assert_f16_close(
+        va.algebraic_rem(vb).to_array(),
+        core::array::from_fn(|i| a[i].algebraic_rem(b[i])),
+    );
 }
 
 #[test]
 fn f16_algebraic_lanewise_operations_remain_close_to_scalar_results() {
-    assert_f16_lanewise(
-        [1.25_f16, -8.0, 0.125, 64.0],
-        [0.5_f16, 2.0, -0.25, 4.0],
-    );
+    assert_f16_lanewise([1.25_f16, -8.0, 0.125, 64.0], [0.5_f16, 2.0, -0.25, 4.0]);
 }
 
 #[test]
