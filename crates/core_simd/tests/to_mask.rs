@@ -353,6 +353,11 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
     // Inspect the stored lane bits without invoking the affected SIMD bitcast.
     // SAFETY: f16 and u16 have identical size and alignment.
     let raw_bits = unsafe { &*(values.as_array() as *const [f16; 8] as *const [u16; 8]) };
+    assert_eq!(
+        *raw_bits,
+        [0x0001, 0x8001, 0x7c00, 0xfc00, 0x7e00, 0x0000, 0x8000, 0x3c00],
+        "raw f16 lane storage must preserve the input bit patterns",
+    );
     let scalar_classification = raw_bits.map(|bits| bits & 0x7fff != 0);
     assert_eq!(
         scalar_classification, expected,
