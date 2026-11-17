@@ -17,12 +17,26 @@ fn assert_f64_close(actual: [f64; 4], expected: [f64; 4]) {
 
 fn assert_f16_close(actual: [f16; 4], expected: [f16; 4], operation: &str) {
     for i in 0..4 {
+        // Algebraic operations may choose a different rounding path. Compare in
+        // representable f16 steps instead of using a scale-dependent epsilon.
+        let ordered_bits = |value: f16| {
+            let bits = value.to_bits();
+            if bits & 0x8000 != 0 {
+                !bits
+            } else {
+                bits | 0x8000
+            }
+        };
+        let actual_bits = ordered_bits(actual[i]);
+        let expected_bits = ordered_bits(expected[i]);
+        let ulp_distance = actual_bits.abs_diff(expected_bits);
         assert!(
-            (actual[i] - expected[i]).abs()
-                <= 0.002_f16 * expected[i].abs().max(1.0_f16),
-            "{operation}, lane {i}: actual={:?}, expected={:?}",
+            ulp_distance <= 2,
+            "{operation}, lane {i}: actual={:?} (0x{:04x}), expected={:?} (0x{:04x}), distance={ulp_distance} ULP",
             actual[i],
+            actual[i].to_bits(),
             expected[i],
+            expected[i].to_bits(),
         );
     }
 }
