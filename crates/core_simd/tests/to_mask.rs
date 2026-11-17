@@ -1,7 +1,7 @@
 #![feature(portable_simd)]
 #![feature(f16)]
 
-use core_simd::simd::{Simd, num::SimdFloat};
+use core_simd::simd::{Mask, Simd, num::SimdFloat};
 
 #[test]
 fn to_mask_maps_zero_and_nonzero_signed_integers() {
@@ -33,10 +33,20 @@ fn to_mask_preserves_f32_subnormals_and_classifies_special_values() {
         -0.0,
         1.0,
     ]);
+    let expected = [true, true, true, true, true, false, false, true];
+    let scalar_classification = values
+        .to_array()
+        .map(|value| value.to_bits() & 0x7fff != 0);
     assert_eq!(
-        values.to_mask().to_array(),
-        [true, true, true, true, true, false, false, true]
+        scalar_classification, expected,
+        "scalar f16 bit classification must distinguish both zero encodings",
     );
+    assert_eq!(
+        Mask::<i16, 8>::from_array(expected).to_array(),
+        expected,
+        "i16 mask construction and extraction must preserve false lanes",
+    );
+    assert_eq!(values.to_mask().to_array(), expected);
 }
 
 #[test]
