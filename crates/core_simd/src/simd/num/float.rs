@@ -351,6 +351,7 @@ macro_rules! impl_trait {
                         // Use a bit-preserving scalar transmute: the Windows GNU
                         // backend currently mishandles f16 SIMD bit extraction.
                         let value = self.as_array()[lane];
+                        // SAFETY: the macro pairs each float type with its same-width unsigned bit type.
                         let bits: $bits_ty = unsafe { core::mem::transmute(value) };
                         (bits & (!0 >> 1)) != 0
                     });
