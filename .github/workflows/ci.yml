@@ -42,9 +42,8 @@ jobs:
           export CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
           cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR" --message-format=json-render-diagnostics > /tmp/core-simd-build.json
           # Cargo may omit the final .rlib from compiler-artifact JSON when
-          # this fork is built as a workspace package. Resolve it from the
-          # package's dedicated deps directory instead of scanning OUT_DIR,
-          # which can contain metadata-only copies.
+          # this fork is built as a workspace package. Search the complete
+          # debug tree, but accept only linkable .rlib files (not .rmeta).
           python3 - <<'PY'
           import glob
           import os
