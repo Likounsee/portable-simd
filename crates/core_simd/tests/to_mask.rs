@@ -33,20 +33,10 @@ fn to_mask_preserves_f32_subnormals_and_classifies_special_values() {
         -0.0,
         1.0,
     ]);
-    let expected = [true, true, true, true, true, false, false, true];
-    let scalar_classification = values
-        .to_array()
-        .map(|value| value.to_bits() & 0x7fff != 0);
     assert_eq!(
-        scalar_classification, expected,
-        "scalar f16 bit classification must distinguish both zero encodings",
+        values.to_mask().to_array(),
+        [true, true, true, true, true, false, false, true]
     );
-    assert_eq!(
-        Mask::<i16, 8>::from_array(expected).to_array(),
-        expected,
-        "i16 mask construction and extraction must preserve false lanes",
-    );
-    assert_eq!(values.to_mask().to_array(), expected);
 }
 
 #[test]
@@ -359,6 +349,17 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
         1.0_f16,
     ]);
 
+    let expected = [true, true, true, true, true, false, false, true];
+    let scalar_classification = values.to_array().map(|value| value.to_bits() & 0x7fff != 0);
+    assert_eq!(
+        scalar_classification, expected,
+        "scalar f16 bit classification must distinguish both zero encodings",
+    );
+    assert_eq!(
+        Mask::<i16, 8>::from_array(expected).to_array(),
+        expected,
+        "i16 mask construction and extraction must preserve false lanes",
+    );
     assert_eq!(
         values.to_array().map(|value| value.to_bits()),
         [
@@ -366,10 +367,7 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
         ],
         "the SIMD-to-array roundtrip must preserve every f16 bit pattern",
     );
-    assert_eq!(
-        values.to_mask().to_array(),
-        [true, true, true, true, true, false, false, true]
-    );
+    assert_eq!(values.to_mask().to_array(), expected);
 }
 
 #[test]
