@@ -347,9 +347,10 @@ macro_rules! impl_trait {
                 if size_of::<$ty>() == 2 {
                     // Some Windows GNU targets currently miscompile the f16 SIMD integer
                     // comparison used below. Keep f16 classification scalar and bit-exact.
-                    let nonzero = self
-                        .to_array()
-                        .map(|value| value.to_bits().wrapping_shl(1) != 0);
+                    let nonzero = self.to_array().map(|value| {
+                        let bits = value.to_bits();
+                        bits != 0 && bits != 0x8000
+                    });
                     Mask::from_array(nonzero)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
