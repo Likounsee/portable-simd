@@ -50,12 +50,19 @@ jobs:
           import os
           import sys
 
-          deps = os.path.join(os.environ["CARGO_TARGET_DIR"], "debug", "deps")
-          candidates = sorted(glob.glob(os.path.join(deps, "libcore_simd-*.rlib")))
-          rlib = next((path for path in reversed(candidates) if os.path.isfile(path)), None)
+          target_debug = os.path.join(os.environ["CARGO_TARGET_DIR"], "debug")
+          candidates = sorted(
+              path
+              for path in glob.glob(os.path.join(target_debug, "**", "libcore_simd*.rlib"), recursive=True)
+              if os.path.isfile(path)
+          )
+          rlib = candidates[-1] if candidates else None
           if not rlib:
-              print(f"No linkable core_simd rlib found in {deps}.", file=sys.stderr)
-              print(f"Matching candidates: {candidates}", file=sys.stderr)
+              print(f"No linkable core_simd rlib found under {target_debug}.", file=sys.stderr)
+              for root, _, files in os.walk(target_debug):
+                  for filename in files:
+                      if "core_simd" in filename:
+                          print(os.path.join(root, filename), file=sys.stderr)
               sys.exit(1)
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
               env.write(f"CORE_SIMD_RLIB={rlib}\n")
