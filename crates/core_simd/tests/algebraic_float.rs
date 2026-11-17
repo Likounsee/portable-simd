@@ -2,10 +2,7 @@
 #![feature(float_algebraic)]
 #![feature(f16)]
 
-use core_simd::simd::{
-    Simd,
-    num::SimdFloat,
-};
+use core_simd::simd::{Simd, num::SimdFloat};
 
 fn assert_f32_lanewise(a: [f32; 4], b: [f32; 4]) {
     let va = Simd::from_array(a);
@@ -120,7 +117,9 @@ fn f64_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
         .to_array();
     let fused: [f64; 4] = core::array::from_fn(|i| x[i].mul_add(a[i], b[i]));
     let separate: [f64; 4] = core::array::from_fn(|i| x[i] * a[i] + b[i]);
-    for i in 0..4 { assert!(actual[i] == fused[i] || actual[i] == separate[i]); }
+    for i in 0..4 {
+        assert!(actual[i] == fused[i] || actual[i] == separate[i]);
+    }
 }
 
 #[test]

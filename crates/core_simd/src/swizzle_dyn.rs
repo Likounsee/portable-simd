@@ -395,10 +395,7 @@ unsafe fn avx2_pshufb_unchecked(bytes: Simd<u8, 32>, idxs: Simd<u8, 32>) -> Simd
 
     // For valid indices, these biases select the correct 128-bit half.
     // High-bit out-of-range indices are zeroed by VPSHUFB before blending.
-    let select_bias = x86::_mm256_set_m128i(
-        x86::_mm_set1_epi8(-16),
-        x86::_mm_set1_epi8(112),
-    );
+    let select_bias = x86::_mm256_set_m128i(x86::_mm_set1_epi8(-16), x86::_mm_set1_epi8(112));
     let select_remote = x86::_mm256_add_epi8(indices, select_bias);
     x86::_mm256_blendv_epi8(local, remote, select_remote).into()
 }
