@@ -49,7 +49,6 @@ jobs:
           import sys
 
           rlib = None
-          rmeta = None
           with open("/tmp/core-simd-build.json", encoding="utf-8") as build_output:
               for line in build_output:
                   try:
@@ -61,17 +60,13 @@ jobs:
                       continue
                   filenames = message.get("filenames", [])
                   rlib = next((name for name in filenames if name.endswith(".rlib")), rlib)
-                  rmeta = next((name for name in filenames if name.endswith(".rmeta")), rmeta)
-          if not rlib or not rmeta:
-              print("Cargo did not report both core_simd rlib and rmeta artifacts.", file=sys.stderr)
+          if not rlib:
+              print("Cargo did not report a core_simd rlib artifact.", file=sys.stderr)
               sys.exit(1)
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
               env.write(f"CORE_SIMD_RLIB={rlib}\n")
-              env.write(f"CORE_SIMD_RMETA={rmeta}\n")
               env.write(f"CORE_SIMD_DEPS={os.path.dirname(rlib)}\n")
-              env.write(f"CORE_SIMD_RMETA_DEPS={os.path.dirname(rmeta)}\n")
           print(f"Using Cargo rlib: {rlib}")
-          print(f"Using Cargo metadata: {rmeta}")
           PY
       - name: Compile masked memory benchmark against the fork
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/masked_load_store.rs -o /tmp/masked-load-store
