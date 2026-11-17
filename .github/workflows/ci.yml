@@ -46,6 +46,7 @@ jobs:
           # debug tree, but accept only linkable .rlib files (not .rmeta).
           python3 - <<'PY'
           import glob
+          import json
           import os
           import sys
 
