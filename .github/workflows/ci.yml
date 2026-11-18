@@ -55,6 +55,8 @@ jobs:
           core_simd = { path = "${GITHUB_WORKSPACE}/crates/core_simd", features = ["as_crate"] }
           TOML
           cat > /tmp/core-simd-benchmark/src/main.rs <<'RS'
+          #![feature(portable_simd)]
+
           use core_simd::simd::Simd;
 
           fn main() {
