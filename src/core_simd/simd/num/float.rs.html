@@ -349,7 +349,7 @@
 <a href=#349 id=349 data-nosnippet>349</a>                    // The SIMD bitcast and comparison paths are miscompiled for f16
 <a href=#350 id=350 data-nosnippet>350</a>                    // on some Windows GNU targets, including both zero encodings.
 <a href=#351 id=351 data-nosnippet>351</a>                    </span><span class="kw">let </span>raw_bytes = <span class="self">self</span>.as_array().as_ptr().cast::&lt;u8&gt;();
-<a href=#352 id=352 data-nosnippet>352</a>                    <span class="kw">let </span>lanes = core::array::from_fn(|i| {
+<a href=#352 id=352 data-nosnippet>352</a>                    <span class="kw">let </span>lanes: [bool; N] = core::array::from_fn(|i| {
 <a href=#353 id=353 data-nosnippet>353</a>                        <span class="comment">// Read through u8 pointers to avoid reinterpreting the
 <a href=#354 id=354 data-nosnippet>354</a>                        // f16 storage as u16 under strict aliasing.
 <a href=#355 id=355 data-nosnippet>355</a>                        // SAFETY: each lane occupies exactly two initialized bytes.
