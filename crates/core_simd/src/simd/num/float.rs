@@ -342,6 +342,32 @@ macro_rules! impl_trait {
 
             #[inline]
             fn to_mask(self) -> Self::Mask {
+                // ARMv7 NEON may flush subnormal floating-point values during SIMD
+                // bitcasts/comparisons. Inspect the stored bytes as integers instead.
+                #[cfg(target_arch = "arm")]
+                {
+                    let lane_size = core::mem::size_of::<$ty>();
+                    let raw_bytes = self.as_array().as_ptr().cast::<u8>();
+                    let lanes: [bool; N] = core::array::from_fn(|i| {
+                        let mut magnitude = 0_u8;
+                        for byte_index in 0..lane_size {
+                            // SAFETY: each lane consists of lane_size initialized bytes.
+                            let mut byte = unsafe { raw_bytes.add(i * lane_size + byte_index).read() };
+                            #[cfg(target_endian = "little")]
+                            if byte_index + 1 == lane_size {
+                                byte &= 0x7f;
+                            }
+                            #[cfg(target_endian = "big")]
+                            if byte_index == 0 {
+                                byte &= 0x7f;
+                            }
+                            magnitude |= byte;
+                        }
+                        magnitude != 0
+                    });
+                    return Mask::from_array(lanes);
+                }
+
                 // Compare the magnitude bits so subnormals remain nonzero even on targets
                 // that flush floating-point subnormal comparisons to zero.
                 if size_of::<$ty>() == 2 {
