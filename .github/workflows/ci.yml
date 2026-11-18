@@ -58,54 +58,14 @@ jobs:
           TOML
           TARGET_DIR="$RUNNER_TEMP/core-simd-benchmark-target"
 
-          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin masked_load_store -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm,llvm-ir
-          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm,llvm-ir
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin masked_load_store -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm=/tmp/masked-load-store.s,llvm-ir=/tmp/masked-load-store.ll
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm=/tmp/gather-unchecked.s,llvm-ir=/tmp/gather-unchecked.ll
 
           "$TARGET_DIR/release/masked_load_store"
           "$TARGET_DIR/release/gather_unchecked"
 
-          python3 - <<'PY'
-          import glob
-          import os
-          import shutil
-          import sys
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+avx2 --emit=link,asm=/tmp/gather-unchecked-avx2.s,llvm-ir=/tmp/gather-unchecked-avx2.ll
 
-          deps = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "release", "deps")
-          outputs = {
-              "masked_load_store-*.s": "/tmp/masked-load-store.s",
-              "masked_load_store-*.ll": "/tmp/masked-load-store.ll",
-              "gather_unchecked-*.s": "/tmp/gather-unchecked.s",
-              "gather_unchecked-*.ll": "/tmp/gather-unchecked.ll",
-          }
-          for pattern, destination in outputs.items():
-              matches = sorted(glob.glob(os.path.join(deps, pattern)), key=os.path.getmtime)
-              if not matches:
-                  print(f"No codegen output found for {pattern}", file=sys.stderr)
-                  sys.exit(1)
-              shutil.copy2(matches[-1], destination)
-              print(f"Captured {matches[-1]} -> {destination}")
-          PY
-
-          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+avx2 --emit=link,asm,llvm-ir
-          python3 - <<'PY'
-          import glob
-          import os
-          import shutil
-          import sys
-
-          deps = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "release", "deps")
-          outputs = {
-              "gather_unchecked-*.s": "/tmp/gather-unchecked-avx2.s",
-              "gather_unchecked-*.ll": "/tmp/gather-unchecked-avx2.ll",
-          }
-          for pattern, destination in outputs.items():
-              matches = sorted(glob.glob(os.path.join(deps, pattern)), key=os.path.getmtime)
-              if not matches:
-                  print(f"No AVX2 codegen output found for {pattern}", file=sys.stderr)
-                  sys.exit(1)
-              shutil.copy2(matches[-1], destination)
-              print(f"Captured {matches[-1]} -> {destination}")
-          PY
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
