@@ -37,12 +37,14 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Check standalone benchmark formatting
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
-      - name: Build forked SIMD crate as a Cargo dependency for codegen diagnostics
+      - name: Build and inspect benchmarks through Cargo
         run: |
-          # Building core_simd as a workspace root can emit a metadata-only
-          # rlib. Build it as a dependency of an external package instead so
-          # Cargo produces a linkable artifact under debug/deps.
-          mkdir -p /tmp/core-simd-benchmark/src
+          # Compile the diagnostic programs as binaries in an external Cargo
+          # package. Cargo then links core_simd as a normal dependency, avoiding
+          # the metadata-only rlib produced when this crate is built standalone.
+          mkdir -p /tmp/core-simd-benchmark/src/bin
+          cp "$GITHUB_WORKSPACE/benchmarks/masked_load_store.rs" /tmp/core-simd-benchmark/src/bin/masked_load_store.rs
+          cp "$GITHUB_WORKSPACE/benchmarks/gather_unchecked.rs" /tmp/core-simd-benchmark/src/bin/gather_unchecked.rs
           cat > /tmp/core-simd-benchmark/Cargo.toml <<TOML
           [package]
           name = "core-simd-benchmark"
@@ -54,64 +56,56 @@ jobs:
           [dependencies]
           core_simd = { path = "${GITHUB_WORKSPACE}/crates/core_simd", features = ["as_crate"] }
           TOML
-          cat > /tmp/core-simd-benchmark/src/main.rs <<'RS'
-          #![feature(portable_simd)]
+          TARGET_DIR="$RUNNER_TEMP/core-simd-benchmark-target"
 
-          use core_simd::simd::Simd;
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin masked_load_store -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm,llvm-ir
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+sse2 --emit=link,asm,llvm-ir
 
-          fn main() {
-              let _ = Simd::<u32, 4>::splat(1);
-          }
-          RS
-          cargo build --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$RUNNER_TEMP/core-simd-benchmark-target"
+          "$TARGET_DIR/release/masked_load_store"
+          "$TARGET_DIR/release/gather_unchecked"
+
           python3 - <<'PY'
           import glob
           import os
+          import shutil
           import sys
 
-          target_debug = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "debug")
-          candidates = sorted(
-              path
-              for path in glob.glob(os.path.join(target_debug, "deps", "libcore_simd-*.rlib"))
-              if os.path.isfile(path) and os.path.getsize(path) > 10_000
-          )
-          for path in candidates:
-              print(f"Linkable core_simd dependency: {path} ({os.path.getsize(path)} bytes)")
-          if len(candidates) != 1:
-              print(f"Expected exactly one non-stub core_simd rlib, found {len(candidates)}.", file=sys.stderr)
-              sys.exit(1)
-          rlib = candidates[0]
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
-              env.write(f"CORE_SIMD_RLIB={rlib}\n")
-              env.write(f"CORE_SIMD_DEPS={os.path.dirname(rlib)}\n")
+          deps = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "release", "deps")
+          outputs = {
+              "masked_load_store-*.s": "/tmp/masked-load-store.s",
+              "masked_load_store-*.ll": "/tmp/masked-load-store.ll",
+              "gather_unchecked-*.s": "/tmp/gather-unchecked.s",
+              "gather_unchecked-*.ll": "/tmp/gather-unchecked.ll",
+          }
+          for pattern, destination in outputs.items():
+              matches = sorted(glob.glob(os.path.join(deps, pattern)), key=os.path.getmtime)
+              if not matches:
+                  print(f"No codegen output found for {pattern}", file=sys.stderr)
+                  sys.exit(1)
+              shutil.copy2(matches[-1], destination)
+              print(f"Captured {matches[-1]} -> {destination}")
           PY
-      - name: Compile masked memory benchmark against the fork
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/masked_load_store.rs -o /tmp/masked-load-store
-      - name: Run masked memory benchmark and semantic assertions
-        run: /tmp/masked-load-store
-      - name: Emit optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/masked-load-store.s benchmarks/masked_load_store.rs
-      - name: Emit optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/masked-load-store.ll benchmarks/masked_load_store.rs
-      - name: Compile unchecked-gather benchmark against the fork
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked
-      - name: Run unchecked-gather benchmark and semantic assertions
-        run: /tmp/gather-unchecked
-      - name: Emit unchecked-gather optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/gather-unchecked.s benchmarks/gather_unchecked.rs
-      - name: Emit unchecked-gather optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked.ll benchmarks/gather_unchecked.rs
-      # AVX2 is required to compare the portable gather path with the hardware
-      # vpgather* lowering discussed in issue #475. Keep this separate from the
-      # baseline SSE2 build so the two codegen outputs cannot be confused.
-      - name: Compile unchecked-gather benchmark with AVX2
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/gather_unchecked.rs -o /tmp/gather-unchecked-avx2
-      - name: Run unchecked-gather AVX2 benchmark and semantic assertions
-        run: /tmp/gather-unchecked-avx2
-      - name: Emit unchecked-gather AVX2 optimized assembly
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=asm -o /tmp/gather-unchecked-avx2.s benchmarks/gather_unchecked.rs
-      - name: Emit unchecked-gather AVX2 optimized LLVM IR
-        run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+avx2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" --emit=llvm-ir -o /tmp/gather-unchecked-avx2.ll benchmarks/gather_unchecked.rs
+
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+avx2 --emit=link,asm,llvm-ir
+          python3 - <<'PY'
+          import glob
+          import os
+          import shutil
+          import sys
+
+          deps = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "release", "deps")
+          outputs = {
+              "gather_unchecked-*.s": "/tmp/gather-unchecked-avx2.s",
+              "gather_unchecked-*.ll": "/tmp/gather-unchecked-avx2.ll",
+          }
+          for pattern, destination in outputs.items():
+              matches = sorted(glob.glob(os.path.join(deps, pattern)), key=os.path.getmtime)
+              if not matches:
+                  print(f"No AVX2 codegen output found for {pattern}", file=sys.stderr)
+                  sys.exit(1)
+              shutil.copy2(matches[-1], destination)
+              print(f"Captured {matches[-1]} -> {destination}")
+          PY
       - name: Upload masked-memory codegen diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
