@@ -358,11 +358,7 @@ macro_rules! impl_trait {
                         };
                         u16::from_ne_bytes(bytes) & 0x7fff != 0
                     });
-                    let mut mask = Mask::splat(false);
-                    for (index, value) in lanes.into_iter().enumerate() {
-                        mask.set(index, value);
-                    }
-                    mask
+                    Mask::from_array(lanes)
                 } else {
                     let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                     magnitude.simd_ne(Simd::splat(0))
