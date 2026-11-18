@@ -9,6 +9,7 @@
 //! CPU, and target-feature settings.
 
 use core_simd::simd::Simd;
+use core_simd::simd::prelude::SimdConstPtr;
 use std::hint::black_box;
 use std::time::Instant;
 
