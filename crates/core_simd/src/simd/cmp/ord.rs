@@ -52,14 +52,6 @@ macro_rules! impl_integer {
         {
             #[inline]
             fn simd_lt(self, other: Self) -> Self::Mask {
-                // LoongArch currently miscompiles the four-lane i8 comparison
-                // intrinsic. Keep this narrow shape on the scalar path there.
-                #[cfg(target_arch = "loongarch64")]
-                if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.as_array()[lane] < other.as_array()[lane]
-                    }));
-                }
                 // Safety: `self` is a vector, and the result of the comparison
                 // is always a valid mask.
                 unsafe { Mask::from_simd_unchecked(core::intrinsics::simd::simd_lt(self, other)) }
@@ -67,14 +59,6 @@ macro_rules! impl_integer {
 
             #[inline]
             fn simd_le(self, other: Self) -> Self::Mask {
-                // LoongArch currently miscompiles four-lane i8 comparison
-                // intrinsics. Keep this narrow shape on the scalar path there.
-                #[cfg(target_arch = "loongarch64")]
-                if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.as_array()[lane] <= other.as_array()[lane]
-                    }));
-                }
                 // Safety: `self` is a vector, and the result of the comparison
                 // is always a valid mask.
                 unsafe { Mask::from_simd_unchecked(core::intrinsics::simd::simd_le(self, other)) }
@@ -82,14 +66,6 @@ macro_rules! impl_integer {
 
             #[inline]
             fn simd_gt(self, other: Self) -> Self::Mask {
-                // LoongArch currently miscompiles four-lane i8 comparison
-                // intrinsics. Keep this narrow shape on the scalar path there.
-                #[cfg(target_arch = "loongarch64")]
-                if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.as_array()[lane] > other.as_array()[lane]
-                    }));
-                }
                 // Safety: `self` is a vector, and the result of the comparison
                 // is always a valid mask.
                 unsafe { Mask::from_simd_unchecked(core::intrinsics::simd::simd_gt(self, other)) }
@@ -97,14 +73,6 @@ macro_rules! impl_integer {
 
             #[inline]
             fn simd_ge(self, other: Self) -> Self::Mask {
-                // LoongArch currently miscompiles four-lane i8 comparison
-                // intrinsics. Keep this narrow shape on the scalar path there.
-                #[cfg(target_arch = "loongarch64")]
-                if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.as_array()[lane] >= other.as_array()[lane]
-                    }));
-                }
                 // Safety: `self` is a vector, and the result of the comparison
                 // is always a valid mask.
                 unsafe { Mask::from_simd_unchecked(core::intrinsics::simd::simd_ge(self, other)) }
@@ -185,21 +153,53 @@ macro_rules! impl_mask {
         {
             #[inline]
             fn simd_lt(self, other: Self) -> Self::Mask {
+                // LoongArch miscompiles bitwise mask operations for four i8 lanes.
+                // Read the scalar mask elements and rebuild a canonical mask instead.
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) < other.test(lane)
+                    }));
+                }
                 !self & other
             }
 
             #[inline]
             fn simd_le(self, other: Self) -> Self::Mask {
+                // LoongArch miscompiles bitwise mask operations for four i8 lanes.
+                // Read the scalar mask elements and rebuild a canonical mask instead.
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) <= other.test(lane)
+                    }));
+                }
                 !self | other
             }
 
             #[inline]
             fn simd_gt(self, other: Self) -> Self::Mask {
+                // LoongArch miscompiles bitwise mask operations for four i8 lanes.
+                // Read the scalar mask elements and rebuild a canonical mask instead.
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) > other.test(lane)
+                    }));
+                }
                 self & !other
             }
 
             #[inline]
             fn simd_ge(self, other: Self) -> Self::Mask {
+                // LoongArch miscompiles bitwise mask operations for four i8 lanes.
+                // Read the scalar mask elements and rebuild a canonical mask instead.
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) >= other.test(lane)
+                    }));
+                }
                 self | !other
             }
         }
@@ -208,11 +208,23 @@ macro_rules! impl_mask {
         {
             #[inline]
             fn simd_max(self, other: Self) -> Self {
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) || other.test(lane)
+                    }));
+                }
                 self | other
             }
 
             #[inline]
             fn simd_min(self, other: Self) -> Self {
+                #[cfg(target_arch = "loongarch64")]
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
+                    return Mask::from_array(core::array::from_fn(|lane| {
+                        self.test(lane) && other.test(lane)
+                    }));
+                }
                 self & other
             }
 
