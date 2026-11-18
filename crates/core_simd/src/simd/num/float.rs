@@ -349,7 +349,7 @@ macro_rules! impl_trait {
                     // The SIMD bitcast and comparison paths are miscompiled for f16
                     // on some Windows GNU targets, including both zero encodings.
                     let raw_bytes = self.as_array().as_ptr().cast::<u8>();
-                    let lanes = core::array::from_fn(|i| {
+                    let lanes: [bool; N] = core::array::from_fn(|i| {
                         // Read through u8 pointers to avoid reinterpreting the
                         // f16 storage as u16 under strict aliasing.
                         // SAFETY: each lane occupies exactly two initialized bytes.
