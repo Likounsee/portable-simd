@@ -55,7 +55,7 @@ macro_rules! impl_integer {
                 // LoongArch currently miscompiles the four-lane i8 comparison
                 // intrinsic. Keep this narrow shape on the scalar path there.
                 #[cfg(target_arch = "loongarch64")]
-                if size_of::<$integer>() == 1 && N == 4 {
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
                     return Mask::from_array(core::array::from_fn(|lane| {
                         self.as_array()[lane] < other.as_array()[lane]
                     }));
@@ -70,7 +70,7 @@ macro_rules! impl_integer {
                 // LoongArch currently miscompiles four-lane i8 comparison
                 // intrinsics. Keep this narrow shape on the scalar path there.
                 #[cfg(target_arch = "loongarch64")]
-                if size_of::<$integer>() == 1 && N == 4 {
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
                     return Mask::from_array(core::array::from_fn(|lane| {
                         self.as_array()[lane] <= other.as_array()[lane]
                     }));
@@ -85,7 +85,7 @@ macro_rules! impl_integer {
                 // LoongArch currently miscompiles four-lane i8 comparison
                 // intrinsics. Keep this narrow shape on the scalar path there.
                 #[cfg(target_arch = "loongarch64")]
-                if size_of::<$integer>() == 1 && N == 4 {
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
                     return Mask::from_array(core::array::from_fn(|lane| {
                         self.as_array()[lane] > other.as_array()[lane]
                     }));
@@ -100,7 +100,7 @@ macro_rules! impl_integer {
                 // LoongArch currently miscompiles four-lane i8 comparison
                 // intrinsics. Keep this narrow shape on the scalar path there.
                 #[cfg(target_arch = "loongarch64")]
-                if size_of::<$integer>() == 1 && N == 4 {
+                if core::mem::size_of::<$integer>() == 1 && N == 4 {
                     return Mask::from_array(core::array::from_fn(|lane| {
                         self.as_array()[lane] >= other.as_array()[lane]
                     }));
