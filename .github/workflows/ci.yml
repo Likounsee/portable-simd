@@ -37,51 +37,51 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Check standalone benchmark formatting
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
-      - name: Build forked SIMD crate for codegen diagnostics
+      - name: Build forked SIMD crate as a Cargo dependency for codegen diagnostics
         run: |
-          export CARGO_TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
-          cargo build -p core_simd --features as_crate --lib --target-dir "$CARGO_TARGET_DIR" --message-format=json-render-diagnostics > /tmp/core-simd-build.json
-          # Cargo may omit the final .rlib from compiler-artifact JSON when
-          # this fork is built as a workspace package. Search the complete
-          # debug tree, but accept only linkable .rlib files (not .rmeta).
+          # Building core_simd as a workspace root can emit a metadata-only
+          # rlib. Build it as a dependency of an external package instead so
+          # Cargo produces a linkable artifact under debug/deps.
+          mkdir -p /tmp/core-simd-benchmark/src
+          cat > /tmp/core-simd-benchmark/Cargo.toml <<'TOML'
+          [package]
+          name = "core-simd-benchmark"
+          version = "0.0.0"
+          edition = "2024"
+
+          [workspace]
+
+          [dependencies]
+          core_simd = { path = "${GITHUB_WORKSPACE}/crates/core_simd", features = ["as_crate"] }
+          TOML
+          cat > /tmp/core-simd-benchmark/src/main.rs <<'RS'
+          use core_simd::simd::Simd;
+
+          fn main() {
+              let _ = Simd::<u32, 4>::splat(1);
+          }
+          RS
+          cargo build --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$RUNNER_TEMP/core-simd-benchmark-target"
           python3 - <<'PY'
           import glob
-          import json
           import os
           import sys
 
-          target_debug = os.path.join(os.environ["CARGO_TARGET_DIR"], "debug")
-          build_json = "/tmp/core-simd-build.json"
-          with open(build_json, encoding="utf-8") as build_output:
-              for line in build_output:
-                  try:
-                      message = json.loads(line)
-                  except json.JSONDecodeError:
-                      continue
-                  if message.get("reason") == "compiler-artifact":
-                      target = message.get("target", {})
-                      if target.get("name") == "core_simd":
-                          print(f"Cargo core_simd artifact: {message.get('filenames', [])}")
+          target_debug = os.path.join(os.environ["RUNNER_TEMP"], "core-simd-benchmark-target", "debug")
           candidates = sorted(
               path
-              for path in glob.glob(os.path.join(target_debug, "**", "libcore_simd*"), recursive=True)
-              if os.path.isfile(path)
+              for path in glob.glob(os.path.join(target_debug, "deps", "libcore_simd-*.rlib"))
+              if os.path.isfile(path) and os.path.getsize(path) > 10_000
           )
           for path in candidates:
-              print(f"core_simd output: {path} ({os.path.getsize(path)} bytes)")
-          rlibs = [path for path in candidates if path.endswith(".rlib")]
-          rlib = rlibs[-1] if rlibs else None
-          if not rlib:
-              print(f"No linkable core_simd rlib found under {target_debug}.", file=sys.stderr)
-              for root, _, files in os.walk(target_debug):
-                  for filename in files:
-                      if "core_simd" in filename:
-                          print(os.path.join(root, filename), file=sys.stderr)
+              print(f"Linkable core_simd dependency: {path} ({os.path.getsize(path)} bytes)")
+          if len(candidates) != 1:
+              print(f"Expected exactly one non-stub core_simd rlib, found {len(candidates)}.", file=sys.stderr)
               sys.exit(1)
+          rlib = candidates[0]
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
               env.write(f"CORE_SIMD_RLIB={rlib}\n")
               env.write(f"CORE_SIMD_DEPS={os.path.dirname(rlib)}\n")
-          print(f"Using linkable core_simd rlib: {rlib}")
           PY
       - name: Compile masked memory benchmark against the fork
         run: rustc --edition=2024 -O -C target-cpu=x86-64 -C target-feature=+sse2 --extern core_simd="$CORE_SIMD_RLIB" -L dependency="$CORE_SIMD_DEPS" benchmarks/masked_load_store.rs -o /tmp/masked-load-store
