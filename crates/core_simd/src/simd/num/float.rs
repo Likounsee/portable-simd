@@ -352,8 +352,9 @@ macro_rules! impl_trait {
                         let mut magnitude = 0_u8;
                         for byte_index in 0..lane_size {
                             // SAFETY: each lane consists of lane_size initialized bytes.
-                            let mut byte =
-                                unsafe { raw_bytes.add(i * lane_size + byte_index).read() };
+                            let mut byte = unsafe {
+                                raw_bytes.add(i * lane_size + byte_index).read()
+                            };
                             #[cfg(target_endian = "little")]
                             if byte_index + 1 == lane_size {
                                 byte &= 0x7f;
