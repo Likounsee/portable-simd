@@ -43,7 +43,7 @@ jobs:
           # rlib. Build it as a dependency of an external package instead so
           # Cargo produces a linkable artifact under debug/deps.
           mkdir -p /tmp/core-simd-benchmark/src
-          cat > /tmp/core-simd-benchmark/Cargo.toml <<'TOML'
+          cat > /tmp/core-simd-benchmark/Cargo.toml <<TOML
           [package]
           name = "core-simd-benchmark"
           version = "0.0.0"
