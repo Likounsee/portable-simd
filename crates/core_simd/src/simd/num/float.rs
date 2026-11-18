@@ -378,21 +378,18 @@ macro_rules! impl_trait {
                         // The SIMD bitcast and comparison paths are miscompiled for f16
                         // on some Windows GNU targets, including both zero encodings.
                         let raw_bytes = self.as_array().as_ptr().cast::<u8>();
-                        let lanes: [$mask_ty; N] = core::array::from_fn(|i| {
+                        let lanes: [bool; N] = core::array::from_fn(|i| {
                             // Read through u8 pointers to avoid reinterpreting the
                             // f16 storage as u16 under strict aliasing.
                             // SAFETY: each lane occupies exactly two initialized bytes.
                             let bytes = unsafe {
                                 [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
                             };
-                            if u16::from_ne_bytes(bytes) & 0x7fff != 0 {
-                                <$mask_ty>::MIN
-                            } else {
-                                0
-                            }
+                            u16::from_ne_bytes(bytes) & 0x7fff != 0
                         });
-                        // SAFETY: each lane is exactly the canonical all-ones or zero mask value.
-                        unsafe { Mask::from_simd_unchecked(Simd::from_array(lanes)) }
+                        // Use the established bool-to-mask conversion path. This avoids
+                        // constructing the f16 mask through the affected SIMD lane path.
+                        Mask::from_array(lanes)
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
