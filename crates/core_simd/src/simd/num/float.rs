@@ -282,25 +282,19 @@ pub impl(self) trait SimdFloat: Copy {
 // when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<const N: usize>(
-    value: Simd<f16, N>,
-) -> Mask<<i16 as SimdElement>::Mask, N> {
+fn f16_to_mask<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
     let lanes = value.as_array().map(|lane| lane.to_bits() & 0x7fff != 0);
     Mask::from_array(lanes)
 }
 
 #[inline(never)]
-fn f32_to_mask<const N: usize>(
-    value: Simd<f32, N>,
-) -> Mask<<i32 as SimdElement>::Mask, N> {
+fn f32_to_mask<const N: usize>(value: Simd<f32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
     let magnitude = value.to_bits() & Simd::splat(0x7fff_ffff);
     magnitude.simd_ne(Simd::splat(0))
 }
 
 #[inline(never)]
-fn f64_to_mask<const N: usize>(
-    value: Simd<f64, N>,
-) -> Mask<<i64 as SimdElement>::Mask, N> {
+fn f64_to_mask<const N: usize>(value: Simd<f64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
     let magnitude = value.to_bits() & Simd::splat(0x7fff_ffff_ffff_ffff);
     magnitude.simd_ne(Simd::splat(0))
 }
