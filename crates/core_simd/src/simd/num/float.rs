@@ -282,7 +282,7 @@ pub impl(self) trait SimdFloat: Copy {
 // when the SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<T: SimdElement, const N: usize>(value: Simd<f16, N>) -> Mask<T::Mask, N> {
+fn f16_to_mask<T: SimdElement, const N: usize>(value: Simd<T, N>) -> Mask<T::Mask, N> {
     let values = value.to_array();
     let raw_bytes = values.as_ptr().cast::<u8>();
     let lanes = core::array::from_fn(|i| {
@@ -392,7 +392,7 @@ macro_rules! impl_trait {
                     // Compare the magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
                     if size_of::<$ty>() == 2 {
-                        f16_to_mask::<$mask_ty, N>(self)
+                        f16_to_mask(self)
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
