@@ -377,16 +377,9 @@ macro_rules! impl_trait {
                         // Extract the lanes before inspecting their scalar bit patterns.
                         // The SIMD bitcast and comparison paths are miscompiled for f16
                         // on some Windows GNU targets, including both zero encodings.
-                        let raw_bytes = self.as_array().as_ptr().cast::<u8>();
-                        let lanes: [bool; N] = core::array::from_fn(|i| {
-                            // Read through u8 pointers to avoid reinterpreting the
-                            // f16 storage as u16 under strict aliasing.
-                            // SAFETY: each lane occupies exactly two initialized bytes.
-                            let bytes = unsafe {
-                                [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
-                            };
-                            u16::from_ne_bytes(bytes) & 0x7fff != 0
-                        });
+                        let lanes = self
+                            .to_array()
+                            .map(|value| value.to_bits() & 0x7fff != 0);
                         // Use the established bool-to-mask conversion path. This avoids
                         // constructing the f16 mask through the affected SIMD lane path.
                         Mask::<<$mask_ty as SimdElement>::Mask, N>::from_array(lanes)
