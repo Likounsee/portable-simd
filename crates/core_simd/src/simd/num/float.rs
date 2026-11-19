@@ -282,14 +282,12 @@ pub impl(self) trait SimdFloat: Copy {
 // when the SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<T: SimdElement, const N: usize>(value: Simd<T, N>) -> [bool; N] {
-    let raw_bytes = value.as_array().as_ptr().cast::<u8>();
-    let lanes = core::array::from_fn(|i| {
-        // SAFETY: each f16 lane occupies two initialized bytes.
+fn f16_to_mask<const N: usize>(raw_bytes: *const u8) -> [bool; N] {
+    core::array::from_fn(|i| {
+        // SAFETY: the caller provides storage for N initialized f16 lanes.
         let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
         u16::from_ne_bytes(bytes) & 0x7fff != 0
-    });
-    lanes
+    })
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -389,7 +387,7 @@ macro_rules! impl_trait {
                     // Compare the magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
                     if size_of::<$ty>() == 2 {
-                        Mask::from_array(f16_to_mask(self))
+                        Mask::from_array(f16_to_mask(self.as_array().as_ptr().cast::<u8>()))
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
