@@ -282,28 +282,27 @@ pub impl(self) trait SimdFloat: Copy {
 // when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
+fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> [bool; N] {
     // Read the stored representation as bytes: scalar f16 bitcasts can be
     // miscompiled on Windows GNU even when the SIMD-to-array roundtrip works.
     let raw_bytes = value.as_array().as_ptr().cast::<u8>();
-    let lanes = core::array::from_fn(|i| {
+    core::array::from_fn(|i| {
         // SAFETY: each f16 lane occupies two initialized bytes.
         let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
         u16::from_ne_bytes(bytes) & 0x7fff != 0
-    });
-    Mask::from_array(lanes)
+    })
 }
 
 #[inline(never)]
-fn f32_to_mask<const N: usize>(value: Simd<f32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
+fn f32_to_mask_lanes<const N: usize>(value: Simd<f32, N>) -> [bool; N] {
     let magnitude = value.to_bits() & Simd::splat(0x7fff_ffff);
-    magnitude.simd_ne(Simd::splat(0))
+    magnitude.to_array().map(|bits| bits != 0)
 }
 
 #[inline(never)]
-fn f64_to_mask<const N: usize>(value: Simd<f64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
+fn f64_to_mask_lanes<const N: usize>(value: Simd<f64, N>) -> [bool; N] {
     let magnitude = value.to_bits() & Simd::splat(0x7fff_ffff_ffff_ffff);
-    magnitude.simd_ne(Simd::splat(0))
+    magnitude.to_array().map(|bits| bits != 0)
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -402,7 +401,7 @@ macro_rules! impl_trait {
                 {
                     // Compare magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
-                    $to_mask(self)
+                    Mask::from_array($to_mask(self))
                 }
             }
 
@@ -633,4 +632,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { f16 { bits: u16, mask: i16, to_mask: f16_to_mask }, f32 { bits: u32, mask: i32, to_mask: f32_to_mask }, f64 { bits: u64, mask: i64, to_mask: f64_to_mask } }
+impl_trait! { f16 { bits: u16, mask: i16, to_mask: f16_to_mask_lanes }, f32 { bits: u32, mask: i32, to_mask: f32_to_mask_lanes }, f64 { bits: u64, mask: i64, to_mask: f64_to_mask_lanes } }
