@@ -350,14 +350,13 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
     ]);
 
     let expected = [true, true, true, true, true, false, false, true];
-    // Inspect the stored lane bits without invoking the affected SIMD bitcast.
-    // Read each lane through a raw pointer so the test does not create a u16
-    // reference over storage whose declared element type is f16.
-    let raw_bits = values.as_array().as_ptr().cast::<u16>();
+    // Inspect the stored lane bytes without invoking the affected SIMD bitcast.
+    // Read through u8 pointers so the test does not reinterpret f16 storage as u16.
+    let raw_bytes = values.as_array().as_ptr().cast::<u8>();
     let observed_bits: [u16; 8] = core::array::from_fn(|i| {
-        // SAFETY: f16 and u16 have identical size and alignment, and every u16
-        // bit pattern is valid. The pointer addresses an initialized SIMD lane.
-        unsafe { raw_bits.add(i).read_unaligned() }
+        // SAFETY: each f16 lane occupies two initialized bytes.
+        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
+        u16::from_ne_bytes(bytes)
     });
     assert_eq!(
         observed_bits,
@@ -370,6 +369,11 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
     assert_eq!(
         scalar_classification, expected,
         "scalar f16 bit classification must distinguish both zero encodings",
+    );
+    assert_eq!(
+        Mask::<i16, 8>::from_array(scalar_classification).to_array(),
+        expected,
+        "dynamic bool-to-mask conversion must preserve false f16 zero lanes",
     );
     assert_eq!(
         Mask::<i16, 8>::from_array(expected).to_array(),

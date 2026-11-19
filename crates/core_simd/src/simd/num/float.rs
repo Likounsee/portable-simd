@@ -277,6 +277,15 @@ pub impl(self) trait SimdFloat: Copy {
     fn reduce_min(self) -> Self::Scalar;
 }
 
+// Keep the complete f16 classification and mask construction behind a
+// codegen boundary. Some Windows GNU configurations miscompile this path
+// when the SIMD-to-array conversion and mask construction are inlined into
+// SimdFloat::to_mask.
+#[inline(never)]
+fn f16_to_mask<const N: usize>(values: &[f16; N]) -> [bool; N] {
+    values.map(|value| value.to_bits() & 0x7fff != 0)
+}
+
 trait AlgebraicReduce: SimdElement {
     fn reduce<const N: usize>(value: Simd<Self, N>) -> Self;
 }
@@ -342,26 +351,43 @@ macro_rules! impl_trait {
 
             #[inline]
             fn to_mask(self) -> Self::Mask {
-                // Compare the magnitude bits so subnormals remain nonzero even on targets
-                // that flush floating-point subnormal comparisons to zero.
-                if size_of::<$ty>() == 2 {
-                    // Extract the lanes before inspecting their scalar bit patterns.
-                    // The SIMD bitcast and comparison paths are miscompiled for f16
-                    // on some Windows GNU targets, including both zero encodings.
+                // ARMv7 NEON may flush subnormal floating-point values during SIMD
+                // bitcasts/comparisons. Inspect the stored bytes as integers instead.
+                #[cfg(target_arch = "arm")]
+                {
+                    let lane_size = core::mem::size_of::<$ty>();
                     let raw_bytes = self.as_array().as_ptr().cast::<u8>();
                     let lanes: [bool; N] = core::array::from_fn(|i| {
-                        // Read through u8 pointers to avoid reinterpreting the
-                        // f16 storage as u16 under strict aliasing.
-                        // SAFETY: each lane occupies exactly two initialized bytes.
-                        let bytes = unsafe {
-                            [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
-                        };
-                        u16::from_ne_bytes(bytes) & 0x7fff != 0
+                        let mut magnitude = 0_u8;
+                        for byte_index in 0..lane_size {
+                            // SAFETY: each lane consists of lane_size initialized bytes.
+                            let mut byte = unsafe {
+                                raw_bytes.add(i * lane_size + byte_index).read()
+                            };
+                            #[cfg(target_endian = "little")]
+                            if byte_index + 1 == lane_size {
+                                byte &= 0x7f;
+                            }
+                            #[cfg(target_endian = "big")]
+                            if byte_index == 0 {
+                                byte &= 0x7f;
+                            }
+                            magnitude |= byte;
+                        }
+                        magnitude != 0
                     });
                     Mask::from_array(lanes)
-                } else {
-                    let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
-                    magnitude.simd_ne(Simd::splat(0))
+                }
+                #[cfg(not(target_arch = "arm"))]
+                {
+                    // Compare the magnitude bits so subnormals remain nonzero even on targets
+                    // that flush floating-point subnormal comparisons to zero.
+                    if size_of::<$ty>() == 2 {
+                        Mask::from_array(f16_to_mask(self.as_array()))
+                    } else {
+                        let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
+                        magnitude.simd_ne(Simd::splat(0))
+                    }
                 }
             }
 
