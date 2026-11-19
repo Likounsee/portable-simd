@@ -281,8 +281,8 @@ pub impl(self) trait SimdFloat: Copy {
 // codegen unit. Some Windows GNU configurations miscompile the inlined
 // conversion when it is returned directly from SimdFloat::to_mask.
 #[inline(never)]
-fn scalar_lanes_to_mask<T: SimdElement, const N: usize>(lanes: [bool; N]) -> Mask<T::Mask, N> {
-    Mask::from_array(lanes)
+fn scalar_lanes_to_mask<T: SimdElement, const N: usize>(lanes: &[bool; N]) -> Mask<T::Mask, N> {
+    Mask::from_array(*lanes)
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -390,7 +390,7 @@ macro_rules! impl_trait {
                             .map(|value| value.to_bits() & 0x7fff != 0);
                         // Use the established bool-to-mask conversion path. This avoids
                         // constructing the f16 mask through the affected SIMD lane path.
-                        scalar_lanes_to_mask::<$mask_ty, N>(lanes)
+                        scalar_lanes_to_mask::<$mask_ty, N>(&lanes)
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
