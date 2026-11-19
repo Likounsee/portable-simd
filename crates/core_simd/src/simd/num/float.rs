@@ -277,12 +277,22 @@ pub impl(self) trait SimdFloat: Copy {
     fn reduce_min(self) -> Self::Scalar;
 }
 
-// Keep the scalar f16 classification and mask construction in a separate
-// codegen unit. Some Windows GNU configurations miscompile the inlined
-// conversion when it is returned directly from SimdFloat::to_mask.
+// Keep the complete f16 classification and mask construction behind a
+// codegen boundary. Some Windows GNU configurations miscompile this path
+// when the SIMD-to-array conversion and mask construction are inlined into
+// SimdFloat::to_mask.
 #[inline(never)]
-fn scalar_lanes_to_mask<T: SimdElement, const N: usize>(lanes: &[bool; N]) -> Mask<T::Mask, N> {
-    Mask::from_array(*lanes)
+fn f16_to_mask<T: SimdElement, const N: usize>(value: Simd<f16, N>) -> Mask<T::Mask, N> {
+    let values = value.to_array();
+    let raw_bytes = values.as_ptr().cast::<u8>();
+    let lanes = core::array::from_fn(|i| {
+        // SAFETY: each f16 lane occupies two initialized bytes.
+        let bytes = unsafe {
+            [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
+        };
+        u16::from_ne_bytes(bytes) & 0x7fff != 0
+    });
+    Mask::from_array(lanes)
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -382,22 +392,7 @@ macro_rules! impl_trait {
                     // Compare the magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
                     if size_of::<$ty>() == 2 {
-                        // Read f16 storage as bytes before classifying it. This avoids
-                        // scalar f16 extraction/conversion code that is miscompiled by some
-                        // Windows GNU configurations, while preserving subnormal bit patterns.
-                        // Materialize the SIMD value as its scalar array before
-                        // inspecting bytes. Some Windows GNU codegen paths incorrectly
-                        // expose the in-register f16 representation through as_array().
-                        let values = self.to_array();
-                        let raw_bytes = values.as_ptr().cast::<u8>();
-                        let lanes = core::array::from_fn(|i| {
-                            // SAFETY: each f16 lane occupies two initialized bytes.
-                            let bytes = unsafe {
-                                [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
-                            };
-                            u16::from_ne_bytes(bytes) & 0x7fff != 0
-                        });
-                        scalar_lanes_to_mask::<$mask_ty, N>(&lanes)
+                        f16_to_mask::<$mask_ty, N>(self)
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
