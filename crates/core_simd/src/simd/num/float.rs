@@ -282,14 +282,8 @@ pub impl(self) trait SimdFloat: Copy {
 // when the SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<T, const N: usize>(values: &[T; N]) -> [bool; N] {
-    let raw_bytes = values.as_ptr().cast::<u8>();
-    core::array::from_fn(|i| {
-        // SAFETY: this helper is called only for two-byte float lanes, and
-        // each lane contains two initialized bytes.
-        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
-        u16::from_ne_bytes(bytes) & 0x7fff != 0
-    })
+fn f16_to_mask<const N: usize>(values: &[f16; N]) -> [bool; N] {
+    values.map(|value| value.to_bits() & 0x7fff != 0)
 }
 
 trait AlgebraicReduce: SimdElement {
