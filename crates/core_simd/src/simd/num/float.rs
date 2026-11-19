@@ -283,14 +283,10 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> [bool; N] {
-    // Read the stored representation as bytes: scalar f16 bitcasts can be
-    // miscompiled on Windows GNU even when the SIMD-to-array roundtrip works.
-    let raw_bytes = value.as_array().as_ptr().cast::<u8>();
-    core::array::from_fn(|i| {
-        // SAFETY: each f16 lane occupies two initialized bytes.
-        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
-        u16::from_ne_bytes(bytes) & 0x7fff != 0
-    })
+    // Classify the SIMD bit representation directly. Going through scalar
+    // f16::to_bits or raw pointers has produced incorrect results on Windows GNU.
+    let magnitude = value.to_bits() & Simd::splat(0x7fff);
+    magnitude.to_array().map(|bits| bits != 0)
 }
 
 #[inline(never)]
