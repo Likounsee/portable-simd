@@ -64,7 +64,9 @@ jobs:
           "$TARGET_DIR/release/masked_load_store"
           "$TARGET_DIR/release/gather_unchecked"
 
-          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+avx2 --emit=link,asm=/tmp/gather-unchecked-avx2.s,llvm-ir=/tmp/gather-unchecked-avx2.ll
+          AVX2_TARGET_DIR="$RUNNER_TEMP/core-simd-benchmark-avx2-target"
+          cargo rustc --manifest-path /tmp/core-simd-benchmark/Cargo.toml --target-dir "$AVX2_TARGET_DIR" --release --bin gather_unchecked -- -C target-cpu=x86-64 -C target-feature=+avx2 --emit=link,asm=/tmp/gather-unchecked-avx2.s,llvm-ir=/tmp/gather-unchecked-avx2.ll
+          "$AVX2_TARGET_DIR/release/gather_unchecked"
 
       - name: Upload masked-memory codegen diagnostics
         if: always()
