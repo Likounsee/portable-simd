@@ -385,7 +385,11 @@ macro_rules! impl_trait {
                         // Read f16 storage as bytes before classifying it. This avoids
                         // scalar f16 extraction/conversion code that is miscompiled by some
                         // Windows GNU configurations, while preserving subnormal bit patterns.
-                        let raw_bytes = self.as_array().as_ptr().cast::<u8>();
+                        // Materialize the SIMD value as its scalar array before
+                        // inspecting bytes. Some Windows GNU codegen paths incorrectly
+                        // expose the in-register f16 representation through as_array().
+                        let values = self.to_array();
+                        let raw_bytes = values.as_ptr().cast::<u8>();
                         let lanes = core::array::from_fn(|i| {
                             // SAFETY: each f16 lane occupies two initialized bytes.
                             let bytes = unsafe {
