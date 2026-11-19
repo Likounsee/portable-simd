@@ -389,7 +389,7 @@ macro_rules! impl_trait {
                         });
                         // Use the established bool-to-mask conversion path. This avoids
                         // constructing the f16 mask through the affected SIMD lane path.
-                        Mask::from_array(lanes)
+                        Mask::<<$mask_ty as SimdElement>::Mask, N>::from_array(lanes)
                     } else {
                         let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
                         magnitude.simd_ne(Simd::splat(0))
