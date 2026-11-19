@@ -371,14 +371,14 @@ fn to_mask_classifies_f16_subnormals_and_special_values() {
         "scalar f16 bit classification must distinguish both zero encodings",
     );
     assert_eq!(
-        Mask::<i8, 8>::from_array(scalar_classification).to_array(),
+        Mask::<i16, 8>::from_array(scalar_classification).to_array(),
         expected,
-        "the actual f16 associated mask type must preserve false zero lanes",
+        "dynamic bool-to-mask conversion must preserve false f16 zero lanes",
     );
     assert_eq!(
-        Mask::<i8, 8>::from_array(expected).to_array(),
+        Mask::<i16, 8>::from_array(expected).to_array(),
         expected,
-        "i8 mask construction and extraction must preserve false lanes",
+        "i16 mask construction and extraction must preserve false lanes",
     );
     assert_eq!(
         values.to_array().map(|value| value.to_bits()),
