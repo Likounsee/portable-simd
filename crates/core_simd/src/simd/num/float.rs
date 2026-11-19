@@ -283,13 +283,10 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask<T: SimdElement, const N: usize>(value: Simd<T, N>) -> Mask<T::Mask, N> {
-    let values = value.to_array();
-    let raw_bytes = values.as_ptr().cast::<u8>();
+    let raw_bytes = value.as_array().as_ptr().cast::<u8>();
     let lanes = core::array::from_fn(|i| {
         // SAFETY: each f16 lane occupies two initialized bytes.
-        let bytes = unsafe {
-            [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()]
-        };
+        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
         u16::from_ne_bytes(bytes) & 0x7fff != 0
     });
     Mask::from_array(lanes)
