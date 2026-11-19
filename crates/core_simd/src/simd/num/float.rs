@@ -277,13 +277,30 @@ pub impl(self) trait SimdFloat: Copy {
     fn reduce_min(self) -> Self::Scalar;
 }
 
-// Keep the complete f16 classification and mask construction behind a
-// codegen boundary. Some Windows GNU configurations miscompile this path
-// when the SIMD-to-array conversion and mask construction are inlined into
+// Keep floating-point classification and mask construction behind a
+// codegen boundary. Some Windows GNU configurations miscompile the f16 path
+// when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask<const N: usize>(values: &[f16; N]) -> [bool; N] {
-    values.map(|value| value.to_bits() & 0x7fff != 0)
+fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> [bool; N] {
+    // Inspect the array storage behind a reference, avoiding a SIMD f16 value
+    // crossing the non-inlined helper boundary on Windows GNU.
+    let raw_bytes = lanes.as_ptr().cast::<u8>();
+    core::array::from_fn(|i| {
+        // SAFETY: each f16 lane occupies two initialized bytes.
+        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
+        u16::from_ne_bytes(bytes) & 0x7fff != 0
+    })
+}
+
+#[inline(never)]
+fn f32_to_mask_lanes<const N: usize>(lanes: &[f32; N]) -> [bool; N] {
+    lanes.map(|lane| lane.to_bits() & 0x7fff_ffff != 0)
+}
+
+#[inline(never)]
+fn f64_to_mask_lanes<const N: usize>(lanes: &[f64; N]) -> [bool; N] {
+    lanes.map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0)
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -340,7 +357,7 @@ impl AlgebraicReduce for f64 {
 }
 
 macro_rules! impl_trait {
-    { $($ty:ty { bits: $bits_ty:ty, mask: $mask_ty:ty }),* } => {
+    { $($ty:ty { bits: $bits_ty:ty, mask: $mask_ty:ty, to_mask: $to_mask:ident }),* } => {
         $(
         impl<const N: usize> SimdFloat for Simd<$ty, N>
         {
@@ -380,14 +397,9 @@ macro_rules! impl_trait {
                 }
                 #[cfg(not(target_arch = "arm"))]
                 {
-                    // Compare the magnitude bits so subnormals remain nonzero even on targets
+                    // Compare magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
-                    if size_of::<$ty>() == 2 {
-                        Mask::from_array(f16_to_mask(self.as_array()))
-                    } else {
-                        let magnitude = self.to_bits() & Simd::splat(!0 >> 1);
-                        magnitude.simd_ne(Simd::splat(0))
-                    }
+                    Mask::from_array($to_mask(self.as_array()))
                 }
             }
 
@@ -618,4 +630,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { f16 { bits: u16, mask: i16 }, f32 { bits: u32, mask: i32 }, f64 { bits: u64, mask: i64 } }
+impl_trait! { f16 { bits: u16, mask: i16, to_mask: f16_to_mask_lanes }, f32 { bits: u32, mask: i32, to_mask: f32_to_mask_lanes }, f64 { bits: u64, mask: i64, to_mask: f64_to_mask_lanes } }
