@@ -339,6 +339,22 @@ macro_rules! impl_signed_tests {
                     assert_eq!(actual.to_array(), expected);
                 }
 
+                fn signed_division_operators_wrap_min_over_negative_one<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| {
+                        if lane % 2 == 0 { Scalar::MIN } else { Scalar::MAX }
+                    });
+                    let rhs = [-1 as Scalar; LANES];
+                    let actual_div =
+                        Vector::<LANES>::from_array(lhs) / Vector::from_array(rhs);
+                    let actual_rem =
+                        Vector::<LANES>::from_array(lhs) % Vector::from_array(rhs);
+                    let expected_div = lhs.map(|value| value.wrapping_div(-1));
+                    let expected_rem = lhs.map(|value| value.wrapping_rem(-1));
+
+                    assert_eq!(actual_div.to_array(), expected_div);
+                    assert_eq!(actual_rem.to_array(), expected_rem);
+                }
+
                 fn rem_euclid<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| (lane as Scalar).wrapping_mul(7).wrapping_sub(19));
                     let rhs: [Scalar; LANES] = core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });

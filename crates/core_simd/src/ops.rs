@@ -40,10 +40,11 @@ macro_rules! wrap_bitshift {
 
 /// SAFETY: This macro must only be used to impl Div or Rem and given the matching intrinsic.
 /// It guards against LLVM's UB conditions for integer div or rem using masks and selects,
-/// thus guaranteeing a Rust value returns instead.
+/// thus guaranteeing defined portable-SIMD results instead. Integer SIMD operators wrap on
+/// signed overflow, while division by zero still panics.
 ///
-/// |                  | LLVM | Rust
-/// | :--------------: | :--- | :----------
+/// |                  | LLVM | portable SIMD
+/// | :--------------: | :--- | :------------
 /// | N {/,%} 0        | UB   | panic!()
 /// | <$int>::MIN / -1 | UB   | <$int>::MIN
 /// | <$int>::MIN % -1 | UB   | 0
