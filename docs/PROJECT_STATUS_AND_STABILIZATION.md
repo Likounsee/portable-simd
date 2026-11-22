@@ -100,7 +100,7 @@ The baseline commit and assessed head differ by 510 commits. The changes fall in
 - Added reproducible codegen diagnostics as a separate quality check.
 - Added a compile-only x86 AVX-512 swizzle check that enables the exact target features required by the byte-minimum and byte-permute intrinsics without executing those instructions.
 
-The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. The current assessed code head is `afc31bcbdd980454cf122d5c281e430e4552132c`; its GitHub Actions run is [run 45064886004](https://github.com/Likounsee/portable-simd/actions/runs/45064886004). At the time of this update, the run is active: formatting and masked-memory checks have passed, while Miri and several architecture jobs are still running or queued. No current-head green claim is made. CI concurrency cancels superseded runs so stale jobs do not block validation of the newest commit.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. The most recent run inspected during the 2026-11-22 follow-up was [run 45066299426](https://github.com/Likounsee/portable-simd/actions/runs/45066299426), on commit `ad51b01a4a219a529a471bc812e6af547fbbc7ad`. It completed 19 jobs successfully with no recorded failures; the remaining 11 jobs were cancelled after later pushes. This is not a completed green matrix. The current main head is `35aab6ea6ac2a0c28ab03555580ea4675340ee5d`; no completed full CI run for that head has been verified. No current-head green claim is made.
 
 ### H. Example correctness and documentation follow-up
 
@@ -190,7 +190,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 ### What is not yet established
 
-- The current head `693cf27f362b9256ea3041dc3b7770fd433fc120` still needs its own completed green CI run.
+- The current main head `35aab6ea6ac2a0c28ab03555580ea4675340ee5d` still needs its own completed green CI run.
 - No full unsafe-code audit has been completed across all modules and architecture backends. A first-pass inventory has begun for vector.rs, masks.rs, select.rs, pointer SIMD modules, and std_float; it is not yet a reviewed safety audit.
 - Miri passing is valuable but does not prove absence of undefined behavior; target-specific hardware/emulator coverage also has limits.
 - The #427 historical compiler ICE lacks a minimal compiler reproducer.
@@ -354,3 +354,9 @@ The latest test and diagnostic changes are on `main`. The workflow has repeatedl
 ## 2026-11-22 follow-up: confirmed edge-case and codegen fixes
 
 The assessed head (`afc31bcbdd980454cf122d5c281e430e4552132c`) includes overflow-safe const-generic swizzle shifts and extraction bounds, typed mask construction inside the non-ARM floating-point `to_mask` helpers to avoid a Windows GNU bool-array ABI/codegen failure, a LoongArch64 four-lane byte-mask workaround, and a subnormal-aware algebraic reduction test oracle for ARM/AltiVec. The 64-bit overflowing-shift implementation follows scalar semantics by converting each lane count to `u32` before checking overflow; high bits discarded by that conversion do not independently set the overflow mask. The CI run exposed and helped correct an earlier mismatch with this contract. Current-head validation is in progress.
+
+## 2026-11-22 follow-up: signed unchecked shift contract and gather codegen
+
+- `SimdInt::unchecked_shl` and `unchecked_shr` now document the same count conversion as their implementation and the unsigned counterparts: each signed lane count is converted to `u32` before the lane-width precondition is checked. The safety comments were corrected, and `unchecked_shifts.rs` now tests 64-bit signed counts above `u32::MAX` whose converted values are valid shift amounts.
+- Inspected the optimized AVX2 artifact from run `45066299426`. The explicit AVX2 reference emits `vpgatherdd`; the generic pointer-gather path lowers to scalar element loads plus vector inserts. The benchmark uses `usize` indices for the generic API and `i32` indices for the explicit intrinsic reference, so this is diagnostic evidence only—not an apples-to-apples timing comparison and not proof of a speedup. The generic gather codegen remains an optimization limitation, not a correctness failure.
+- The latest main head `35aab6ea6ac2a0c28ab03555580ea4675340ee5d` still requires a completed CI run.
