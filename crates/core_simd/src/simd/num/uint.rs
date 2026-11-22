@@ -48,14 +48,22 @@ pub impl(self) trait SimdUint: Copy {
 
     /// Shifts each lane left without masking the shift amount.
     ///
+    /// Each lane's shift amount is converted to `u32`, matching the scalar
+    /// integer shift operation, before it is checked against the lane width.
+    ///
     /// # Safety
-    /// Every lane's shift amount must be less than the lane bit width.
+    /// After conversion to `u32`, every lane's shift amount must be less than
+    /// the lane bit width.
     unsafe fn unchecked_shl(self, rhs: Self) -> Self;
 
     /// Shifts each lane right without masking the shift amount.
     ///
+    /// Each lane's shift amount is converted to `u32`, matching the scalar
+    /// integer shift operation, before it is checked against the lane width.
+    ///
     /// # Safety
-    /// Every lane's shift amount must be less than the lane bit width.
+    /// After conversion to `u32`, every lane's shift amount must be less than
+    /// the lane bit width.
     unsafe fn unchecked_shr(self, rhs: Self) -> Self;
 
     /// Rotates every lane's bits to the left by the same number of bits.
@@ -153,11 +161,19 @@ pub impl(self) trait SimdUint: Copy {
         Self: SimdPartialEq;
 
     /// Shifts each lane left and reports shift amounts greater than or equal to the lane width.
+    ///
+    /// Each lane's shift amount is first converted to `u32`, matching Rust's
+    /// scalar integer shift operation. The overflow mask therefore reports
+    /// whether that converted amount is at least the lane bit width.
     fn overflowing_shl(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
     where
         Self: SimdPartialEq;
 
     /// Shifts each lane right and reports shift amounts greater than or equal to the lane width.
+    ///
+    /// Each lane's shift amount is first converted to `u32`, matching Rust's
+    /// scalar integer shift operation. The overflow mask therefore reports
+    /// whether that converted amount is at least the lane bit width.
     fn overflowing_shr(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
     where
         Self: SimdPartialEq;
