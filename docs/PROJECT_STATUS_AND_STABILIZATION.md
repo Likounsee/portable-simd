@@ -190,7 +190,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 ### What is not yet established
 
-- The current head `8cccd48` still needs its own completed green CI run.
+- The current head `693cf27f362b9256ea3041dc3b7770fd433fc120` still needs its own completed green CI run.
 - No full unsafe-code audit has been completed across all modules and architecture backends. A first-pass inventory has begun for vector.rs, masks.rs, select.rs, pointer SIMD modules, and std_float; it is not yet a reviewed safety audit.
 - Miri passing is valuable but does not prove absence of undefined behavior; target-specific hardware/emulator coverage also has limits.
 - The #427 historical compiler ICE lacks a minimal compiler reproducer.
@@ -206,7 +206,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 1. Obtain a completed green CI run for the current head.
 2. Keep the new exhaustive gather/scatter tests and check their results on the complete matrix.
-3. Avoid rapid pushes that cancel runs before they finish; batch related changes and let CI complete.
+3. Batch related changes when practical; superseded runs are cancelled automatically so the newest main-branch commit can be validated.
 4. Record the final run URL and job counts in this document.
 
 **Exit criteria:** current head has a completed green full matrix, not merely an earlier green commit.
