@@ -719,8 +719,16 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 
 ### 2026-11-22 — fix integer shift overflow reporting, swizzle offset overflow, and float mask codegen
 
-- Fixed signed and unsigned 64-bit `overflowing_shl` / `overflowing_shr`: preserve the original lane shift count when computing the overflow mask instead of relying only on its truncated `u32` form. Added regression tests for counts at the lane width, high bits above bit 31, negative signed counts, and `u64::MAX`.
+- Corrected the shift-count contract for signed and unsigned 64-bit `overflowing_shl` / `overflowing_shr`: each lane count is converted to `u32` before the scalar overflow check, matching Rust's scalar `overflowing_shl` / `overflowing_shr` behavior. An earlier attempt to treat discarded high bits as overflow disagreed with the scalar contract and failed the existing i64 test matrix; it was reverted. Regression tests now cover high-bit truncation, lane-width overflow, and negative signed counts.
 - Fixed `Simd::shift_elements_left` so the const-generic offset check cannot overflow for very large offsets such as `usize::MAX`; added a regression test that expects the padding value in every lane.
 - Made `Simd::extract`'s compile-time bounds predicate overflow-safe by checking `START <= N` before subtracting from `N`.
 - Changed the non-ARM floating-point `to_mask` helpers to construct and return the correctly typed `Mask` inside the non-inlined helper. This avoids the Windows GNU bool-array ABI/codegen failure reported by the f16 regression; the ARM-specific path remains separately cfg-gated.
 - Validation: the current-head GitHub Actions run is queued. No local Rust toolchain is available in this environment, so compilation, formatting, Miri, and target-matrix results are not claimed until CI completes.
+
+
+### 2026-11-22 — CI-driven cross-target corrections
+
+- Fixed the LoongArch64 four-lane byte-mask comparison path after reviewing its target-specific regression report. The fallback reads canonical mask lanes individually and reconstructs the typed mask; a focused four-lane ordering/min/max regression test was added.
+- Corrected the algebraic floating reduction test oracle for ARMv7 and older AltiVec configurations: both the SIMD result and scalar reference now apply the target's documented subnormal-flush policy before comparison.
+- Reconciled 64-bit overflowing-shift tests with the scalar API contract. The shift count is cast to `u32` before overflow is reported; high bits discarded by that cast must not independently set the overflow mask.
+- Validation is still in progress on the latest main commit. The previous CI run exposed the shift-contract mismatch on i64 across several targets; those failures were traced to the extra full-width overflow condition and corrected. No current-head test-pass claim is made yet.
