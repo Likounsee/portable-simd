@@ -485,10 +485,9 @@ macro_rules! impl_trait {
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let shift = rhs.as_array()[lane];
                     let (value, did_overflow) = self.as_array()[lane].overflowing_shl(shift as u32);
-                    // Casting a 64-bit lane to u32 can discard high shift-count bits.
-                    // The scalar operation sees only u32, but SIMD lanes must still
-                    // report overflow for the original count when it is >= the lane width.
-                    overflow[lane] = did_overflow || (shift as u128) >= <$ty>::BITS as u128;
+                    // Match the scalar operation: shift counts are converted to u32
+                    // before the lane-width check, including for 64-bit lane types.
+                    overflow[lane] = did_overflow;
                     value
                 }));
                 let overflow = Simd::<$ty, N>::from_array(
@@ -507,10 +506,9 @@ macro_rules! impl_trait {
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     let shift = rhs.as_array()[lane];
                     let (value, did_overflow) = self.as_array()[lane].overflowing_shr(shift as u32);
-                    // Casting a 64-bit lane to u32 can discard high shift-count bits.
-                    // The scalar operation sees only u32, but SIMD lanes must still
-                    // report overflow for the original count when it is >= the lane width.
-                    overflow[lane] = did_overflow || (shift as u128) >= <$ty>::BITS as u128;
+                    // Match the scalar operation: shift counts are converted to u32
+                    // before the lane-width check, including for 64-bit lane types.
+                    overflow[lane] = did_overflow;
                     value
                 }));
                 let overflow = Simd::<$ty, N>::from_array(
