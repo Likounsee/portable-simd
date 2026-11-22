@@ -171,9 +171,9 @@ where
     /// ```
     #[inline]
     pub const fn as_array(&self) -> &[T; N] {
-        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have
-        // equal sizes for every supported lane count, so this reference covers
-        // exactly the vector's element storage.
+        // SAFETY: The layout tests verify equal sizes and that Simd's alignment
+        // is at least the array's alignment for every supported lane count, so
+        // this reference covers the initialized element storage and is aligned.
         //
         // NOTE: This deliberately doesn't just use `&self.0`, see the comment
         // on the struct definition for details.
@@ -185,9 +185,9 @@ where
     /// For updating a single element, prefer [`Self::set`], which may optimize better.
     #[inline]
     pub const fn as_mut_array(&mut self) -> &mut [T; N] {
-        // SAFETY: The layout tests verify that `Simd<T, N>` and `[T; N]` have
-        // equal sizes for every supported lane count, so this reference covers
-        // exactly the vector's element storage.
+        // SAFETY: The layout tests verify equal sizes and that Simd's alignment
+        // is at least the array's alignment for every supported lane count, so
+        // this reference covers the initialized element storage and is aligned.
         //
         // NOTE: This deliberately doesn't just use `&mut self.0`, see the comment
         // on the struct definition for details.
