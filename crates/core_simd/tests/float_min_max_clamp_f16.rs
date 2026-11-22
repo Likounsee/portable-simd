@@ -85,3 +85,11 @@ mod tests {
         );
     }
 }
+
+    #[test]
+    fn simd_min_and_max_allow_either_signed_zero_for_f16() {
+        let left = Simd::from_array([-0.0_f16, 0.0, -0.0, 0.0]);
+        let right = Simd::from_array([0.0_f16, -0.0, -0.0, 0.0]);
+        assert_eq!(left.simd_min(right).to_array(), [0.0_f16; 4]);
+        assert_eq!(left.simd_max(right).to_array(), [0.0_f16; 4]);
+    }
