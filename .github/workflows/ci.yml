@@ -35,6 +35,10 @@ jobs:
           persist-credentials: false
       - name: Run rustfmt
         run: cargo fmt --all -- --check
+      - name: Compile AVX-512 swizzle implementations without executing them
+        run: cargo check -p core_simd --lib
+        env:
+          RUSTFLAGS: -C target-feature=+avx2,+avx512f,+avx512bw,+avx512vl,+avx512vbmi
       - name: Check standalone benchmark formatting
         run: rustfmt --edition 2024 --check benchmarks/masked_load_store.rs benchmarks/gather_unchecked.rs
       - name: Build and inspect benchmarks through Cargo

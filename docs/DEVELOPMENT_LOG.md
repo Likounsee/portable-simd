@@ -1,3 +1,9 @@
+### 2026-11-22 — AVX-512 swizzle compile coverage
+
+- Added the missing unsafe blocks around the AVX-512 byte-permute intrinsics; the surrounding unsafe match does not extend into closure bodies.
+- Tightened feature gates so the 256-bit implementation also requires AVX2 for byte-minimum, while the 512-bit implementation requires AVX-512BW for byte-minimum and AVX-512VBMI for byte permutation.
+- Added a compile-only CI check with the required AVX-512 target features enabled. It type-checks these paths without executing AVX-512 instructions on runners that may not support them.
+
 ### 2026-11-22 — use scalar strict-provenance API for SIMD with_addr
 
 - Replaced the remaining wrapping-offset emulation in const and mutable SIMD pointer `with_addr` with lane-wise calls to the scalar `pointer.with_addr` API.

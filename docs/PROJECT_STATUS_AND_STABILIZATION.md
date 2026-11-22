@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed code head:** `2a385ed6a6cac44598dfacbe42e58fbb0b2a5bd4`
+**Assessed code head:** `2a385ed6a6cac44598dfacbe42e58fbb0b2a5bd4` (AVX-512 compile-path fix queued separately)
 
 ## Executive summary
 

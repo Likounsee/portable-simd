@@ -75,14 +75,26 @@ impl<const N: usize> Simd<u8, N> {
                 // x86, x86-64
                 #[cfg(target_feature = "ssse3")]
                 16 => transize(x86::_mm_shuffle_epi8, self, zeroing_idxs(idxs)),
-                #[cfg(all(target_feature = "avx512vl", target_feature = "avx512vbmi"))]
+                #[cfg(all(
+                    target_feature = "avx2",
+                    target_feature = "avx512vl",
+                    target_feature = "avx512vbmi"
+                ))]
                 32 => {
                     let swizzler = |bytes, idxs| {
-                        // Clamp out-of-range indices to the first byte of a
-                        // second, all-zero table.
-                        let idxs =
-                            x86::_mm256_min_epu8(idxs, Simd::<u8, 32>::splat(N as u8).into());
-                        x86::_mm256_permutex2var_epi8(bytes, idxs, x86::_mm256_setzero_si256())
+                        // SAFETY: this branch is compiled only when AVX2,
+                        // AVX-512VL, and AVX-512VBMI are enabled.
+                        unsafe {
+                            // Clamp out-of-range indices to the first byte of a
+                            // second, all-zero table.
+                            let idxs =
+                                x86::_mm256_min_epu8(idxs, Simd::<u8, 32>::splat(N as u8).into());
+                            x86::_mm256_permutex2var_epi8(
+                                bytes,
+                                idxs,
+                                x86::_mm256_setzero_si256(),
+                            )
+                        }
                     };
                     transize(swizzler, self, idxs)
                 }
@@ -91,14 +103,25 @@ impl<const N: usize> Simd<u8, N> {
                 #[cfg(target_feature = "ssse3")]
                 32 => transize(swizzle_dyn_split::<32, 16>, self, idxs),
                 // Notable absence: avx512bw pshufb shuffle
-                #[cfg(all(target_feature = "avx512vl", target_feature = "avx512vbmi"))]
+                #[cfg(all(
+                    target_feature = "avx512bw",
+                    target_feature = "avx512vbmi"
+                ))]
                 64 => {
                     let swizzler = |bytes, idxs| {
-                        // Clamp out-of-range indices to the first byte of a
-                        // second, all-zero table.
-                        let idxs =
-                            x86::_mm512_min_epu8(idxs, Simd::<u8, 64>::splat(N as u8).into());
-                        x86::_mm512_permutex2var_epi8(bytes, idxs, x86::_mm512_setzero_si512())
+                        // SAFETY: this branch is compiled only when AVX-512BW
+                        // and AVX-512VBMI are enabled.
+                        unsafe {
+                            // Clamp out-of-range indices to the first byte of a
+                            // second, all-zero table.
+                            let idxs =
+                                x86::_mm512_min_epu8(idxs, Simd::<u8, 64>::splat(N as u8).into());
+                            x86::_mm512_permutex2var_epi8(
+                                bytes,
+                                idxs,
+                                x86::_mm512_setzero_si512(),
+                            )
+                        }
                     };
                     transize(swizzler, self, idxs)
                 }
