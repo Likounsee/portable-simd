@@ -168,13 +168,15 @@ pub impl(self) trait SimdFloat: Copy {
 
     /// Returns the minimum of each element.
     ///
-    /// If one of the values is `NAN`, then the other value is returned.
+    /// If one of the values is `NAN`, then the other value is returned. If both values compare
+    /// equal, including `+0.0` and `-0.0`, either value may be returned.
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn simd_min(self, other: Self) -> Self;
 
     /// Returns the maximum of each element.
     ///
-    /// If one of the values is `NAN`, then the other value is returned.
+    /// If one of the values is `NAN`, then the other value is returned. If both values compare
+    /// equal, including `+0.0` and `-0.0`, either value may be returned.
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn simd_max(self, other: Self) -> Self;
 
