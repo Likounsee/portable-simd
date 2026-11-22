@@ -487,7 +487,7 @@ where
         struct Extract<const N: usize, const START: usize>;
         impl<const N: usize, const START: usize, const LEN: usize> Swizzle<LEN> for Extract<N, START> {
             const INDEX: [usize; LEN] = const {
-                assert!(START + LEN <= N, "index out of bounds");
+                assert!(START <= N && LEN <= N - START, "index out of bounds");
                 let mut index = [0; LEN];
                 let mut i = 0;
                 while i < LEN {
