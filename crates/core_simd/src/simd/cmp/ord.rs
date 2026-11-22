@@ -183,10 +183,7 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 0>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 0>(self, other);
                 }
                 !self & other
             }
@@ -197,10 +194,7 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 1>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 1>(self, other);
                 }
                 !self | other
             }
@@ -211,10 +205,7 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 2>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 2>(self, other);
                 }
                 self & !other
             }
@@ -225,10 +216,7 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 3>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 3>(self, other);
                 }
                 self | !other
             }
@@ -240,10 +228,7 @@ macro_rules! impl_mask {
             fn simd_max(self, other: Self) -> Self {
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 4>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 4>(self, other);
                 }
                 self | other
             }
@@ -252,10 +237,7 @@ macro_rules! impl_mask {
             fn simd_min(self, other: Self) -> Self {
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return loongarch_mask_i8x4_cmp::<_, N, 5>(
-                        self,
-                        other,
-                    );
+                    return loongarch_mask_i8x4_cmp::<_, N, 5>(self, other);
                 }
                 self & other
             }
