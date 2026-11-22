@@ -2309,7 +2309,14 @@ macro_rules! impl_float_tests {
                         // subnormal policy to the inputs and result.
                         use test_helpers::subnormals::{flush, flush_in};
                         let actual = flush(Vector::<LANES>::from_array(x).algebraic_reduce_sum());
+                        // Relaxed algebraic operations may flush subnormal inputs, but
+                        // they are not required to do so. Accept both valid target
+                        // behaviors: preserving the input subnormal or flushing it.
                         let expected = x
+                            .iter()
+                            .copied()
+                            .fold(0.0, Scalar::algebraic_add);
+                        let expected_flushed = x
                             .iter()
                             .copied()
                             .map(flush_in)
@@ -2322,9 +2329,10 @@ macro_rules! impl_float_tests {
                         // Keep a nonzero tolerance when the input magnitude is subnormal:
                         // multiplying a subnormal by EPSILON can underflow to zero.
                         let tolerance = magnitude.max(Scalar::MIN_POSITIVE) * Scalar::EPSILON * 128.0;
+                        let matches = |expected| (actual - expected).abs() <= tolerance;
                         proptest::prop_assert!(
-                            (actual - expected).abs() <= tolerance,
-                            "actual={actual:?}, expected={expected:?}, tolerance={tolerance:?}",
+                            matches(expected) || matches(expected_flushed),
+                            "actual={actual:?}, expected={expected:?}, expected_flushed={expected_flushed:?}, tolerance={tolerance:?}",
                         );
                         Ok(())
                     });
