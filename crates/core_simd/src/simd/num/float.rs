@@ -277,28 +277,29 @@ pub impl(self) trait SimdFloat: Copy {
     fn reduce_min(self) -> Self::Scalar;
 }
 
-// Keep floating-point classification and mask construction behind a
-// codegen boundary. Some Windows GNU configurations miscompile the f16 path
-// when SIMD-to-array conversion and mask construction are inlined into
-// SimdFloat::to_mask.
+// Keep floating-point classification behind a codegen boundary, but pass
+// references to scalar arrays rather than SIMD vectors. On Windows GNU, passing
+// f16 SIMD values (or their bitcast vectors) across a helper boundary corrupts
+// zero lanes even though their in-memory representation is intact.
 #[inline(never)]
-fn f16_to_mask_lanes<const N: usize>(bits: Simd<u16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Receive integer lanes so the Windows GNU ABI cannot canonicalize or
-    // otherwise alter f16 values before their magnitude bits are inspected.
-    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff != 0))
+fn f16_to_mask_lanes<const N: usize>(value: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
+    let raw_bytes = value.as_ptr().cast::<u8>();
+    let lanes = core::array::from_fn(|i| {
+        // SAFETY: each f16 lane occupies two initialized bytes.
+        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
+        u16::from_ne_bytes(bytes) & 0x7fff != 0
+    });
+    Mask::from_array(lanes)
 }
 
 #[inline(never)]
-fn f32_to_mask_lanes<const N: usize>(bits: Simd<u32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
-    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff_ffff != 0))
+fn f32_to_mask_lanes<const N: usize>(value: &[f32; N]) -> Mask<<i32 as SimdElement>::Mask, N> {
+    Mask::from_array(value.map(|lane| lane.to_bits() & 0x7fff_ffff != 0))
 }
 
 #[inline(never)]
-fn f64_to_mask_lanes<const N: usize>(bits: Simd<u64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
-    Mask::from_array(
-        bits.as_array()
-            .map(|lane| lane & 0x7fff_ffff_ffff_ffff != 0),
-    )
+fn f64_to_mask_lanes<const N: usize>(value: &[f64; N]) -> Mask<<i64 as SimdElement>::Mask, N> {
+    Mask::from_array(value.map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0))
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -397,7 +398,7 @@ macro_rules! impl_trait {
                 {
                     // Compare magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
-                    $to_mask(self.to_bits())
+                    $to_mask(self.as_array())
                 }
             }
 
