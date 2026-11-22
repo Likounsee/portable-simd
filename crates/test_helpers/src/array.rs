@@ -131,7 +131,6 @@ impl<T: ValueTree, const LANES: usize> ValueTree for ArrayValueTree<[T; LANES]> 
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::try_init_array;
