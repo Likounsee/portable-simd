@@ -282,30 +282,20 @@ pub impl(self) trait SimdFloat: Copy {
 // when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Reinterpret the SIMD register as integer lanes before inspecting its
-    // magnitude bits. This avoids floating-point comparisons that may flush
-    // subnormal f16 values to zero on some targets.
-    let bits = value.to_bits();
+fn f16_to_mask_lanes<const N: usize>(bits: Simd<u16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
+    // Receive integer lanes so the Windows GNU ABI cannot canonicalize or
+    // otherwise alter f16 values before their magnitude bits are inspected.
     Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff != 0))
 }
 
 #[inline(never)]
-fn f32_to_mask_lanes<const N: usize>(value: Simd<f32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
-    Mask::from_array(
-        value
-            .as_array()
-            .map(|lane| lane.to_bits() & 0x7fff_ffff != 0),
-    )
+fn f32_to_mask_lanes<const N: usize>(bits: Simd<u32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
+    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff_ffff != 0))
 }
 
 #[inline(never)]
-fn f64_to_mask_lanes<const N: usize>(value: Simd<f64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
-    Mask::from_array(
-        value
-            .as_array()
-            .map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0),
-    )
+fn f64_to_mask_lanes<const N: usize>(bits: Simd<u64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
+    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff_ffff_ffff_ffff != 0))
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -404,7 +394,7 @@ macro_rules! impl_trait {
                 {
                     // Compare magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
-                    $to_mask(self)
+                    $to_mask(self.to_bits())
                 }
             }
 
