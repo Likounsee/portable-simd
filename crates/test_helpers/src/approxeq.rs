@@ -85,43 +85,6 @@ impl_float_approxeq! {
     f64, u64, 0x8000_0000_0000_0000;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::ApproxEq;
-
-    #[test]
-    fn finite_values_never_match_nan_or_infinity() {
-        assert!(!1.0_f32.approxeq(&f32::NAN, i64::MAX));
-        assert!(!f32::NAN.approxeq(&1.0_f32, i64::MAX));
-        assert!(!1.0_f32.approxeq(&f32::INFINITY, i64::MAX));
-        assert!(!f32::NEG_INFINITY.approxeq(&1.0_f32, i64::MAX));
-        assert!(!f32::INFINITY.approxeq(&f32::NEG_INFINITY, i64::MAX));
-    }
-
-    #[test]
-    fn matching_special_values_and_signed_zero_are_equal() {
-        assert!(f32::NAN.approxeq(&f32::NAN, 0));
-        assert!(f64::INFINITY.approxeq(&f64::INFINITY, 0));
-        assert!(f64::NEG_INFINITY.approxeq(&f64::NEG_INFINITY, 0));
-        assert!(0.0_f64.approxeq(&-0.0_f64, 0));
-    }
-
-    #[test]
-    fn ulp_distance_is_correct_across_zero_and_exponent_boundaries() {
-        assert!(0.0_f32.approxeq(&f32::from_bits(1), 1));
-        assert!((-f32::from_bits(1)).approxeq(&0.0_f32, 1));
-        assert!(f32::from_bits(0x007f_ffff).approxeq(&f32::MIN_POSITIVE, 1));
-        assert!(!0.0_f32.approxeq(&f32::from_bits(2), 1));
-        assert!(!1.0_f32.approxeq(&f32::from_bits(1.0_f32.to_bits() + 2), 1));
-        assert!(f64::MAX.approxeq(&f64::MAX, 0));
-    }
-
-    #[test]
-    fn negative_ulp_allowance_rejects_unequal_values() {
-        assert!(!1.0_f32.approxeq(&1.0_f32.next_up(), -1));
-    }
-}
-
 impl<T: ApproxEq, const N: usize> ApproxEq for [T; N] {
     fn approxeq(&self, other: &Self, ulps: i64) -> bool {
         self.iter()
@@ -172,4 +135,42 @@ macro_rules! prop_assert_approxeq {
             proptest::prop_assert_eq!(ApproxEqWrapper(&a, $ulps), b);
         }
     };
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::ApproxEq;
+
+    #[test]
+    fn finite_values_never_match_nan_or_infinity() {
+        assert!(!1.0_f32.approxeq(&f32::NAN, i64::MAX));
+        assert!(!f32::NAN.approxeq(&1.0_f32, i64::MAX));
+        assert!(!1.0_f32.approxeq(&f32::INFINITY, i64::MAX));
+        assert!(!f32::NEG_INFINITY.approxeq(&1.0_f32, i64::MAX));
+        assert!(!f32::INFINITY.approxeq(&f32::NEG_INFINITY, i64::MAX));
+    }
+
+    #[test]
+    fn matching_special_values_and_signed_zero_are_equal() {
+        assert!(f32::NAN.approxeq(&f32::NAN, 0));
+        assert!(f64::INFINITY.approxeq(&f64::INFINITY, 0));
+        assert!(f64::NEG_INFINITY.approxeq(&f64::NEG_INFINITY, 0));
+        assert!(0.0_f64.approxeq(&-0.0_f64, 0));
+    }
+
+    #[test]
+    fn ulp_distance_is_correct_across_zero_and_exponent_boundaries() {
+        assert!(0.0_f32.approxeq(&f32::from_bits(1), 1));
+        assert!((-f32::from_bits(1)).approxeq(&0.0_f32, 1));
+        assert!(f32::from_bits(0x007f_ffff).approxeq(&f32::MIN_POSITIVE, 1));
+        assert!(!0.0_f32.approxeq(&f32::from_bits(2), 1));
+        assert!(!1.0_f32.approxeq(&f32::from_bits(1.0_f32.to_bits() + 2), 1));
+        assert!(f64::MAX.approxeq(&f64::MAX, 0));
+    }
+
+    #[test]
+    fn negative_ulp_allowance_rejects_unequal_values() {
+        assert!(!1.0_f32.approxeq(&1.0_f32.next_up(), -1));
+    }
 }

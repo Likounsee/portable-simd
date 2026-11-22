@@ -281,6 +281,7 @@ pub impl(self) trait SimdFloat: Copy {
 // codegen boundary. Some Windows GNU configurations miscompile the f16 path
 // when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
+#[cfg(not(target_arch = "arm"))]
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> [bool; N] {
     // Inspect the array storage behind a reference, avoiding a SIMD f16 value
@@ -293,11 +294,13 @@ fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> [bool; N] {
     })
 }
 
+#[cfg(not(target_arch = "arm"))]
 #[inline(never)]
 fn f32_to_mask_lanes<const N: usize>(lanes: &[f32; N]) -> [bool; N] {
     lanes.map(|lane| lane.to_bits() & 0x7fff_ffff != 0)
 }
 
+#[cfg(not(target_arch = "arm"))]
 #[inline(never)]
 fn f64_to_mask_lanes<const N: usize>(lanes: &[f64; N]) -> [bool; N] {
     lanes.map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0)
