@@ -1,4 +1,4 @@
-#![feature(portable_simd]
+#![feature(portable_simd)]
 #![feature(f16)]
 
 macro_rules! layout_tests {
