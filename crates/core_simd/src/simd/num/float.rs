@@ -288,7 +288,10 @@ fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdEleme
     // where zero lanes were incorrectly treated as nonzero.
     // SAFETY: f16 and u16 have identical size and alignment, and every bit
     // pattern is valid for both types.
-    let bits: Simd<u16, N> = unsafe { core::mem::transmute_copy(lanes) };
+    let vector = Simd::from_array(*lanes);
+    // SAFETY: f16 and u16 SIMD vectors have identical size and alignment,
+    // and every f16 bit pattern is valid as a u16 bit pattern.
+    let bits: Simd<u16, N> = unsafe { core::mem::transmute_copy(&vector) };
     let magnitude = bits & Simd::splat(0x7fff);
     magnitude.simd_ne(Simd::splat(0))
 }
