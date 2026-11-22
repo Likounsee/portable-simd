@@ -1,3 +1,9 @@
+### 2026-11-22 — use scalar strict-provenance API for SIMD with_addr
+
+- Replaced the remaining wrapping-offset emulation in const and mutable SIMD pointer `with_addr` with lane-wise calls to the scalar `pointer.with_addr` API.
+- This removes the last `strict_provenance_magic` FIXME and avoids signed-difference arithmetic when changing addresses across the signed-address boundary.
+- Added regression coverage for zero, `isize::MAX`, `isize::MAX + 1`, and `usize::MAX` addresses for both const and mutable pointer vectors.
+
 ### 2026-11-22 — API contract documentation and stabilization status
 
 - Documented the signed MIN / -1 and MIN % -1 panic cases for Euclidean integer division/remainder, matching the scalar operations.

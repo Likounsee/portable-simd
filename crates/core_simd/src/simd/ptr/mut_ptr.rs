@@ -104,14 +104,11 @@ impl<T, const N: usize> SimdMutPtr for Simd<*mut T, N> {
 
     #[inline]
     fn with_addr(self, addr: Self::Usize) -> Self {
-        // FIXME(strict_provenance_magic): I am magic and should be a compiler intrinsic.
-        //
-        // In the mean-time, this operation is defined to be "as if" it was
-        // a wrapping_offset, so we can emulate it as such. This should properly
-        // restore pointer provenance even under today's compiler.
-        self.cast::<u8>()
-            .wrapping_offset(addr.cast::<isize>() - self.addr().cast::<isize>())
-            .cast()
+        let pointers = self.to_array();
+        let addresses = addr.to_array();
+        Simd::from_array(core::array::from_fn(|lane| {
+            pointers[lane].with_addr(addresses[lane])
+        }))
     }
 
     #[inline]

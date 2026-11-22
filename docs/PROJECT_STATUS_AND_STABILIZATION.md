@@ -76,7 +76,7 @@ The baseline commit and current head differ by 482 commits. The changes fall int
 - Expanded SIMD layout regression coverage, including `f16`.
 - Corrected the earlier documentation about possible trailing padding after tests established equal size for supported SIMD and array types in the covered layout matrix.
 - Clarified that equal size does not make references interchangeable and does not waive pointer validity, initialization, aliasing, or provenance requirements.
-- Replaced pointer-vector/integer transmute-based address conversions with lane-wise calls to scalar strict-provenance APIs for `addr`, `without_provenance`, and `without_provenance_mut`; `with_addr` remains expressed through provenance-preserving wrapping offsets until a compiler intrinsic is available.
+- Replaced pointer-vector/integer transmute-based address conversions with lane-wise calls to scalar strict-provenance APIs for `addr`, `without_provenance`, and `without_provenance_mut`; `with_addr` also uses the scalar strict-provenance API lane by lane, avoiding integer-difference emulation.
 - Clarified that unaligned reads/writes still access the full SIMD object size.
 
 **Impact:** clearer unsafe contracts and broader layout assertions. This is not a substitute for a compiler guarantee about every target ABI/layout or every future element type.

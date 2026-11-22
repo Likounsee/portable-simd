@@ -432,3 +432,19 @@ mod mut_ptr {
 
     }
 }
+
+#[test]
+fn with_addr_preserves_addresses_across_signed_boundary() {
+    let addresses = Simd::from_array([
+        0,
+        isize::MAX as usize,
+        isize::MAX as usize + 1,
+        usize::MAX,
+    ]);
+
+    let const_pointers = Simd::splat(core::ptr::without_provenance::<u8>(0));
+    assert_eq!(const_pointers.with_addr(addresses).addr(), addresses);
+
+    let mut_pointers = Simd::splat(core::ptr::without_provenance_mut::<u8>(0));
+    assert_eq!(mut_pointers.with_addr(addresses).addr(), addresses);
+}
