@@ -1,5 +1,5 @@
 # The Rust standard library's portable SIMD API
-![Build Status](https://github.com/rust-lang/portable-simd/actions/workflows/ci.yml/badge.svg?branch=main)
+![Build Status](https://github.com/Likounsee/portable-simd/actions/workflows/ci.yml/badge.svg?branch=main)
 
 Code repository for the [Portable SIMD Project Group](https://github.com/rust-lang/project-portable-simd).
 Please refer to [CONTRIBUTING.md](./CONTRIBUTING.md) for our contributing guidelines.
@@ -44,7 +44,7 @@ Currently, vectors may have up to 64 elements, but aliases are provided only up 
 Depending on the size of the primitive type, the number of lanes the vector will have varies. For example, 128-bit vectors have four `f32` lanes and two `f64` lanes.
 
 The supported element types are as follows:
-* **Floating Point:** `f32`, `f64`
+* **Floating Point:** `f16`, `f32`, `f64`
 * **Signed Integers:** `i8`, `i16`, `i32`, `i64`, `isize` (`i128` excluded)
 * **Unsigned Integers:** `u8`, `u16`, `u32`, `u64`, `usize` (`u128` excluded)
 * **Pointers:** `*const T` and `*mut T` (zero-sized metadata only)
@@ -56,4 +56,4 @@ The mask types have elements that are "truthy" values, like `bool`, but have an 
 [simd-guide]: ./beginners-guide.md
 [zulip-project-portable-simd]: https://rust-lang.zulipchat.com/#narrow/stream/257879-project-portable-simd
 [stdarch]: https://github.com/rust-lang/stdarch
-[docs]: https://rust-lang.github.io/portable-simd/core_simd
+[docs]: https://likounsee.github.io/portable-simd/core_simd
