@@ -7,9 +7,14 @@ macro_rules! layout_tests {
         mod $mod {
             test_helpers::test_lanes! {
                 fn no_padding<const LANES: usize>() {
-                    assert_eq!(
-                        size_of::<core_simd::simd::Simd::<$ty, LANES>>(),
-                        size_of::<[$ty; LANES]>(),
+                    type Vector = core_simd::simd::Simd<$ty, LANES>;
+                    type Array = [$ty; LANES];
+
+                    assert_eq!(size_of::<Vector>(), size_of::<Array>());
+                    assert!(
+                        align_of::<Vector>() >= align_of::<Array>(),
+                        "SIMD alignment must satisfy the array reference alignment for {} lanes",
+                        LANES,
                     );
                 }
             }
