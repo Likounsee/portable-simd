@@ -282,10 +282,10 @@ pub impl(self) trait SimdFloat: Copy {
 // when SIMD-to-array conversion and mask construction are inlined into
 // SimdFloat::to_mask.
 #[inline(never)]
-fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Read the stored representation directly: floating-point loads and
-    // SIMD bitcasts are miscompiled for f16 on the Windows GNU target.
-    let raw_bytes = lanes.as_ptr().cast::<u8>();
+fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
+    // Keep the SIMD value intact across the non-inlined boundary. Materializing
+    // and passing its backing array from `to_mask` triggers a Windows GNU miscompile.
+    let raw_bytes = value.as_array().as_ptr().cast::<u8>();
     let classified = core::array::from_fn(|i| {
         // SAFETY: each f16 lane occupies two initialized bytes. Volatile
         // reads prevent LLVM from folding the representation back into an
@@ -304,13 +304,13 @@ fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdEleme
 }
 
 #[inline(never)]
-fn f32_to_mask_lanes<const N: usize>(lanes: &[f32; N]) -> Mask<<i32 as SimdElement>::Mask, N> {
-    Mask::from_array(lanes.map(|lane| lane.to_bits() & 0x7fff_ffff != 0))
+fn f32_to_mask_lanes<const N: usize>(value: Simd<f32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
+    Mask::from_array(value.as_array().map(|lane| lane.to_bits() & 0x7fff_ffff != 0))
 }
 
 #[inline(never)]
-fn f64_to_mask_lanes<const N: usize>(lanes: &[f64; N]) -> Mask<<i64 as SimdElement>::Mask, N> {
-    Mask::from_array(lanes.map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0))
+fn f64_to_mask_lanes<const N: usize>(value: Simd<f64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
+    Mask::from_array(value.as_array().map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0))
 }
 
 trait AlgebraicReduce: SimdElement {
@@ -409,7 +409,7 @@ macro_rules! impl_trait {
                 {
                     // Compare magnitude bits so subnormals remain nonzero even on targets
                     // that flush floating-point subnormal comparisons to zero.
-                    $to_mask(self.as_array())
+                    $to_mask(self)
                 }
             }
 
