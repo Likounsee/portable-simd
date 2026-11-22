@@ -287,8 +287,15 @@ fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdEleme
     // SIMD bitcasts are miscompiled for f16 on the Windows GNU target.
     let raw_bytes = lanes.as_ptr().cast::<u8>();
     let classified = core::array::from_fn(|i| {
-        // SAFETY: each f16 lane occupies two initialized bytes.
-        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
+        // SAFETY: each f16 lane occupies two initialized bytes. Volatile
+        // reads prevent LLVM from folding the representation back into an
+        // f16 load or floating-point operation on affected Windows GNU targets.
+        let bytes = unsafe {
+            [
+                raw_bytes.add(2 * i).read_volatile(),
+                raw_bytes.add(2 * i + 1).read_volatile(),
+            ]
+        };
         u16::from_ne_bytes(bytes) & 0x7fff != 0
     });
     // Construct the mask here so no bool-array ABI boundary crosses the
