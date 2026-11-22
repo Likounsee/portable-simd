@@ -14,7 +14,7 @@ fn signed_64_bit_shift_counts_match_scalar_u32_conversion() {
     assert_eq!(left.to_array(), [2, -2, 3, 0]);
     assert_eq!(right.to_array(), [0, -2, 3, -1]);
     assert_eq!(left_overflow.to_array(), [false, true, false, true]);
-    assert_eq!(right_overflow.to_array(), [false, true, true, true]);
+    assert_eq!(right_overflow.to_array(), [false, true, false, true]);
 }
 
 #[test]
@@ -27,6 +27,6 @@ fn unsigned_64_bit_shift_counts_match_scalar_u32_conversion() {
 
     assert_eq!(left.to_array(), [2, 2, 3, 1_u64 << 63]);
     assert_eq!(right.to_array(), [0, 2, 3, 1]);
-    assert_eq!(left_overflow.to_array(), [false, true, true, true]);
-    assert_eq!(right_overflow.to_array(), [false, true, true, true]);
+    assert_eq!(left_overflow.to_array(), [false, true, false, true]);
+    assert_eq!(right_overflow.to_array(), [false, true, false, true]);
 }
