@@ -715,3 +715,12 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Corrected the #475 assessment: `gather_unchecked` currently routes through an all-true mask and a `T::default()` passthrough into `simd_gather`; a distinct maskless intrinsic is not present in this fork. Generated code must establish whether the backend eliminates this machinery.
 - Clarified #539 implementation shape: lane-wise algebraic add/sub/mul/div/rem call scalar algebraic operations per lane; relaxed FMA uses the SIMD intrinsic; unordered reduction uses the SIMD intrinsic for f32/f64 and a scalar fold for f16.
 - These are source-level findings, not performance claims. CI and generated-code inspection remain pending.
+
+
+### 2026-11-22 — fix integer shift overflow reporting, swizzle offset overflow, and float mask codegen
+
+- Fixed signed and unsigned 64-bit `overflowing_shl` / `overflowing_shr`: preserve the original lane shift count when computing the overflow mask instead of relying only on its truncated `u32` form. Added regression tests for counts at the lane width, high bits above bit 31, negative signed counts, and `u64::MAX`.
+- Fixed `Simd::shift_elements_left` so the const-generic offset check cannot overflow for very large offsets such as `usize::MAX`; added a regression test that expects the padding value in every lane.
+- Made `Simd::extract`'s compile-time bounds predicate overflow-safe by checking `START <= N` before subtracting from `N`.
+- Changed the non-ARM floating-point `to_mask` helpers to construct and return the correctly typed `Mask` inside the non-inlined helper. This avoids the Windows GNU bool-array ABI/codegen failure reported by the f16 regression; the ARM-specific path remains separately cfg-gated.
+- Validation: the current-head GitHub Actions run is queued. No local Rust toolchain is available in this environment, so compilation, formatting, Miri, and target-matrix results are not claimed until CI completes.

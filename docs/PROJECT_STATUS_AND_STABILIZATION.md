@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed code head:** `ff0b447646560d31508d032191e281c3736e9d3c`
+**Assessed code head:** `a74e0533ed08b7949c95c88540a2189c45c76d22`
 
 ## Executive summary
 
@@ -30,7 +30,7 @@ This distinction matters: the first CI was primarily exposing integration/visibi
 
 ## 2. What has materially improved since baseline
 
-The baseline commit and current head differ by 488 commits. The changes fall into these groups.
+The baseline commit and current head differ by 501 commits. The changes fall into these groups.
 
 ### A. Mask semantics and mask safety invariants
 
@@ -100,7 +100,7 @@ The baseline commit and current head differ by 488 commits. The changes fall int
 - Added reproducible codegen diagnostics as a separate quality check.
 - Added a compile-only x86 AVX-512 swizzle check that enables the exact target features required by the byte-minimum and byte-permute intrinsics without executing those instructions.
 
-The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 29/30 jobs with zero failures; only Miri partition 2 remains active. The assessed code head includes the AVX-512 compile-only swizzle check and the latest documentation/workflow follow-up. Its CI run is queued behind the still-active Miri partition from the preceding run. No current-head green claim is made. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. The current assessed code head is `a74e0533ed08b7949c95c88540a2189c45c76d22`; its GitHub Actions run is [run 45058202994](https://github.com/Likounsee/portable-simd/actions/runs/45058202994) and is pending behind an older in-progress matrix. No current-head green claim is made. CI concurrency is configured to keep the active run alive while GitHub retains only the latest pending run for the branch.
 
 ### H. Example correctness and documentation follow-up
 
@@ -349,3 +349,8 @@ The latest test and diagnostic changes are on `main`. The workflow has repeatedl
 
 - #475: `gather_unchecked` currently constructs an all-true mask and a `T::default()` passthrough, then calls the masked `simd_gather` intrinsic through `gather_select_ptr`. It is not a separate maskless intrinsic. Whether LLVM removes the mask/passthrough is an open code-generation question until the emitted IR and assembly are inspected.
 - #539: the five lane-wise algebraic arithmetic methods are expressed through scalar per-lane operations in the current implementation. The unordered SIMD reduction is a separate f32/f64 path; f16 reduction remains scalar. No vectorization or speedup is inferred from the API or tests alone.
+
+
+## 2026-11-22 follow-up: confirmed edge-case and codegen fixes
+
+The assessed head now includes four additional source-level corrections: full-width shift-count overflow reporting for signed and unsigned integer vectors; overflow-safe const-generic swizzle shifts and extraction bounds; and typed mask construction inside the non-ARM floating-point `to_mask` helpers to avoid a Windows GNU bool-array ABI/codegen failure. Regression coverage was added for 64-bit shift counts and `usize::MAX` swizzle offsets. The current-head CI run is pending; these changes are not yet described as fully validated.
