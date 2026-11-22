@@ -2287,8 +2287,17 @@ macro_rules! impl_float_tests {
                                 0.0
                             }
                         });
-                        let actual = Vector::<LANES>::from_array(x).algebraic_reduce_sum();
-                        let expected = x.iter().copied().fold(0.0, Scalar::algebraic_add);
+                        // ARMv7 NEON and older AltiVec configurations may flush
+                        // subnormal values during arithmetic. Algebraic reductions permit
+                        // that relaxed behavior, so compare after applying the same target
+                        // subnormal policy to the inputs and result.
+                        use test_helpers::subnormals::{flush, flush_in};
+                        let actual = flush(Vector::<LANES>::from_array(x).algebraic_reduce_sum());
+                        let expected = x
+                            .iter()
+                            .copied()
+                            .map(flush_in)
+                            .fold(0.0, Scalar::algebraic_add);
 
                         // ULP distance is unstable around zero, especially for f16
                         // under Miri. Bound the absolute error by the input magnitude
