@@ -25,8 +25,8 @@ fn unsigned_64_bit_shift_counts_keep_high_bits_for_overflow() {
     let (left, left_overflow) = value.overflowing_shl(amount);
     let (right, right_overflow) = value.overflowing_shr(amount);
 
-    assert_eq!(left.to_array(), [2, 2, 3, u64::MAX]);
-    assert_eq!(right.to_array(), [0, 2, 3, u64::MAX]);
+    assert_eq!(left.to_array(), [2, 2, 3, 1_u64 << 63]);
+    assert_eq!(right.to_array(), [0, 2, 3, 1]);
     assert_eq!(left_overflow.to_array(), [false, true, true, true]);
     assert_eq!(right_overflow.to_array(), [false, true, true, true]);
 }
