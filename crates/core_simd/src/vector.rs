@@ -2,7 +2,7 @@ use core::intrinsics::simd::SimdAlign;
 
 use crate::simd::{
     Mask, MaskElement,
-    cmp::{SimdPartialEq, SimdPartialOrd},
+    cmp::SimdPartialOrd,
     num::SimdUint,
     ptr::{SimdConstPtr, SimdMutPtr},
 };

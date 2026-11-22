@@ -56,7 +56,7 @@ where
                         // resources owned by the earlier value trees.
                         for slot in &mut tree[..initialized] {
                             // SAFETY: exactly the slots in this prefix were initialized.
-                            unsafe { slot.assume_init_drop() };
+                            slot.assume_init_drop();
                         }
                         return Err(error);
                     }
