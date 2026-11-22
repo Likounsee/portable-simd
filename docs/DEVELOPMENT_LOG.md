@@ -1,3 +1,8 @@
+### 2026-11-22 — example edge cases and example documentation
+
+- Updated the examples guide to identify the `core_simd` crate and use `cargo test -p core_simd --example dot_product` so it actually runs the example's regression tests.
+- Made `spectral_norm(0)` reject an empty matrix explicitly instead of returning NaN from a 0/0 norm calculation; added a regression test.
+
 ### 2026-11-22 — dot-product example correctness and CI run reliability
 
 - Fixed all SIMD dot-product example variants to include the scalar remainder when the input length is not divisible by four.

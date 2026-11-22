@@ -1,13 +1,9 @@
-### `stdsimd` examples
+### `core_simd` examples
 
-This crate is a port of example uses of `stdsimd`, mostly taken from the `packed_simd` crate.
+These examples demonstrate uses of the portable SIMD API. Several were originally adapted from the `packed_simd` crate.
 
-The examples contain, as in the case of `dot_product.rs`, multiple ways of solving the problem, in order to show idiomatic uses of SIMD and iteration of performance designs.
+Run the dot-product example's regression tests with:
 
-Run the tests with the command 
-
+```sh
+cargo test -p core_simd --example dot_product
 ```
-cargo run --example dot_product
-```
-
-and verify the code for `dot_product.rs` on your machine.

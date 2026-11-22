@@ -48,6 +48,7 @@ fn mult_atav(v: &[f64], out: &mut [f64], tmp: &mut [f64]) {
 }
 
 pub fn spectral_norm(n: usize) -> f64 {
+    assert!(n > 0, "matrix size must be nonzero");
     assert!(n % 2 == 0, "only even lengths are accepted");
 
     let mut u = vec![1.0; n];
@@ -67,9 +68,19 @@ fn dot(x: &[f64], y: &[f64]) -> f64 {
 }
 
 #[cfg(test)]
-#[test]
-fn test() {
-    assert_eq!(format!("{:.9}", spectral_norm(100)), "1.274219991");
+mod tests {
+    use super::spectral_norm;
+
+    #[test]
+    fn test() {
+        assert_eq!(format!("{:.9}", spectral_norm(100)), "1.274219991");
+    }
+
+    #[test]
+    #[should_panic(expected = "matrix size must be nonzero")]
+    fn rejects_empty_matrices() {
+        spectral_norm(0);
+    }
 }
 
 fn main() {
