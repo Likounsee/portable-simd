@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed code head:** `a74e0533ed08b7949c95c88540a2189c45c76d22`
+**Assessed code head:** `afc31bcbdd980454cf122d5c281e430e4552132c`
 
 ## Executive summary
 
@@ -30,7 +30,7 @@ This distinction matters: the first CI was primarily exposing integration/visibi
 
 ## 2. What has materially improved since baseline
 
-The baseline commit and current head differ by 501 commits. The changes fall into these groups.
+The baseline commit and assessed head differ by 510 commits. The changes fall into these groups.
 
 ### A. Mask semantics and mask safety invariants
 
@@ -100,7 +100,7 @@ The baseline commit and current head differ by 501 commits. The changes fall int
 - Added reproducible codegen diagnostics as a separate quality check.
 - Added a compile-only x86 AVX-512 swizzle check that enables the exact target features required by the byte-minimum and byte-permute intrinsics without executing those instructions.
 
-The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. The current assessed code head is `a74e0533ed08b7949c95c88540a2189c45c76d22`; its GitHub Actions run is [run 45058202994](https://github.com/Likounsee/portable-simd/actions/runs/45058202994) and is pending behind an older in-progress matrix. No current-head green claim is made. CI concurrency is configured to keep the active run alive while GitHub retains only the latest pending run for the branch.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. The current assessed code head is `afc31bcbdd980454cf122d5c281e430e4552132c`; its GitHub Actions run is [run 45064886004](https://github.com/Likounsee/portable-simd/actions/runs/45064886004). At the time of this update, the run is active: formatting and masked-memory checks have passed, while Miri and several architecture jobs are still running or queued. No current-head green claim is made. CI concurrency cancels superseded runs so stale jobs do not block validation of the newest commit.
 
 ### H. Example correctness and documentation follow-up
 
@@ -353,4 +353,4 @@ The latest test and diagnostic changes are on `main`. The workflow has repeatedl
 
 ## 2026-11-22 follow-up: confirmed edge-case and codegen fixes
 
-The assessed head includes overflow-safe const-generic swizzle shifts and extraction bounds, typed mask construction inside the non-ARM floating-point `to_mask` helpers to avoid a Windows GNU bool-array ABI/codegen failure, a LoongArch64 four-lane byte-mask workaround, and a subnormal-aware algebraic reduction test oracle for ARM/AltiVec. The 64-bit overflowing-shift implementation follows scalar semantics by converting each lane count to `u32` before checking overflow; high bits discarded by that conversion do not independently set the overflow mask. The CI run exposed and helped correct an earlier mismatch with this contract. Current-head validation is pending.
+The assessed head (`afc31bcbdd980454cf122d5c281e430e4552132c`) includes overflow-safe const-generic swizzle shifts and extraction bounds, typed mask construction inside the non-ARM floating-point `to_mask` helpers to avoid a Windows GNU bool-array ABI/codegen failure, a LoongArch64 four-lane byte-mask workaround, and a subnormal-aware algebraic reduction test oracle for ARM/AltiVec. The 64-bit overflowing-shift implementation follows scalar semantics by converting each lane count to `u32` before checking overflow; high bits discarded by that conversion do not independently set the overflow mask. The CI run exposed and helped correct an earlier mismatch with this contract. Current-head validation is in progress.
