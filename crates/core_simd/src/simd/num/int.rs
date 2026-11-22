@@ -48,14 +48,22 @@ pub impl(self) trait SimdInt: Copy {
 
     /// Shifts each lane left without masking the shift amount.
     ///
+    /// Each lane's shift amount is converted to `u32`, matching the scalar
+    /// integer shift operation, before it is checked against the lane width.
+    ///
     /// # Safety
-    /// Every lane's shift amount must be nonnegative and less than the lane bit width.
+    /// After conversion to `u32`, every lane's shift amount must be less than
+    /// the lane bit width.
     unsafe fn unchecked_shl(self, rhs: Self) -> Self;
 
     /// Shifts each lane right without masking the shift amount.
     ///
+    /// Each lane's shift amount is converted to `u32`, matching the scalar
+    /// integer shift operation, before it is checked against the lane width.
+    ///
     /// # Safety
-    /// Every lane's shift amount must be nonnegative and less than the lane bit width.
+    /// After conversion to `u32`, every lane's shift amount must be less than
+    /// the lane bit width.
     unsafe fn unchecked_shr(self, rhs: Self) -> Self;
 
     /// Rotates every lane's bits to the left by the same number of bits.
@@ -429,7 +437,7 @@ macro_rules! impl_trait {
             #[inline]
             unsafe fn unchecked_shl(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
+                    // SAFETY: After conversion to u32, the caller guarantees the shift amount is less than the lane width.
                     unsafe { self.as_array()[lane].unchecked_shl(rhs.as_array()[lane] as u32) }
                 }))
             }
@@ -437,7 +445,7 @@ macro_rules! impl_trait {
             #[inline]
             unsafe fn unchecked_shr(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees every shift amount is nonnegative and less than the lane width.
+                    // SAFETY: After conversion to u32, the caller guarantees the shift amount is less than the lane width.
                     unsafe { self.as_array()[lane].unchecked_shr(rhs.as_array()[lane] as u32) }
                 }))
             }
