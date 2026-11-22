@@ -1,3 +1,10 @@
+### 2026-11-22 — cleanup, panic-safe array teardown, and repository maintenance fixes
+
+- Fixed the rustfmt failure in the f16 byte-conversion test and corrected the remaining ToBytes docs for floating-point values.
+- Removed Clippy warnings by keeping ARM-only-unused float mask helpers out of ARM builds and moving the ApproxEq test module after production items.
+- Changed the array initialization guard to use slice drop glue, ensuring the remainder of an initialized prefix is dropped if one element destructor panics; added a regression test.
+- Fixed the contributor instructions' invalid git command, corrected the bug-report dependency example to this fork's crate, and added argument validation to subtree-sync.sh.
+
 ### 2026-11-22 — fix pointer provenance handling and complete layout lane coverage
 
 - Replaced vector pointer/integer transmute-based implementations of addr, without_provenance, and without_provenance_mut with lane-wise calls to Rust's scalar strict-provenance APIs. The previous transmute-based implementation relied on compiler/sysroot special handling and was not an appropriate implementation for the external as_crate build.

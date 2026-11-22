@@ -41,10 +41,15 @@ struct ArrayInitGuard<T> {
 
 impl<T> Drop for ArrayInitGuard<T> {
     fn drop(&mut self) {
-        for index in 0..self.initialized {
-            // SAFETY: the constructor increments initialized only after writing
-            // a valid T into this slot; all earlier slots are therefore initialized.
-            unsafe { self.ptr.add(index).drop_in_place() };
+        // SAFETY: the constructor increments initialized only after writing a
+        // valid T into the slot. Therefore this slice is exactly the initialized
+        // prefix, and slice drop glue also cleans up the remaining elements if
+        // one element's destructor panics.
+        unsafe {
+            core::ptr::drop_in_place(core::ptr::slice_from_raw_parts_mut(
+                self.ptr,
+                self.initialized,
+            ));
         }
     }
 }
@@ -134,7 +139,7 @@ impl<T: ValueTree, const LANES: usize> ValueTree for ArrayValueTree<[T; LANES]> 
 #[cfg(test)]
 mod tests {
     use super::try_init_array;
-    use core::sync::atomic::{AtomicUsize, Ordering};
+    use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     use std::sync::Arc;
 
     struct DropCounter(Arc<AtomicUsize>);
@@ -187,6 +192,44 @@ mod tests {
 
         assert_eq!(drops.load(Ordering::SeqCst), 0);
         drop(values);
+        assert_eq!(drops.load(Ordering::SeqCst), 3);
+    }
+
+    struct PanicOnceDrop {
+        drops: Arc<AtomicUsize>,
+        panic_once: Arc<AtomicBool>,
+    }
+
+    impl Drop for PanicOnceDrop {
+        fn drop(&mut self) {
+            self.drops.fetch_add(1, Ordering::SeqCst);
+            if self.panic_once.swap(false, Ordering::SeqCst) {
+                panic!("simulated element destructor panic");
+            }
+        }
+    }
+
+    #[test]
+    fn initialized_prefix_cleanup_continues_after_a_destructor_panics() {
+        let drops = Arc::new(AtomicUsize::new(0));
+        let panic_once = Arc::new(AtomicBool::new(true));
+        let result = std::panic::catch_unwind({
+            let drops = Arc::clone(&drops);
+            let panic_once = Arc::clone(&panic_once);
+            move || {
+                let _ = try_init_array::<_, (), 4>(|index| {
+                    if index == 3 {
+                        return Err(());
+                    }
+                    Ok(PanicOnceDrop {
+                        drops: Arc::clone(&drops),
+                        panic_once: Arc::clone(&panic_once),
+                    })
+                });
+            }
+        });
+
+        assert!(result.is_err());
         assert_eq!(drops.load(Ordering::SeqCst), 3);
     }
 }

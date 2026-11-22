@@ -12,6 +12,15 @@
 
 set -eou pipefail
 
+usage() {
+    echo "Usage: $0 pull | $0 push <github-username>" >&2
+}
+
+if [ "$#" -lt 1 ]; then
+    usage
+    exit 2
+fi
+
 git fetch origin
 
 if [ "$(git rev-parse --show-prefix)" != "" ]; then
@@ -26,15 +35,27 @@ fi
 
 today=$(date +%Y-%m-%d)
 
-case $1 in
+case "$1" in
     "push")
+        if [ "$#" -ne 2 ] || [ -z "${2:-}" ]; then
+            usage
+            exit 2
+        fi
         username=${2}
         branch=sync-to-rust-${today}
         rustc-josh-sync push "${branch}" "${username}"
         ;;
     "pull")
+        if [ "$#" -ne 1 ]; then
+            usage
+            exit 2
+        fi
         branch=sync-from-rust-${today}
         git checkout -B "${branch}"
         rustc-josh-sync pull
+        ;;
+    *)
+        usage
+        exit 2
         ;;
 esac
