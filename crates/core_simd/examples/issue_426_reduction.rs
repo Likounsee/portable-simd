@@ -23,7 +23,10 @@ fn scalar(data: &[f32]) -> f32 {
     assert_eq!(data.len() % RECORD_WIDTH, 0);
 
     let mut sum = 0.0_f32;
-    for record in data.chunks_exact(RECORD_WIDTH) {
+    let (records, remainder) = data.as_chunks::<RECORD_WIDTH>();
+    assert!(remainder.is_empty());
+
+    for record in records {
         let x = record[0];
         let y = record[1];
         let z = record[2];
@@ -42,8 +45,11 @@ fn simd_reduce_each_iteration(data: &[f32]) -> f32 {
     let direction = f32x4::from_array(DIRECTION);
     let mut sum = 0.0_f32;
 
-    for record in data.chunks_exact(RECORD_WIDTH) {
-        let values = f32x4::from_array(record.try_into().unwrap());
+    let (records, remainder) = data.as_chunks::<RECORD_WIDTH>();
+    assert!(remainder.is_empty());
+
+    for record in records {
+        let values = f32x4::from_array(*record);
         sum += ((values - position) * direction).reduce_sum();
     }
     sum
@@ -57,8 +63,11 @@ fn simd_accumulate_then_reduce(data: &[f32]) -> f32 {
     let direction = f32x4::from_array(DIRECTION);
     let mut sums = f32x4::splat(0.0);
 
-    for record in data.chunks_exact(RECORD_WIDTH) {
-        let values = f32x4::from_array(record.try_into().unwrap());
+    let (records, remainder) = data.as_chunks::<RECORD_WIDTH>();
+    assert!(remainder.is_empty());
+
+    for record in records {
+        let values = f32x4::from_array(*record);
         sums += (values - position) * direction;
     }
 
@@ -79,14 +88,17 @@ fn simd_soa_accumulate_then_reduce(x: &[f32], y: &[f32], z: &[f32]) -> f32 {
     let direction_z = f32x4::splat(DIRECTION[2]);
     let mut sums = f32x4::splat(0.0);
 
-    for ((x, y), z) in x
-        .chunks_exact(4)
-        .zip(y.chunks_exact(4))
-        .zip(z.chunks_exact(4))
-    {
-        let x = f32x4::from_array(x.try_into().unwrap());
-        let y = f32x4::from_array(y.try_into().unwrap());
-        let z = f32x4::from_array(z.try_into().unwrap());
+    let (x_chunks, x_remainder) = x.as_chunks::<4>();
+    let (y_chunks, y_remainder) = y.as_chunks::<4>();
+    let (z_chunks, z_remainder) = z.as_chunks::<4>();
+    assert!(x_remainder.is_empty());
+    assert!(y_remainder.is_empty());
+    assert!(z_remainder.is_empty());
+
+    for ((x, y), z) in x_chunks.iter().zip(y_chunks).zip(z_chunks) {
+        let x = f32x4::from_array(*x);
+        let y = f32x4::from_array(*y);
+        let z = f32x4::from_array(*z);
         sums += (x - position_x) * direction_x
             + (y - position_y) * direction_y
             + (z - position_z) * direction_z;
@@ -137,7 +149,7 @@ fn main() {
     let mut x = Vec::with_capacity(records);
     let mut y = Vec::with_capacity(records);
     let mut z = Vec::with_capacity(records);
-    for record in data.chunks_exact(RECORD_WIDTH) {
+    for record in data.as_chunks::<RECORD_WIDTH>().0 {
         x.push(record[0]);
         y.push(record[1]);
         z.push(record[2]);
