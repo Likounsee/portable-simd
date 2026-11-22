@@ -90,9 +90,8 @@ fn unsigned_integer_byte_conversions_roundtrip_all_endiannesses() {
 
 #[test]
 fn f16_byte_conversions_preserve_all_bit_patterns_and_endiannesses() {
-    let values: Simd<f16, 4> = Simd::from_bits(Simd::<u16, 4>::from_array([
-        0x0000, 0x8000, 0x7e11, 0xfc01,
-    ]));
+    let values: Simd<f16, 4> =
+        Simd::from_bits(Simd::<u16, 4>::from_array([0x0000, 0x8000, 0x7e11, 0xfc01]));
 
     assert_eq!(
         Simd::<f16, 4>::from_ne_bytes(values.to_ne_bytes()).to_bits(),

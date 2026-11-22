@@ -19,16 +19,15 @@ pub impl(self) trait ToBytes {
     /// order.
     fn to_ne_bytes(self) -> Self::Bytes;
 
-    /// Returns the memory representation of this integer as a byte array in big-endian
+    /// Returns the memory representation of this value as a byte array in big-endian
     /// (network) byte order.
     fn to_be_bytes(self) -> Self::Bytes;
 
-    /// Returns the memory representation of this integer as a byte array in little-endian
+    /// Returns the memory representation of this value as a byte array in little-endian
     /// byte order.
     fn to_le_bytes(self) -> Self::Bytes;
 
-    /// Creates a value from its memory representation in native byte order as a byte array
-    /// in native endianness.
+    /// Creates a value from its memory representation in native byte order.
     fn from_ne_bytes(bytes: Self::Bytes) -> Self;
 
     /// Creates a value from its representation as a byte array in big-endian byte order.
