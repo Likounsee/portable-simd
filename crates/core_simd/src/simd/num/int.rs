@@ -628,9 +628,12 @@ macro_rules! impl_trait {
             fn overflowing_shl(self, rhs: Self) -> (Self, Self::Mask) {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) =
-                        self.as_array()[lane].overflowing_shl(rhs.as_array()[lane] as u32);
-                    overflow[lane] = did_overflow;
+                    let shift = rhs.as_array()[lane];
+                    let (value, did_overflow) = self.as_array()[lane].overflowing_shl(shift as u32);
+                    // Casting a 64-bit lane to u32 can discard high shift-count bits.
+                    // The scalar operation sees only u32, but SIMD lanes must still
+                    // report overflow for the original count when it is >= the lane width.
+                    overflow[lane] = did_overflow || (shift as u128) >= <$ty>::BITS as u128;
                     value
                 }));
                 let overflow = Simd::<$ty, N>::from_array(
@@ -644,9 +647,12 @@ macro_rules! impl_trait {
             fn overflowing_shr(self, rhs: Self) -> (Self, Self::Mask) {
                 let mut overflow = [false; N];
                 let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) =
-                        self.as_array()[lane].overflowing_shr(rhs.as_array()[lane] as u32);
-                    overflow[lane] = did_overflow;
+                    let shift = rhs.as_array()[lane];
+                    let (value, did_overflow) = self.as_array()[lane].overflowing_shr(shift as u32);
+                    // Casting a 64-bit lane to u32 can discard high shift-count bits.
+                    // The scalar operation sees only u32, but SIMD lanes must still
+                    // report overflow for the original count when it is >= the lane width.
+                    overflow[lane] = did_overflow || (shift as u128) >= <$ty>::BITS as u128;
                     value
                 }));
                 let overflow = Simd::<$ty, N>::from_array(
