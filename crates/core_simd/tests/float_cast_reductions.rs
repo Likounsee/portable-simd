@@ -843,3 +843,27 @@ fn float_to_int_unchecked_f16_to_u64_matches_scalar_truncation() {
     let actual = unsafe { vector.to_int_unchecked::<u64>() };
     assert_eq!(actual.to_array(), values.map(|value| value as u64));
 }
+
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
+#[test]
+fn simd_f16_sum_and_product_follow_iterator_identities() {
+    use core_simd::simd::Simd;
+
+    let values = [
+        Simd::from_array([1.0_f16, 2.0, 3.0, 4.0]),
+        Simd::from_array([2.0_f16, 3.0, 4.0, 5.0]),
+    ];
+
+    let sum: Simd<f16, 4> = values.into_iter().sum();
+    let product: Simd<f16, 4> = values.into_iter().product();
+    let empty_sum: Simd<f16, 4> = core::iter::empty().sum();
+    let empty_product: Simd<f16, 4> = core::iter::empty().product();
+
+    assert_eq!(sum.to_array(), [3.0_f16, 5.0, 7.0, 9.0]);
+    assert_eq!(product.to_array(), [2.0_f16, 6.0, 12.0, 20.0]);
+    assert_eq!(empty_sum.to_array(), [0.0_f16; 4]);
+    assert_eq!(empty_product.to_array(), [1.0_f16; 4]);
+}
