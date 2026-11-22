@@ -283,10 +283,14 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Classify each scalar lane from its IEEE-754 representation. Keeping both
-    // the scalar extraction and mask construction in this helper avoids the
-    // problematic Windows GNU f16 SIMD codegen path.
-    Mask::from_array(lanes.map(|lane| lane.to_bits() & 0x7fff != 0))
+    // Reinterpret the stored half-float lanes as integers before classifying
+    // them. This avoids scalar f16 loads/conversions in the Windows GNU path,
+    // where zero lanes were incorrectly treated as nonzero.
+    // SAFETY: f16 and u16 have identical size and alignment, and every bit
+    // pattern is valid for both types.
+    let bits: Simd<u16, N> = unsafe { core::mem::transmute_copy(lanes) };
+    let magnitude = bits & Simd::splat(0x7fff);
+    magnitude.simd_ne(Simd::splat(0))
 }
 
 #[inline(never)]
