@@ -446,12 +446,7 @@ fn with_addr_preserves_addresses_across_signed_boundary() {
 
 #[test]
 fn wrapping_pointer_offsets_match_scalar_semantics_at_usize_boundaries() {
-    let addresses = [
-        0,
-        1,
-        isize::MAX as usize,
-        usize::MAX,
-    ];
+    let addresses = [0, 1, isize::MAX as usize, usize::MAX];
     let counts = [
         usize::MAX,
         isize::MAX as usize,
@@ -459,9 +454,8 @@ fn wrapping_pointer_offsets_match_scalar_semantics_at_usize_boundaries() {
         1,
     ];
 
-    let const_pointers = Simd::<*const u8, 4>::from_array(
-        addresses.map(core::ptr::without_provenance::<u8>),
-    );
+    let const_pointers =
+        Simd::<*const u8, 4>::from_array(addresses.map(core::ptr::without_provenance::<u8>));
     let vector_counts = Simd::from_array(counts);
 
     let actual_add = const_pointers.wrapping_add(vector_counts).addr().to_array();
@@ -480,9 +474,8 @@ fn wrapping_pointer_offsets_match_scalar_semantics_at_usize_boundaries() {
     });
     assert_eq!(actual_sub, expected_sub);
 
-    let mut_pointers = Simd::<*mut u8, 4>::from_array(
-        addresses.map(core::ptr::without_provenance_mut::<u8>),
-    );
+    let mut_pointers =
+        Simd::<*mut u8, 4>::from_array(addresses.map(core::ptr::without_provenance_mut::<u8>));
     let actual_mut_add = mut_pointers.wrapping_add(vector_counts).addr().to_array();
     let expected_mut_add = core::array::from_fn(|lane| {
         core::ptr::without_provenance_mut::<u8>(addresses[lane])
