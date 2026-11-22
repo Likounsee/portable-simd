@@ -283,17 +283,17 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Reinterpret the stored half-float lanes as integers before classifying
-    // them. This avoids scalar f16 loads/conversions in the Windows GNU path,
-    // where zero lanes were incorrectly treated as nonzero.
-    // SAFETY: f16 and u16 have identical size and alignment, and every bit
-    // pattern is valid for both types.
-    let vector = Simd::from_array(*lanes);
-    // SAFETY: f16 and u16 SIMD vectors have identical size and alignment,
-    // and every f16 bit pattern is valid as a u16 bit pattern.
-    let bits: Simd<u16, N> = unsafe { core::mem::transmute_copy(&vector) };
-    let magnitude = bits & Simd::splat(0x7fff);
-    magnitude.simd_ne(Simd::splat(0))
+    // Read the stored representation directly: floating-point loads and
+    // SIMD bitcasts are miscompiled for f16 on the Windows GNU target.
+    let raw_bytes = lanes.as_ptr().cast::<u8>();
+    let classified = core::array::from_fn(|i| {
+        // SAFETY: each f16 lane occupies two initialized bytes.
+        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
+        u16::from_ne_bytes(bytes) & 0x7fff != 0
+    });
+    // Construct the mask here so no bool-array ABI boundary crosses the
+    // non-inlined helper boundary.
+    Mask::from_array(classified)
 }
 
 #[inline(never)]
