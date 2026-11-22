@@ -96,10 +96,10 @@ impl<T, const N: usize> SimdConstPtr for Simd<*const T, N> {
 
     #[inline]
     fn addr(self) -> Self::Usize {
-        // FIXME(strict_provenance_magic): I am magic and should be a compiler intrinsic.
-        // SAFETY: Pointer-to-integer transmutes are valid (if you are okay with losing the
-        // provenance).
-        unsafe { core::mem::transmute_copy(&self) }
+        // Use the scalar strict-provenance API rather than transmuting a vector
+        // of pointers. The scalar method guarantees that reading an address does
+        // not expose pointer provenance.
+        Simd::from_array(self.to_array().map(|pointer| pointer.addr()))
     }
 
     #[inline]

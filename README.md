@@ -39,7 +39,7 @@ Explanation: We construct our SIMD vectors with methods like `splat` or `from_ar
 
 ## Supported vectors
 
-Currently, vectors may have up to 64 elements, but aliases are provided only up to 512-bit vectors.
+Vectors support 1 to 64 lanes. Fixed-width aliases are provided for lane counts 1, 2, 4, 8, 16, 32, and 64; the total vector width therefore depends on the element type.
 
 Depending on the size of the primitive type, the number of lanes the vector will have varies. For example, 128-bit vectors have four `f32` lanes and two `f64` lanes.
 

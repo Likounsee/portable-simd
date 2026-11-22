@@ -1,3 +1,10 @@
+### 2026-11-22 — fix pointer provenance handling and complete layout lane coverage
+
+- Replaced vector pointer/integer transmute-based implementations of addr, without_provenance, and without_provenance_mut with lane-wise calls to Rust's scalar strict-provenance APIs. The previous transmute-based implementation relied on compiler/sysroot special handling and was not an appropriate implementation for the external as_crate build.
+- Expanded the SIMD/array size and alignment regression test to check every supported lane count (1 through 64) for every supported element type. This now matches the invariant cited by Simd::as_array and Simd::as_mut_array safety comments.
+- Corrected README lane-alias documentation and clarified that byte conversions apply to floating-point values as well as integers.
+- Validation is pending the new main-branch CI run.
+
 ### 2026-11-16 — synchronize sprint status and formatting
 
 - Updated the five-issue status table to reflect the current architecture-specific unchecked-swizzle paths, expanded integer/floating `to_mask` tests, f64 gather coverage, and AVX2 gather reference.

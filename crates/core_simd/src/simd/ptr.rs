@@ -13,12 +13,7 @@ use crate::simd::Simd;
 /// Equivalent to calling [`core::ptr::without_provenance`] on each element.
 #[inline]
 pub fn without_provenance<T, const N: usize>(addr: Simd<usize, N>) -> Simd<*const T, N> {
-    // An int-to-pointer transmute currently has exactly the intended semantics: it creates a
-    // pointer without provenance. Note that this is *not* a stable guarantee about transmute
-    // semantics, it relies on sysroot crates having special status.
-    // SAFETY: every valid integer is also a valid pointer (as long as you don't dereference that
-    // pointer).
-    unsafe { core::mem::transmute_copy(&addr) }
+    Simd::from_array(addr.to_array().map(core::ptr::without_provenance::<T>))
 }
 
 /// Creates mutable pointers with the given addresses and no provenance.
@@ -26,12 +21,7 @@ pub fn without_provenance<T, const N: usize>(addr: Simd<usize, N>) -> Simd<*cons
 /// Equivalent to calling [`core::ptr::without_provenance_mut`] on each element.
 #[inline]
 pub fn without_provenance_mut<T, const N: usize>(addr: Simd<usize, N>) -> Simd<*mut T, N> {
-    // An int-to-pointer transmute currently has exactly the intended semantics: it creates a
-    // pointer without provenance. Note that this is *not* a stable guarantee about transmute
-    // semantics, it relies on sysroot crates having special status.
-    // SAFETY: every valid integer is also a valid pointer (as long as you don't dereference that
-    // pointer).
-    unsafe { core::mem::transmute_copy(&addr) }
+    Simd::from_array(addr.to_array().map(core::ptr::without_provenance_mut::<T>))
 }
 
 /// Converts addresses back to pointers, picking up some previously "exposed" provenance.

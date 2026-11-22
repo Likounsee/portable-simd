@@ -15,7 +15,7 @@ pub impl(self) trait ToBytes {
         + SimdUint<Scalar = u8>
         + 'static;
 
-    /// Returns the memory representation of this integer as a byte array in native byte
+    /// Returns the memory representation of this value as a byte array in native byte
     /// order.
     fn to_ne_bytes(self) -> Self::Bytes;
 
@@ -27,14 +27,14 @@ pub impl(self) trait ToBytes {
     /// byte order.
     fn to_le_bytes(self) -> Self::Bytes;
 
-    /// Creates a native endian integer value from its memory representation as a byte array
+    /// Creates a value from its memory representation in native byte order as a byte array
     /// in native endianness.
     fn from_ne_bytes(bytes: Self::Bytes) -> Self;
 
-    /// Creates an integer value from its representation as a byte array in big endian.
+    /// Creates a value from its representation as a byte array in big-endian byte order.
     fn from_be_bytes(bytes: Self::Bytes) -> Self;
 
-    /// Creates an integer value from its representation as a byte array in little endian.
+    /// Creates a value from its representation as a byte array in little-endian byte order.
     fn from_le_bytes(bytes: Self::Bytes) -> Self;
 }
 
