@@ -859,8 +859,8 @@ fn simd_f16_sum_and_product_follow_iterator_identities() {
 
     let sum: Simd<f16, 4> = values.into_iter().sum();
     let product: Simd<f16, 4> = values.into_iter().product();
-    let empty_sum: Simd<f16, 4> = core::iter::empty().sum();
-    let empty_product: Simd<f16, 4> = core::iter::empty().product();
+    let empty_sum: Simd<f16, 4> = core::iter::empty::<Simd<f16, 4>>().sum();
+    let empty_product: Simd<f16, 4> = core::iter::empty::<Simd<f16, 4>>().product();
 
     assert_eq!(sum.to_array(), [3.0_f16, 5.0, 7.0, 9.0]);
     assert_eq!(product.to_array(), [2.0_f16, 6.0, 12.0, 20.0]);
