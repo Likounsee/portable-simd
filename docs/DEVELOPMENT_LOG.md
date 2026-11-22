@@ -1,3 +1,10 @@
+### 2026-11-22 — API contract documentation and stabilization status
+
+- Documented the signed MIN / -1 and MIN % -1 panic cases for Euclidean integer division/remainder, matching the scalar operations.
+- Documented that floating-point SIMD clamp panics for inverted bounds and NaN bounds, as enforced by its implementation.
+- Corrected BitEq's description to state that NaN payloads/signs are treated as equivalent rather than claiming strict bit identity for NaNs.
+- Refreshed the project status assessment to the current main commit, corrected the commit-distance count, and recorded the actual in-progress CI run without claiming it is green.
+
 ### 2026-11-22 — example edge cases and example documentation
 
 - Updated the examples guide to identify the `core_simd` crate and use `cargo test -p core_simd --example dot_product` so it actually runs the example's regression tests.

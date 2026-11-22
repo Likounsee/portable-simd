@@ -1,9 +1,9 @@
 # Portable SIMD — project status and stabilization assessment
 
-**Assessment date:** 2026-11-16  
+**Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `6d88cf5ab0098042c22855318a8eb33e1d678afb`
+**Assessed head:** `3d74e21212b267e8d4a5e5e990bc76ff7b2e009c`
 
 ## Executive summary
 
@@ -30,7 +30,7 @@ This distinction matters: the first CI was primarily exposing integration/visibi
 
 ## 2. What has materially improved since baseline
 
-The baseline commit and current head differ by 64 commits. The changes fall into these groups.
+The baseline commit and current head differ by 481 commits. The changes fall into these groups.
 
 ### A. Mask semantics and mask safety invariants
 
@@ -95,7 +95,17 @@ The baseline commit and current head differ by 64 commits. The changes fall into
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
 
-The last fully green run confirmed in the development log is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. Run [43744268908](https://github.com/Likounsee/portable-simd/actions/runs/43744268908), on 8cccd48, completed 29/30 with zero failures and one cancelled WASM release job. The current main head assessed here is 6d88cf5; its run [43944365944](https://github.com/Likounsee/portable-simd/actions/runs/43944365944) is pending with 56 jobs queued/running at the time of this update. No current-head green claim is made. The earlier run for `43b3bcd` was cancelled when a newer push superseded it.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 28/30 jobs with zero failures; the Miri partition 2 and WebAssembly SIMD128 release jobs are still running. The assessed main head is now `3d74e21`; its workflow run [45050648217](https://github.com/Likounsee/portable-simd/actions/runs/45050648217) is pending behind that active run. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
+
+### H. Example correctness and documentation follow-up
+
+- Fixed the SIMD dot-product example variants that previously ignored trailing elements when the input length was not divisible by four.
+- Added coverage for all remainder lengths over input sizes 0 through 17, and made every dot-product variant enforce equal input lengths.
+- Made the spectral-norm example reject a zero-sized matrix explicitly rather than return NaN from a zero-over-zero calculation.
+- Corrected the examples guide so its command runs the dot-product regression tests and refers to the current `core_simd` crate name.
+
+**Impact:** the examples now cover their documented input lengths and reject invalid shape combinations consistently. These are example/API-usage corrections, not changes to the SIMD compiler intrinsics.
+
 
 ## 3. Upstream issue triage
 

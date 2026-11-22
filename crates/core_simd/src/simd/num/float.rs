@@ -183,6 +183,9 @@ pub impl(self) trait SimdFloat: Copy {
     /// For each element in `self`, returns the corresponding element in `max` if the element is
     /// greater than `max`, and the corresponding element in `min` if the element is less
     /// than `min`.  Otherwise returns the element in `self`.
+    ///
+    /// # Panics
+    /// Panics if any lane has `min > max`, or if either bound is NaN.
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn simd_clamp(self, min: Self, max: Self) -> Self;
 

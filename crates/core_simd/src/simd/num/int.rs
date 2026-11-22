@@ -128,12 +128,14 @@ pub impl(self) trait SimdInt: Copy {
 
     /// Returns the Euclidean quotient of each lane.
     ///
-    /// Division by zero panics, matching the scalar integer operation.
+    /// Division by zero panics, matching the scalar integer operation. The signed `MIN / -1`
+    /// overflow case also panics, as it does for the scalar operation.
     fn div_euclid(self, rhs: Self) -> Self;
 
     /// Returns the Euclidean remainder of each lane.
     ///
-    /// Division by zero panics, matching the scalar integer operation.
+    /// Division by zero panics, matching the scalar integer operation. The signed `MIN % -1`
+    /// overflow case also panics, as it does for the scalar operation.
     fn rem_euclid(self, rhs: Self) -> Self;
 
     /// Returns the wrapped remainder and a mask indicating lanes where remainder overflowed.

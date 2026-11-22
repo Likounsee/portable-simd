@@ -1,4 +1,4 @@
-//! Compare numeric types by exact bit value.
+//! Compare numeric values by bit representation, treating all NaN values as equivalent.
 
 pub trait BitEq {
     fn biteq(&self, other: &Self) -> bool;
