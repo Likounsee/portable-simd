@@ -58,10 +58,12 @@ macro_rules! impl_float_approxeq {
                 let self_bits = self.to_bits() as $bits;
                 let other_bits = other.to_bits() as $bits;
                 let ordered = |bits: $bits| {
-                    if bits & ($sign_mask as $bits) != 0 {
-                        !bits
+                    let sign_mask = $sign_mask as $bits;
+                    let magnitude = bits & !sign_mask;
+                    if bits & sign_mask != 0 {
+                        sign_mask - magnitude
                     } else {
-                        bits | ($sign_mask as $bits)
+                        sign_mask + magnitude
                     }
                 };
                 let left = ordered(self_bits) as u64;
@@ -107,6 +109,7 @@ mod tests {
     #[test]
     fn ulp_distance_is_correct_across_zero_and_exponent_boundaries() {
         assert!(0.0_f32.approxeq(&f32::from_bits(1), 1));
+        assert!((-f32::from_bits(1)).approxeq(&0.0_f32, 1));
         assert!(f32::from_bits(0x007f_ffff).approxeq(&f32::MIN_POSITIVE, 1));
         assert!(!0.0_f32.approxeq(&f32::from_bits(2), 1));
         assert!(!1.0_f32.approxeq(&f32::from_bits(1.0_f32.to_bits() + 2), 1));
