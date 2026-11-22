@@ -283,24 +283,11 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Keep the SIMD value intact across the non-inlined boundary. Materializing
-    // and passing its backing array from `to_mask` triggers a Windows GNU miscompile.
-    let raw_bytes = value.as_array().as_ptr().cast::<u8>();
-    let classified = core::array::from_fn(|i| {
-        // SAFETY: each f16 lane occupies two initialized bytes. Volatile
-        // reads prevent LLVM from folding the representation back into an
-        // f16 load or floating-point operation on affected Windows GNU targets.
-        let bytes = unsafe {
-            [
-                raw_bytes.add(2 * i).read_volatile(),
-                raw_bytes.add(2 * i + 1).read_volatile(),
-            ]
-        };
-        u16::from_ne_bytes(bytes) & 0x7fff != 0
-    });
-    // Construct the mask here so no bool-array ABI boundary crosses the
-    // non-inlined helper boundary.
-    Mask::from_array(classified)
+    // Reinterpret the SIMD register as integer lanes before inspecting its
+    // magnitude bits. This avoids floating-point comparisons that may flush
+    // subnormal f16 values to zero on some targets.
+    let bits = value.to_bits();
+    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff != 0))
 }
 
 #[inline(never)]
