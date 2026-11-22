@@ -9,7 +9,7 @@ on:
 
 permissions: {}
 
-# Keep in-progress runs alive; GitHub retains only the latest pending run per concurrency group.
+# Cancel superseded runs so stale CI jobs cannot delay validation of the newest commit.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
