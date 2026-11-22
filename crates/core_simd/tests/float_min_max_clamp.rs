@@ -149,3 +149,16 @@ fn simd_clamp_matches_scalar_behavior_for_f64() {
         expected
     );
 }
+
+#[test]
+fn simd_min_and_max_allow_either_signed_zero_for_f32_and_f64() {
+    let f32_left = Simd::from_array([-0.0_f32, 0.0, -0.0, 0.0]);
+    let f32_right = Simd::from_array([0.0_f32, -0.0, -0.0, 0.0]);
+    assert_eq!(f32_left.simd_min(f32_right).to_array(), [0.0; 4]);
+    assert_eq!(f32_left.simd_max(f32_right).to_array(), [0.0; 4]);
+
+    let f64_left = Simd::from_array([-0.0_f64, 0.0, -0.0, 0.0]);
+    let f64_right = Simd::from_array([0.0_f64, -0.0, -0.0, 0.0]);
+    assert_eq!(f64_left.simd_min(f64_right).to_array(), [0.0; 4]);
+    assert_eq!(f64_left.simd_max(f64_right).to_array(), [0.0; 4]);
+}
