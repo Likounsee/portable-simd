@@ -283,15 +283,10 @@ pub impl(self) trait SimdFloat: Copy {
 // SimdFloat::to_mask.
 #[inline(never)]
 fn f16_to_mask_lanes<const N: usize>(lanes: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
-    // Inspect the array storage behind a reference, avoiding a SIMD f16 value
-    // crossing the non-inlined helper boundary on Windows GNU.
-    let raw_bytes = lanes.as_ptr().cast::<u8>();
-    let classified = core::array::from_fn(|i| {
-        // SAFETY: each f16 lane occupies two initialized bytes.
-        let bytes = unsafe { [raw_bytes.add(2 * i).read(), raw_bytes.add(2 * i + 1).read()] };
-        u16::from_ne_bytes(bytes) & 0x7fff != 0
-    });
-    Mask::from_array(classified)
+    // Classify each scalar lane from its IEEE-754 representation. Keeping both
+    // the scalar extraction and mask construction in this helper avoids the
+    // problematic Windows GNU f16 SIMD codegen path.
+    Mask::from_array(lanes.map(|lane| lane.to_bits() & 0x7fff != 0))
 }
 
 #[inline(never)]
