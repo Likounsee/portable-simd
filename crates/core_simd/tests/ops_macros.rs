@@ -2329,7 +2329,7 @@ macro_rules! impl_float_tests {
                         // Keep a nonzero tolerance when the input magnitude is subnormal:
                         // multiplying a subnormal by EPSILON can underflow to zero.
                         let tolerance = magnitude.max(Scalar::MIN_POSITIVE) * Scalar::EPSILON * 128.0;
-                        let matches = |expected| (actual - expected).abs() <= tolerance;
+                        let matches = |expected: Scalar| (actual - expected).abs() <= tolerance;
                         proptest::prop_assert!(
                             matches(expected) || matches(expected_flushed),
                             "actual={actual:?}, expected={expected:?}, expected_flushed={expected_flushed:?}, tolerance={tolerance:?}",
