@@ -146,6 +146,39 @@ macro_rules! impl_float {
 
 impl_float! { f16, f32, f64 }
 
+#[cfg(target_arch = "loongarch64")]
+#[inline(never)]
+fn loongarch_mask_i8x4_cmp<T, const N: usize, const OP: u8>(
+    lhs: &[T; N],
+    rhs: &[T; N],
+) -> Mask<T, N>
+where
+    T: crate::simd::MaskElement + PartialOrd + Default,
+{
+    // LoongArch LLVM code generation miscompiles four-lane byte-mask
+    // operations. Read the canonical -1/0 lanes individually through scalar
+    // pointers, then construct the final typed mask before returning.
+    let zero = T::default();
+    let lhs_ptr = lhs.as_ptr();
+    let rhs_ptr = rhs.as_ptr();
+    let lanes = core::array::from_fn(|lane| {
+        // SAFETY: lane is in 0..N, and both references point to N initialized lanes.
+        let lhs = unsafe { lhs_ptr.add(lane).read() < zero };
+        // SAFETY: lane is in 0..N, and both references point to N initialized lanes.
+        let rhs = unsafe { rhs_ptr.add(lane).read() < zero };
+        match OP {
+            0 => lhs < rhs,
+            1 => lhs <= rhs,
+            2 => lhs > rhs,
+            3 => lhs >= rhs,
+            4 => lhs || rhs,
+            5 => lhs && rhs,
+            _ => unreachable!(),
+        }
+    });
+    Mask::from_array(lanes)
+}
+
 macro_rules! impl_mask {
     { $($integer:ty),* } => {
         $(
@@ -157,9 +190,10 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) < other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 0>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 !self & other
             }
@@ -170,9 +204,10 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) <= other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 1>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 !self | other
             }
@@ -183,9 +218,10 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) > other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 2>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 self & !other
             }
@@ -196,9 +232,10 @@ macro_rules! impl_mask {
                 // Read the scalar mask elements and rebuild a canonical mask instead.
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) >= other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 3>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 self | !other
             }
@@ -210,9 +247,10 @@ macro_rules! impl_mask {
             fn simd_max(self, other: Self) -> Self {
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) || other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 4>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 self | other
             }
@@ -221,9 +259,10 @@ macro_rules! impl_mask {
             fn simd_min(self, other: Self) -> Self {
                 #[cfg(target_arch = "loongarch64")]
                 if core::mem::size_of::<$integer>() == 1 && N == 4 {
-                    return Mask::from_array(core::array::from_fn(|lane| {
-                        self.test(lane) && other.test(lane)
-                    }));
+                    return loongarch_mask_i8x4_cmp::<_, N, 5>(
+                        self.to_simd().as_array(),
+                        other.to_simd().as_array(),
+                    );
                 }
                 self & other
             }

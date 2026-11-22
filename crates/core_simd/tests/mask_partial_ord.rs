@@ -10,6 +10,19 @@ use core_simd::simd::{
 };
 
 #[test]
+fn loongarch_four_lane_mask_ordering_regression() {
+    let a = Mask::<i8, 4>::from_array([false, true, false, false]);
+    let b = Mask::<i8, 4>::from_array([false, false, false, true]);
+
+    assert_eq!(a.simd_lt(b).to_array(), [false, false, false, true]);
+    assert_eq!(a.simd_le(b).to_array(), [true, false, true, true]);
+    assert_eq!(a.simd_gt(b).to_array(), [false, true, false, false]);
+    assert_eq!(a.simd_ge(b).to_array(), [true, true, true, false]);
+    assert_eq!(a.simd_min(b).to_array(), [false, false, false, false]);
+    assert_eq!(a.simd_max(b).to_array(), [false, true, false, true]);
+}
+
+#[test]
 fn mask_partial_order_matches_bool_ordering_for_64_lanes() {
     // Include the sign bit and mixed patterns. Comparing the underlying signed
     // mask lanes as integers would reverse the ordering of true and false.
