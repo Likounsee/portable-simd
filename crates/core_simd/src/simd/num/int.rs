@@ -23,8 +23,8 @@ pub impl(self) trait SimdInt: Copy {
 
     /// Performs elementwise conversion of this vector's elements to another SIMD-valid type.
     ///
-    /// This follows the semantics of Rust's `as` conversion for casting integers (wrapping to
-    /// other integer types, and saturating to float types).
+    /// This follows Rust's `as` conversion semantics: integer-to-integer casts truncate to the
+    /// destination width, while integer-to-float casts round to the nearest representable value.
     #[must_use]
     fn cast<T: SimdCast>(self) -> Self::Cast<T>;
 

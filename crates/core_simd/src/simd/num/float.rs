@@ -25,8 +25,9 @@ pub impl(self) trait SimdFloat: Copy {
 
     /// Performs elementwise conversion of this vector's elements to another SIMD-valid type.
     ///
-    /// This follows the semantics of Rust's `as` conversion for floats (truncating or saturating
-    /// at the limits) for each element.
+    /// This follows Rust's `as` conversion semantics: casts to integer types truncate toward zero
+    /// and saturate at the destination bounds (with NaN converting to zero), while casts to other
+    /// float types round to the nearest representable value.
     ///
     /// # Example
     /// ```

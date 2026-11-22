@@ -92,5 +92,4 @@ mod tests {
         assert_eq!(left.simd_min(right).to_array(), [0.0_f16; 4]);
         assert_eq!(left.simd_max(right).to_array(), [0.0_f16; 4]);
     }
-
 }
