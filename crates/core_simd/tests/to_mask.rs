@@ -1,7 +1,7 @@
 #![feature(portable_simd)]
 #![feature(f16)]
 
-use core_simd::simd::{Mask, Simd, num::SimdFloat};
+use core_simd::simd::{Mask, Simd, num::{SimdFloat, SimdInt, SimdUint}};
 
 #[test]
 fn to_mask_maps_zero_and_nonzero_signed_integers() {

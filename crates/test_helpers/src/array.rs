@@ -43,8 +43,22 @@ where
         let tree: [S::Tree; LANES] = unsafe {
             #[allow(clippy::uninit_assumed_init)]
             let mut tree: [MaybeUninit<S::Tree>; LANES] = MaybeUninit::uninit().assume_init();
-            for t in tree.iter_mut() {
-                *t = MaybeUninit::new(self.strategy.new_tree(runner)?)
+            for (index, slot) in tree.iter_mut().enumerate() {
+                match self.strategy.new_tree(runner) {
+                    Ok(value) => {
+                        slot.write(value);
+                    }
+                    Err(error) => {
+                        // Drop every tree that was initialized before the strategy
+                        // failed. Without this cleanup, a partially built array leaks
+                        // resources owned by the earlier value trees.
+                        for initialized in &mut tree[..index] {
+                            // SAFETY: exactly the slots before this index were initialized.
+                            unsafe { initialized.assume_init_drop() };
+                        }
+                        return Err(error);
+                    }
+                }
             }
             core::mem::transmute_copy(&tree)
         };

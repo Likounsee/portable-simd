@@ -965,7 +965,7 @@ macro_rules! impl_signed_tests {
 
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
-                        &Vector::<LANES>::to_mask,
+                        &<Vector<LANES> as SimdInt>::to_mask,
                         &|x: Scalar| x != 0,
                         &|_| true,
                     );
@@ -1874,7 +1874,7 @@ macro_rules! impl_unsigned_tests {
             test_helpers::test_lanes! {
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
-                        &Vector::<LANES>::to_mask,
+                        &<Vector<LANES> as SimdUint>::to_mask,
                         &|x: Scalar| x != 0,
                         &|_| true,
                     );
@@ -2022,7 +2022,7 @@ macro_rules! impl_float_tests {
 
                 fn to_mask<const LANES: usize>() {
                     test_helpers::test_unary_mask_elementwise(
-                        &Vector::<LANES>::to_mask,
+                        &<Vector<LANES> as SimdFloat>::to_mask,
                         &|x: Scalar| x != 0.0,
                         &|_| true,
                     );
