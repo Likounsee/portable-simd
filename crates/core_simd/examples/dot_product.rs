@@ -230,5 +230,4 @@ mod tests {
     fn simd_dot_product_rejects_mismatched_lengths() {
         dot_prod_simd_4(&[1.0, 2.0], &[1.0]);
     }
-
 }
