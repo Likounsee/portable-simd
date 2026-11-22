@@ -605,7 +605,7 @@ macro_rules! test_lanes_helper {
     };
 }
 
-/// Expand a const-generic test into separate tests for each possible lane count.
+/// Expand a const-generic test into separate tests for representative supported lane counts.
 #[macro_export]
 macro_rules! test_lanes {
     {
@@ -703,7 +703,7 @@ macro_rules! test_lanes {
     }
 }
 
-/// Expand a const-generic `#[should_panic]` test into separate tests for each possible lane count.
+/// Expand a const-generic `#[should_panic]` test into separate tests for representative supported lane counts.
 #[macro_export]
 macro_rules! test_lanes_panic {
     {
