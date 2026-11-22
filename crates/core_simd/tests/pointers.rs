@@ -443,3 +443,59 @@ fn with_addr_preserves_addresses_across_signed_boundary() {
     let mut_pointers = Simd::splat(core::ptr::without_provenance_mut::<u8>(0));
     assert_eq!(mut_pointers.with_addr(addresses).addr(), addresses);
 }
+
+#[test]
+fn wrapping_pointer_offsets_match_scalar_semantics_at_usize_boundaries() {
+    let addresses = [
+        0,
+        1,
+        isize::MAX as usize,
+        usize::MAX,
+    ];
+    let counts = [
+        usize::MAX,
+        isize::MAX as usize,
+        (isize::MAX as usize).wrapping_add(1),
+        1,
+    ];
+
+    let const_pointers = Simd::<*const u8, 4>::from_array(
+        addresses.map(core::ptr::without_provenance::<u8>),
+    );
+    let vector_counts = Simd::from_array(counts);
+
+    let actual_add = const_pointers.wrapping_add(vector_counts).addr().to_array();
+    let expected_add = core::array::from_fn(|lane| {
+        core::ptr::without_provenance::<u8>(addresses[lane])
+            .wrapping_add(counts[lane])
+            .addr()
+    });
+    assert_eq!(actual_add, expected_add);
+
+    let actual_sub = const_pointers.wrapping_sub(vector_counts).addr().to_array();
+    let expected_sub = core::array::from_fn(|lane| {
+        core::ptr::without_provenance::<u8>(addresses[lane])
+            .wrapping_sub(counts[lane])
+            .addr()
+    });
+    assert_eq!(actual_sub, expected_sub);
+
+    let mut_pointers = Simd::<*mut u8, 4>::from_array(
+        addresses.map(core::ptr::without_provenance_mut::<u8>),
+    );
+    let actual_mut_add = mut_pointers.wrapping_add(vector_counts).addr().to_array();
+    let expected_mut_add = core::array::from_fn(|lane| {
+        core::ptr::without_provenance_mut::<u8>(addresses[lane])
+            .wrapping_add(counts[lane])
+            .addr()
+    });
+    assert_eq!(actual_mut_add, expected_mut_add);
+
+    let actual_mut_sub = mut_pointers.wrapping_sub(vector_counts).addr().to_array();
+    let expected_mut_sub = core::array::from_fn(|lane| {
+        core::ptr::without_provenance_mut::<u8>(addresses[lane])
+            .wrapping_sub(counts[lane])
+            .addr()
+    });
+    assert_eq!(actual_mut_sub, expected_mut_sub);
+}
