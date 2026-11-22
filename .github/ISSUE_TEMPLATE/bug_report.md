@@ -29,7 +29,7 @@ Instead, this happened: *explanation*
 `crate version in Cargo.toml`:
 ```toml
 [dependencies]
-stdsimd = 
+core_simd = { git = "https://github.com/Likounsee/portable-simd" }
 ```
 <!-- If this specifies the repo at HEAD, please include the latest commit. -->
 

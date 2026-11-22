@@ -137,7 +137,6 @@ macro_rules! prop_assert_approxeq {
     };
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::ApproxEq;

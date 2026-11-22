@@ -1,3 +1,8 @@
+### 2026-11-22 — final documentation and formatting follow-up
+
+- Removed the remaining rustfmt-only blank line in ApproxEq tests.
+- Updated the bug-report template's Cargo dependency example to reference this fork's actual core_simd crate.
+
 ### 2026-11-22 — cleanup, panic-safe array teardown, and repository maintenance fixes
 
 - Fixed the rustfmt failure in the f16 byte-conversion test and corrected the remaining ToBytes docs for floating-point values.
