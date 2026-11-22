@@ -1,10 +1,10 @@
 //! 4x4 matrix inverse
 // Code ported from the `packed_simd` crate
-// Run this code with `cargo test --example matrix_inversion`
+// Run this code with `cargo test -p core_simd --example matrix_inversion`
 #![feature(portable_simd)]
 use core_simd::simd::prelude::*;
 
-// Gotta define our own 4x4 matrix since Rust doesn't ship multidim arrays yet :^)
+// Define a 4x4 matrix wrapper; Rust supports nested arrays but has no dedicated matrix type.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub struct Matrix4x4([[f32; 4]; 4]);
 

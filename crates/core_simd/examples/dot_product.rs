@@ -1,7 +1,7 @@
 //! Code taken from the `packed_simd` crate.
-//! Run this code with `cargo test --example dot_product`.
+//! Run this code with `cargo test -p core_simd --example dot_product`.
 
-// Add these imports to use the stdsimd library
+// Import the portable SIMD API and its fixed-width aliases.
 #![feature(portable_simd)]
 use core_simd::simd::prelude::*;
 
@@ -34,8 +34,8 @@ pub fn dot_prod_scalar_1(a: &[f32], b: &[f32]) -> f32 {
 // `as_chunks::<4>`: mapping this over the vector will let us construct SIMD vectors
 // `f32x4::from_array`: construct the SIMD vector from a slice
 // `(a * b).reduce_sum()`: Multiply both f32x4 vectors together, and then reduce them.
-// This approach essentially uses SIMD to produce a vector of length N/4 of all the products,
-// and then add those with `sum()`. This is suboptimal.
+// Each chunk is multiplied and immediately reduced to a scalar. This performs one
+// horizontal reduction per chunk instead of accumulating lanes and reducing once.
 // TODO: ASCII diagrams
 pub fn dot_prod_simd_0(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
@@ -137,8 +137,8 @@ pub fn dot_prod_simd_3(a: &[f32], b: &[f32]) -> f32 {
 }
 
 // Finally, we present an iterator version for handling remainders in a scalar fashion at the end of the loop.
-// Unfortunately, this is allocating 1 `XMM` register on the order of `~len(a)` - we'll see how we can get around it in the
-// next example.
+// This iterator-based version streams each chunk through a SIMD accumulator; it does
+// not materialize an intermediate array of products.
 pub fn dot_prod_simd_4(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
     let mut sum = a
@@ -159,8 +159,7 @@ pub fn dot_prod_simd_4(a: &[f32], b: &[f32]) -> f32 {
     sum
 }
 
-// This version allocates a single `XMM` register for accumulation, and the folds don't allocate on top of that.
-// Notice the use of `mul_add`, which can do a multiply and an add operation ber iteration.
+// This version keeps one SIMD accumulator in the fold and uses `mul_add` for each chunk.
 pub fn dot_prod_simd_5(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
     let (a_chunks, a_remainder) = a.as_chunks::<4>();

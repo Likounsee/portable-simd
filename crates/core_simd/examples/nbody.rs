@@ -4,7 +4,7 @@ extern crate std_float;
 
 /// Benchmarks game nbody code
 /// Taken from the `packed_simd` crate
-/// Run this benchmark with `cargo test --example nbody`
+/// Run this benchmark with `cargo test -p core_simd --example nbody`
 mod nbody {
     use core_simd::simd::prelude::*;
     #[allow(unused)] // False positive?
