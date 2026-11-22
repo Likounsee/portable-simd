@@ -3,13 +3,13 @@
 **Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed head:** `3d74e21212b267e8d4a5e5e990bc76ff7b2e009c`
+**Assessed code head:** `13361414516e409706ea9252bcade296afe1d0d0`
 
 ## Executive summary
 
 This fork has moved from an initially failing validation setup to a substantially better-tested and more observable development branch. The most important progress is in regression coverage for masks, masked memory, gather/scatter, dynamic swizzling, integer edge cases, SIMD layout, and in making CI reproducible across a broad target matrix.
 
-This is **not yet a stable-ready implementation**, and the work so far does not demonstrate that a previously exploitable memory-safety bug in the SIMD implementation has been fixed. Most of the security-related progress is stronger verification of bounds, disabled-lane behavior, pointer/layout assumptions, and unsafe API documentation. The confirmed production implementation change so far is a bounded/full-width fast-path improvement for all-enabled slice loads and stores, not a broad rewrite of unsafe SIMD internals.
+This is **not yet a stable-ready implementation**, and the work so far does not demonstrate that a previously exploitable memory-safety bug in the SIMD implementation has been fixed. Security-related progress includes stronger verification of bounds and disabled-lane behavior, explicit size/alignment tests, panic-safe test-helper cleanup, and lane-wise use of Rust's strict-provenance pointer APIs. Confirmed production changes also include bounded/full-width slice-memory fast paths and f16 support additions. These are focused changes, not a broad rewrite or a proof of soundness.
 
 The fork's GitHub Issues feature is disabled and the fork has no issue tracker of its own. The upstream `rust-lang/portable-simd` repository reports 107 open issues at the time of this assessment. This document therefore classifies the 16 upstream issue numbers explicitly investigated in this fork's development log; it does **not** claim to have resolved or audited all 107 upstream open issues.
 
@@ -30,7 +30,7 @@ This distinction matters: the first CI was primarily exposing integration/visibi
 
 ## 2. What has materially improved since baseline
 
-The baseline commit and current head differ by 481 commits. The changes fall into these groups.
+The baseline commit and current head differ by 482 commits. The changes fall into these groups.
 
 ### A. Mask semantics and mask safety invariants
 
@@ -57,8 +57,10 @@ The baseline commit and current head differ by 481 commits. The changes fall int
 ### C. Dynamic swizzle
 
 - Added a scalar-oracle test that visits every possible `u8` index at representative widths around implementation boundaries.
+- Added `swizzle_dyn_unchecked` with an explicit high-bit out-of-range contract and exhaustive high-bit regression tests.
+- Added architecture-specific implementations for AArch64/ARMv7, WebAssembly SIMD128, x86 SSSE3/AVX2 and LoongArch LSX/LASX checked swizzles; unsupported cases retain the scalar or split-vector fallback.
 
-**Impact:** strong coverage of the current zeroing semantics. It does not add the optional unchecked/out-of-range API discussed upstream.
+**Impact:** both checked zeroing semantics and the constrained unchecked API now have regression coverage. Architecture-specific execution still depends on the CI target-feature matrix.
 
 ### D. Integer and floating-point edge cases
 
@@ -73,6 +75,7 @@ The baseline commit and current head differ by 481 commits. The changes fall int
 - Expanded SIMD layout regression coverage, including `f16`.
 - Corrected the earlier documentation about possible trailing padding after tests established equal size for supported SIMD and array types in the covered layout matrix.
 - Clarified that equal size does not make references interchangeable and does not waive pointer validity, initialization, aliasing, or provenance requirements.
+- Replaced pointer-vector/integer transmute-based address conversions with lane-wise calls to scalar strict-provenance APIs for `addr`, `without_provenance`, and `without_provenance_mut`; `with_addr` remains expressed through provenance-preserving wrapping offsets until a compiler intrinsic is available.
 - Clarified that unaligned reads/writes still access the full SIMD object size.
 
 **Impact:** clearer unsafe contracts and broader layout assertions. This is not a substitute for a compiler guarantee about every target ABI/layout or every future element type.
@@ -95,7 +98,7 @@ The baseline commit and current head differ by 481 commits. The changes fall int
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
 
-The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 28/30 jobs with zero failures; the Miri partition 2 and WebAssembly SIMD128 release jobs are still running. The assessed main head is now `3d74e21`; its workflow run [45050648217](https://github.com/Likounsee/portable-simd/actions/runs/45050648217) is pending behind that active run. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 28/30 jobs with zero failures; the Miri partition 2 and WebAssembly SIMD128 release jobs are still running. The assessed code head is `1336141`; its workflow run [45050915847](https://github.com/Likounsee/portable-simd/actions/runs/45050915847) is pending behind that active run. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
 
 ### H. Example correctness and documentation follow-up
 
