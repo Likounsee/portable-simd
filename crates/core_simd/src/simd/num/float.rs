@@ -285,9 +285,7 @@ pub impl(self) trait SimdFloat: Copy {
 // these helpers can corrupt the mask lanes at the call site.
 #[cfg(not(target_arch = "arm"))]
 #[inline(never)]
-fn f16_to_mask_lanes<const N: usize>(
-    value: &[f16; N],
-) -> Mask<<i16 as SimdElement>::Mask, N> {
+fn f16_to_mask_lanes<const N: usize>(value: &[f16; N]) -> Mask<<i16 as SimdElement>::Mask, N> {
     // Read the stored representation directly so subnormal values remain nonzero
     // even on targets that flush floating-point subnormal operations to zero.
     let raw_bytes = value.as_ptr().cast::<u8>();
@@ -301,17 +299,13 @@ fn f16_to_mask_lanes<const N: usize>(
 
 #[cfg(not(target_arch = "arm"))]
 #[inline(never)]
-fn f32_to_mask_lanes<const N: usize>(
-    value: &[f32; N],
-) -> Mask<<i32 as SimdElement>::Mask, N> {
+fn f32_to_mask_lanes<const N: usize>(value: &[f32; N]) -> Mask<<i32 as SimdElement>::Mask, N> {
     Mask::from_array(value.map(|lane| lane.to_bits() & 0x7fff_ffff != 0))
 }
 
 #[cfg(not(target_arch = "arm"))]
 #[inline(never)]
-fn f64_to_mask_lanes<const N: usize>(
-    value: &[f64; N],
-) -> Mask<<i64 as SimdElement>::Mask, N> {
+fn f64_to_mask_lanes<const N: usize>(value: &[f64; N]) -> Mask<<i64 as SimdElement>::Mask, N> {
     Mask::from_array(value.map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0))
 }
 
