@@ -12,7 +12,7 @@ permissions: {}
 # A newer push supersedes older work on the same ref.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 defaults:
   run:

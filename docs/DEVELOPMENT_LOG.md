@@ -1,3 +1,10 @@
+### 2026-11-22 — dot-product example correctness and CI run reliability
+
+- Fixed all SIMD dot-product example variants to include the scalar remainder when the input length is not divisible by four.
+- Added equal-length validation to the dot_prod_simd_4 example, matching the other public variants.
+- Added regression coverage for every remainder length across input sizes 0 through 17 and for mismatched input lengths.
+- Disabled automatic cancellation of an in-progress CI run when a new commit is pushed, preventing repeated validation runs from being cancelled during active work.
+
 ### 2026-11-22 — final documentation and formatting follow-up
 
 - Removed the remaining rustfmt-only blank line in ApproxEq tests.

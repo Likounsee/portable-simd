@@ -39,14 +39,22 @@ pub fn dot_prod_scalar_1(a: &[f32], b: &[f32]) -> f32 {
 // TODO: ASCII diagrams
 pub fn dot_prod_simd_0(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
-    // TODO handle remainder when a.len() % 4 != 0
-    a.as_chunks::<4>()
-        .0
+    let (a_chunks, a_remainder) = a.as_chunks::<4>();
+    let (b_chunks, b_remainder) = b.as_chunks::<4>();
+
+    let chunk_sum = a_chunks
         .iter()
         .map(|&a| f32x4::from_array(a))
-        .zip(b.as_chunks::<4>().0.iter().map(|&b| f32x4::from_array(b)))
+        .zip(b_chunks.iter().map(|&b| f32x4::from_array(b)))
         .map(|(a, b)| (a * b).reduce_sum())
-        .sum()
+        .sum::<f32>();
+    let remainder_sum = a_remainder
+        .iter()
+        .zip(b_remainder)
+        .map(|(a, b)| a * b)
+        .sum::<f32>();
+
+    chunk_sum + remainder_sum
 }
 
 // There's some simple ways to improve the previous code:
@@ -59,14 +67,22 @@ pub fn dot_prod_simd_0(a: &[f32], b: &[f32]) -> f32 {
 // Can become a problem.
 pub fn dot_prod_simd_1(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
-    // TODO handle remainder when a.len() % 4 != 0
-    a.as_chunks::<4>()
-        .0
+    let (a_chunks, a_remainder) = a.as_chunks::<4>();
+    let (b_chunks, b_remainder) = b.as_chunks::<4>();
+
+    let chunk_sum = a_chunks
         .iter()
         .map(|&a| f32x4::from_array(a))
-        .zip(b.as_chunks::<4>().0.iter().map(|&b| f32x4::from_array(b)))
-        .fold(f32x4::splat(0.0), |acc, zipped| acc + zipped.0 * zipped.1)
-        .reduce_sum()
+        .zip(b_chunks.iter().map(|&b| f32x4::from_array(b)))
+        .fold(f32x4::splat(0.0), |acc, (a, b)| acc + a * b)
+        .reduce_sum();
+    let remainder_sum = a_remainder
+        .iter()
+        .zip(b_remainder)
+        .map(|(a, b)| a * b)
+        .sum::<f32>();
+
+    chunk_sum + remainder_sum
 }
 
 // A lot of knowledgeable use of SIMD comes from knowing specific instructions that are
@@ -74,17 +90,25 @@ pub fn dot_prod_simd_1(a: &[f32], b: &[f32]) -> f32 {
 use std_float::StdFloat;
 pub fn dot_prod_simd_2(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
-    // TODO handle remainder when a.len() % 4 != 0
+    let (a_chunks, a_remainder) = a.as_chunks::<4>();
+    let (b_chunks, b_remainder) = b.as_chunks::<4>();
+
     let mut res = f32x4::splat(0.0);
-    a.as_chunks::<4>()
-        .0
+    a_chunks
         .iter()
         .map(|&a| f32x4::from_array(a))
-        .zip(b.as_chunks::<4>().0.iter().map(|&b| f32x4::from_array(b)))
+        .zip(b_chunks.iter().map(|&b| f32x4::from_array(b)))
         .for_each(|(a, b)| {
             res = a.mul_add(b, res);
         });
-    res.reduce_sum()
+    let chunk_sum = res.reduce_sum();
+    let remainder_sum = a_remainder
+        .iter()
+        .zip(b_remainder)
+        .map(|(a, b)| a * b)
+        .sum::<f32>();
+
+    chunk_sum + remainder_sum
 }
 
 // Finally, we will write the same operation but handling the loop remainder.
@@ -116,6 +140,7 @@ pub fn dot_prod_simd_3(a: &[f32], b: &[f32]) -> f32 {
 // Unfortunately, this is allocating 1 `XMM` register on the order of `~len(a)` - we'll see how we can get around it in the
 // next example.
 pub fn dot_prod_simd_4(a: &[f32], b: &[f32]) -> f32 {
+    assert_eq!(a.len(), b.len());
     let mut sum = a
         .as_chunks::<4>()
         .0
@@ -137,13 +162,23 @@ pub fn dot_prod_simd_4(a: &[f32], b: &[f32]) -> f32 {
 // This version allocates a single `XMM` register for accumulation, and the folds don't allocate on top of that.
 // Notice the use of `mul_add`, which can do a multiply and an add operation ber iteration.
 pub fn dot_prod_simd_5(a: &[f32], b: &[f32]) -> f32 {
-    a.as_chunks::<4>()
-        .0
+    assert_eq!(a.len(), b.len());
+    let (a_chunks, a_remainder) = a.as_chunks::<4>();
+    let (b_chunks, b_remainder) = b.as_chunks::<4>();
+
+    let chunk_sum = a_chunks
         .iter()
         .map(|&a| f32x4::from_array(a))
-        .zip(b.as_chunks::<4>().0.iter().map(|&b| f32x4::from_array(b)))
+        .zip(b_chunks.iter().map(|&b| f32x4::from_array(b)))
         .fold(f32x4::splat(0.), |acc, (a, b)| a.mul_add(b, acc))
-        .reduce_sum()
+        .reduce_sum();
+    let remainder_sum = a_remainder
+        .iter()
+        .zip(b_remainder)
+        .map(|(a, b)| a * b)
+        .sum::<f32>();
+
+    chunk_sum + remainder_sum
 }
 
 fn main() {
@@ -173,4 +208,27 @@ mod tests {
         // We can handle vectors that are non-multiples of 4
         assert_eq!(1003.0, dot_prod_simd_3(&x, &y));
     }
+
+    #[test]
+    fn every_simd_dot_product_handles_all_remainder_lengths() {
+        for len in 0..=17 {
+            let a: Vec<f32> = (0..len).map(|i| (i as i32 % 7 - 3) as f32).collect();
+            let b: Vec<f32> = (0..len).map(|i| (i as i32 % 5 - 2) as f32).collect();
+            let expected = dot_prod_scalar_0(&a, &b);
+
+            assert_eq!(dot_prod_simd_0(&a, &b), expected, "length {len}");
+            assert_eq!(dot_prod_simd_1(&a, &b), expected, "length {len}");
+            assert_eq!(dot_prod_simd_2(&a, &b), expected, "length {len}");
+            assert_eq!(dot_prod_simd_3(&a, &b), expected, "length {len}");
+            assert_eq!(dot_prod_simd_4(&a, &b), expected, "length {len}");
+            assert_eq!(dot_prod_simd_5(&a, &b), expected, "length {len}");
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn simd_dot_product_rejects_mismatched_lengths() {
+        dot_prod_simd_4(&[1.0, 2.0], &[1.0]);
+    }
+
 }
