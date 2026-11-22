@@ -31,6 +31,48 @@ pub struct ArrayValueTree<T> {
     last_shrinker: Option<usize>,
 }
 
+// Owns the initialized prefix of an array under construction. It is deliberately
+// a raw-pointer guard so that both an ordinary error return and unwinding clean up
+// every value already written into the MaybeUninit array.
+struct ArrayInitGuard<T> {
+    ptr: *mut T,
+    initialized: usize,
+}
+
+impl<T> Drop for ArrayInitGuard<T> {
+    fn drop(&mut self) {
+        for index in 0..self.initialized {
+            // SAFETY: the constructor increments initialized only after writing
+            // a valid T into this slot; all earlier slots are therefore initialized.
+            unsafe { self.ptr.add(index).drop_in_place() };
+        }
+    }
+}
+
+fn try_init_array<T, E, const N: usize>(
+    mut init: impl FnMut(usize) -> Result<T, E>,
+) -> Result<[T; N], E> {
+    let mut array = MaybeUninit::<[T; N]>::uninit();
+    let ptr = array.as_mut_ptr().cast::<T>();
+    let mut guard = ArrayInitGuard {
+        ptr,
+        initialized: 0,
+    };
+
+    while guard.initialized < N {
+        let value = init(guard.initialized)?;
+        // SAFETY: initialized is strictly less than N, and this slot has not
+        // previously been written. The guard tracks the value immediately after.
+        unsafe { ptr.add(guard.initialized).write(value) };
+        guard.initialized += 1;
+    }
+
+    // Transfer ownership of all N initialized values to the returned array.
+    guard.initialized = 0;
+    // SAFETY: every element was initialized by the loop above.
+    Ok(unsafe { array.assume_init() })
+}
+
 impl<T, S, const LANES: usize> Strategy for UniformArrayStrategy<S, [T; LANES]>
 where
     T: core::fmt::Debug,
@@ -40,30 +82,7 @@ where
     type Value = [T; LANES];
 
     fn new_tree(&self, runner: &mut TestRunner) -> NewTree<Self> {
-        let tree: [S::Tree; LANES] = unsafe {
-            #[allow(clippy::uninit_assumed_init)]
-            let mut tree: [MaybeUninit<S::Tree>; LANES] = MaybeUninit::uninit().assume_init();
-            let mut initialized = 0;
-            while initialized < LANES {
-                match self.strategy.new_tree(runner) {
-                    Ok(value) => {
-                        tree[initialized].write(value);
-                        initialized += 1;
-                    }
-                    Err(error) => {
-                        // Drop every tree that was initialized before the strategy
-                        // failed. Without this cleanup, a partially built array leaks
-                        // resources owned by the earlier value trees.
-                        for slot in &mut tree[..initialized] {
-                            // SAFETY: exactly the slots in this prefix were initialized.
-                            slot.assume_init_drop();
-                        }
-                        return Err(error);
-                    }
-                }
-            }
-            core::mem::transmute_copy(&tree)
-        };
+        let tree = try_init_array(|_| self.strategy.new_tree(runner))?;
         Ok(ArrayValueTree {
             tree,
             shrinker: 0,
@@ -76,13 +95,11 @@ impl<T: ValueTree, const LANES: usize> ValueTree for ArrayValueTree<[T; LANES]> 
     type Value = [T::Value; LANES];
 
     fn current(&self) -> Self::Value {
-        unsafe {
-            #[allow(clippy::uninit_assumed_init)]
-            let mut value: [MaybeUninit<T::Value>; LANES] = MaybeUninit::uninit().assume_init();
-            for (tree_elem, value_elem) in self.tree.iter().zip(value.iter_mut()) {
-                *value_elem = MaybeUninit::new(tree_elem.current());
-            }
-            core::mem::transmute_copy(&value)
+        match try_init_array(|index| {
+            Ok::<T::Value, core::convert::Infallible>(self.tree[index].current())
+        }) {
+            Ok(value) => value,
+            Err(never) => match never {},
         }
     }
 
@@ -111,5 +128,66 @@ impl<T: ValueTree, const LANES: usize> ValueTree for ArrayValueTree<[T; LANES]> 
         } else {
             false
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::try_init_array;
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    struct DropCounter(Arc<AtomicUsize>);
+
+    impl Drop for DropCounter {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[test]
+    fn initialized_prefix_is_dropped_when_initialization_returns_error() {
+        let drops = Arc::new(AtomicUsize::new(0));
+        let result = try_init_array::<_, (), 4>(|index| {
+            if index == 2 {
+                Err(())
+            } else {
+                Ok(DropCounter(Arc::clone(&drops)))
+            }
+        });
+
+        assert!(result.is_err());
+        assert_eq!(drops.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn initialized_prefix_is_dropped_when_initialization_panics() {
+        let drops = Arc::new(AtomicUsize::new(0));
+        let result = std::panic::catch_unwind({
+            let drops = Arc::clone(&drops);
+            move || {
+                let _ = try_init_array::<_, (), 4>(|index| {
+                    if index == 2 {
+                        panic!("simulated strategy panic");
+                    }
+                    Ok(DropCounter(Arc::clone(&drops)))
+                });
+            }
+        });
+
+        assert!(result.is_err());
+        assert_eq!(drops.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn successful_initialization_transfers_all_elements_to_the_array() {
+        let drops = Arc::new(AtomicUsize::new(0));
+        let values = try_init_array::<_, (), 3>(|_| Ok(DropCounter(Arc::clone(&drops))))
+            .expect("initialization succeeds");
+
+        assert_eq!(drops.load(Ordering::SeqCst), 0);
+        drop(values);
+        assert_eq!(drops.load(Ordering::SeqCst), 3);
     }
 }
