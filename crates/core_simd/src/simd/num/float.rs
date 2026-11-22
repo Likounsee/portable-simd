@@ -295,7 +295,10 @@ fn f32_to_mask_lanes<const N: usize>(bits: Simd<u32, N>) -> Mask<<i32 as SimdEle
 
 #[inline(never)]
 fn f64_to_mask_lanes<const N: usize>(bits: Simd<u64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
-    Mask::from_array(bits.as_array().map(|lane| lane & 0x7fff_ffff_ffff_ffff != 0))
+    Mask::from_array(
+        bits.as_array()
+            .map(|lane| lane & 0x7fff_ffff_ffff_ffff != 0),
+    )
 }
 
 trait AlgebraicReduce: SimdElement {
