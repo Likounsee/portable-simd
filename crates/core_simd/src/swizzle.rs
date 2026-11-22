@@ -296,7 +296,7 @@ where
             const INDEX: [usize; N] = const {
                 let mut index = [N; N];
                 let mut i = 0;
-                while i + OFFSET < N {
+                while i < N && OFFSET < N - i {
                     index[i] = i + OFFSET;
                     i += 1;
                 }

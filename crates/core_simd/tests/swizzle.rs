@@ -58,6 +58,10 @@ fn shift() {
     assert_eq!(a.shift_elements_left::<3>(8).to_array(), [4, 8, 8, 8]);
     assert_eq!(a.shift_elements_left::<4>(7).to_array(), [7, 7, 7, 7]);
     assert_eq!(a.shift_elements_left::<5>(6).to_array(), [6, 6, 6, 6]);
+    assert_eq!(
+        a.shift_elements_left::<{ usize::MAX }>(5).to_array(),
+        [5, 5, 5, 5]
+    );
     assert_eq!(a.shift_elements_right::<0>(0).to_array(), [1, 2, 3, 4]);
     assert_eq!(a.shift_elements_right::<1>(0).to_array(), [0, 1, 2, 3]);
     assert_eq!(a.shift_elements_right::<2>(-1).to_array(), [-1, -1, 1, 2]);
