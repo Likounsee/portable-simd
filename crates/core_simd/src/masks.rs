@@ -401,7 +401,7 @@ where
     /// Creates a mask from a bitmask.
     ///
     /// For each bit, if it is set, the corresponding element in the mask is set to `true`.
-    /// If the mask contains more than 64 elements, the remainder are set to `false`.
+    /// Bits beyond the number of elements in the mask are ignored.
     #[inline]
     #[must_use = "method returns a new mask and does not mutate the original value"]
     pub fn from_bitmask(bitmask: u64) -> Self {
