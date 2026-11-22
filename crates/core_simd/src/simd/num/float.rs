@@ -305,12 +305,20 @@ fn f16_to_mask_lanes<const N: usize>(value: Simd<f16, N>) -> Mask<<i16 as SimdEl
 
 #[inline(never)]
 fn f32_to_mask_lanes<const N: usize>(value: Simd<f32, N>) -> Mask<<i32 as SimdElement>::Mask, N> {
-    Mask::from_array(value.as_array().map(|lane| lane.to_bits() & 0x7fff_ffff != 0))
+    Mask::from_array(
+        value
+            .as_array()
+            .map(|lane| lane.to_bits() & 0x7fff_ffff != 0),
+    )
 }
 
 #[inline(never)]
 fn f64_to_mask_lanes<const N: usize>(value: Simd<f64, N>) -> Mask<<i64 as SimdElement>::Mask, N> {
-    Mask::from_array(value.as_array().map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0))
+    Mask::from_array(
+        value
+            .as_array()
+            .map(|lane| lane.to_bits() & 0x7fff_ffff_ffff_ffff != 0),
+    )
 }
 
 trait AlgebraicReduce: SimdElement {
