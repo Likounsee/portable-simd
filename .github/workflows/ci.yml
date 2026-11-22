@@ -9,7 +9,7 @@ on:
 
 permissions: {}
 
-# A newer push supersedes older work on the same ref.
+# Keep in-progress runs alive; GitHub retains only the latest pending run per concurrency group.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false

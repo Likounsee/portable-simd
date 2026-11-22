@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-22  
 **Repository:** [Likounsee/portable-simd](https://github.com/Likounsee/portable-simd)  
 **Baseline:** first CI run, commit `664729f4ecc4cd6c9bfc4d966c2194004f1cf550`  
-**Assessed code head:** `2a385ed6a6cac44598dfacbe42e58fbb0b2a5bd4` (AVX-512 compile-path fix queued separately)
+**Assessed code head:** `d8329ba273bc6c87003da668cad90986ac966651`
 
 ## Executive summary
 
@@ -30,7 +30,7 @@ This distinction matters: the first CI was primarily exposing integration/visibi
 
 ## 2. What has materially improved since baseline
 
-The baseline commit and current head differ by 485 commits. The changes fall into these groups.
+The baseline commit and current head differ by 487 commits. The changes fall into these groups.
 
 ### A. Mask semantics and mask safety invariants
 
@@ -98,8 +98,9 @@ The baseline commit and current head differ by 485 commits. The changes fall int
 - Fixed Cross installation/cache setup failures and prepared Cross once before the emulated target fan-out.
 - Consolidated workflow jobs without removing the existing x86 target/feature, debug/release, Clippy, WASM, macOS, Cross, or Miri test categories.
 - Added reproducible codegen diagnostics as a separate quality check.
+- Added a compile-only x86 AVX-512 swizzle check that enables the exact target features required by the byte-minimum and byte-permute intrinsics without executing those instructions.
 
-The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 29/30 jobs with zero failures; only Miri partition 2 remains active. The assessed code head is `2a385ed`; its workflow run [45051326218](https://github.com/Likounsee/portable-simd/actions/runs/45051326218) is pending behind that active run. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
+The historical fully green run recorded earlier is [run 43734489259](https://github.com/Likounsee/portable-simd/actions/runs/43734489259), on commit a15f086: 30/30 jobs succeeded. As of this assessment, [run 45048152578](https://github.com/Likounsee/portable-simd/actions/runs/45048152578), on commit 15b2c12, has completed 29/30 jobs with zero failures; only Miri partition 2 remains active. The assessed code head is `d8329ba`; its workflow run [45051630256](https://github.com/Likounsee/portable-simd/actions/runs/45051630256) is pending behind that active run. The pending run includes the compile-only AVX-512 swizzle check. No current-head green claim is made. CI concurrency was changed to avoid cancelling an in-progress run when a new commit is pushed.
 
 ### H. Example correctness and documentation follow-up
 
