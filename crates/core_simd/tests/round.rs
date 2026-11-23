@@ -34,6 +34,26 @@ macro_rules! float_rounding_test {
                     )
                 }
 
+                fn round_ties_away_from_zero<const LANES: usize>() {
+                    let input: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 1.5,
+                        1 => 2.5,
+                        2 => -1.5,
+                        _ => -2.5,
+                    });
+                    let expected: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 2.0,
+                        1 => 3.0,
+                        2 => -2.0,
+                        _ => -3.0,
+                    });
+
+                    assert_eq!(
+                        Vector::<LANES>::from_array(input).round().to_array(),
+                        expected
+                    );
+                }
+
                 fn trunc<const LANES: usize>() {
                     test_helpers::test_unary_elementwise(
                         &Vector::<LANES>::trunc,
