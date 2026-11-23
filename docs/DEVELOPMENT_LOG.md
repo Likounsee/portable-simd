@@ -732,3 +732,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Corrected the algebraic floating reduction test oracle for ARMv7 and older AltiVec configurations: both the SIMD result and scalar reference now apply the target's documented subnormal-flush policy before comparison.
 - Reconciled 64-bit overflowing-shift tests with the scalar API contract. The shift count is cast to `u32` before overflow is reported; high bits discarded by that cast must not independently set the overflow mask.
 - Validation is still in progress on the latest main commit. The previous CI run exposed the shift-contract mismatch on i64 across several targets; those failures were traced to the extra full-width overflow condition and corrected. No current-head test-pass claim is made yet.
+
+### 2026-11-23 — continue unsafe intrinsic audit
+
+- Reviewed unsafe call sites and safety contracts in the core vector/mask APIs, pointer-vector traits, numeric SIMD operations, dynamic swizzle helpers, architecture conversion modules, and `std_float`.
+- Added explicit SAFETY comments to the floating-point intrinsic calls in `crates/std_float/src/lib.rs`. The comments record the supported floating-point SIMD operand types and matching lane/vector shapes; this is an auditability improvement and does not change runtime behavior.
+- Rechecked the existing pointer and gather/scatter contracts, including disabled-lane handling, pointer alignment for masked contiguous access, and the documented duplicate-scatter behavior. No additional concrete soundness defect was established in this pass.
+- This remains a source-level audit, not a proof of soundness or completion of every unsafe site. Target-specific intrinsic preconditions, unsafe trait implementations, and compiler-dependent behavior still require systematic verification and completed CI/Miri evidence.
+- Validation snapshot: the earlier gather-test run reached 29/30 successful jobs with zero failures; its final Miri shard was still running. The current main-head workflow was queued, so no current-head green result is claimed.
