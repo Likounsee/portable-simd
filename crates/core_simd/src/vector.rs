@@ -708,7 +708,7 @@ where
         // is enabled. Use lane 0 as an initialized passthru value, and disable
         // that lane in the intrinsic so each element is read exactly once.
         // SAFETY: The caller guarantees that every index is in bounds.
-        let first = unsafe { *slice.get_unchecked(idxs[0]) };
+        let first = unsafe { *slice.get_unchecked(idxs.as_array()[0]) };
         let enable = Mask::<isize, N>::from_array(core::array::from_fn(|lane| lane != 0));
         // SAFETY: Every enabled index is in bounds, and lane 0 is supplied by first.
         unsafe { Self::gather_select_unchecked(slice, enable, idxs, Self::splat(first)) }
