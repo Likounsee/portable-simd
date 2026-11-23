@@ -399,6 +399,9 @@ jobs:
             cargo install --locked cross --git https://github.com/cross-rs/cross --rev "$CROSS_REV"
           fi
 
+      - name: Add Cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
       - name: Verify Cross
         run: cross --version
 
@@ -463,6 +466,9 @@ jobs:
         run: rustup target add ${TARGET}
         env:
           TARGET: ${{ matrix.target }}
+
+      - name: Add restored Cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Verify restored Cross
         run: cross --version
