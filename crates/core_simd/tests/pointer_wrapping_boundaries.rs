@@ -5,9 +5,9 @@ use core_simd::simd::{
     ptr::{SimdConstPtr, SimdMutPtr},
 };
 
-fn check_const_pointer_arithmetic<const N: usize>() {
-    let base = core::ptr::without_provenance::<u8>(0x1234);
-    let pointers = Simd::<*const u8, N>::splat(base);
+fn check_const_pointer_arithmetic<T, const N: usize>() {
+    let base = core::ptr::without_provenance::<T>(0x1234);
+    let pointers = Simd::<*const T, N>::splat(base);
 
     let counts = core::array::from_fn(|lane| match lane % 6 {
         0 => 0,
@@ -50,9 +50,9 @@ fn check_const_pointer_arithmetic<const N: usize>() {
     );
 }
 
-fn check_mut_pointer_arithmetic<const N: usize>() {
-    let base = core::ptr::without_provenance_mut::<u8>(0x5678);
-    let pointers = Simd::<*mut u8, N>::splat(base);
+fn check_mut_pointer_arithmetic<T, const N: usize>() {
+    let base = core::ptr::without_provenance_mut::<T>(0x5678);
+    let pointers = Simd::<*mut T, N>::splat(base);
 
     let counts = core::array::from_fn(|lane| match lane % 6 {
         0 => 0,
@@ -97,19 +97,34 @@ fn check_mut_pointer_arithmetic<const N: usize>() {
 
 #[test]
 fn pointer_wrapping_arithmetic_matches_scalar_at_integer_boundaries() {
-    check_const_pointer_arithmetic::<1>();
-    check_const_pointer_arithmetic::<2>();
-    check_const_pointer_arithmetic::<4>();
-    check_const_pointer_arithmetic::<8>();
-    check_const_pointer_arithmetic::<16>();
-    check_const_pointer_arithmetic::<32>();
-    check_const_pointer_arithmetic::<64>();
+    check_const_pointer_arithmetic::<u8, 1>();
+    check_const_pointer_arithmetic::<u8, 2>();
+    check_const_pointer_arithmetic::<u8, 4>();
+    check_const_pointer_arithmetic::<u8, 8>();
+    check_const_pointer_arithmetic::<u8, 16>();
+    check_const_pointer_arithmetic::<u8, 32>();
+    check_const_pointer_arithmetic::<u8, 64>();
 
-    check_mut_pointer_arithmetic::<1>();
-    check_mut_pointer_arithmetic::<2>();
-    check_mut_pointer_arithmetic::<4>();
-    check_mut_pointer_arithmetic::<8>();
-    check_mut_pointer_arithmetic::<16>();
-    check_mut_pointer_arithmetic::<32>();
-    check_mut_pointer_arithmetic::<64>();
+    check_mut_pointer_arithmetic::<u8, 1>();
+    check_mut_pointer_arithmetic::<u8, 2>();
+    check_mut_pointer_arithmetic::<u8, 4>();
+    check_mut_pointer_arithmetic::<u8, 8>();
+    check_mut_pointer_arithmetic::<u8, 16>();
+    check_mut_pointer_arithmetic::<u8, 32>();
+    check_mut_pointer_arithmetic::<u8, 64>();
+
+    check_const_pointer_arithmetic::<u32, 1>();
+    check_mut_pointer_arithmetic::<u32, 1>();
+    check_const_pointer_arithmetic::<u32, 2>();
+    check_mut_pointer_arithmetic::<u32, 2>();
+    check_const_pointer_arithmetic::<u32, 4>();
+    check_mut_pointer_arithmetic::<u32, 4>();
+    check_const_pointer_arithmetic::<u32, 8>();
+    check_mut_pointer_arithmetic::<u32, 8>();
+    check_const_pointer_arithmetic::<u32, 16>();
+    check_mut_pointer_arithmetic::<u32, 16>();
+    check_const_pointer_arithmetic::<u32, 32>();
+    check_mut_pointer_arithmetic::<u32, 32>();
+    check_const_pointer_arithmetic::<u32, 64>();
+    check_mut_pointer_arithmetic::<u32, 64>();
 }
