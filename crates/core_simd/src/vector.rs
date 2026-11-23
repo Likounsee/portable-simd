@@ -3,7 +3,7 @@ use core::intrinsics::simd::SimdAlign;
 use crate::simd::{
     Mask, MaskElement,
     cmp::{SimdPartialEq, SimdPartialOrd},
-    num::SimdUint,
+    num::{SimdInt, SimdUint},
     ptr::{SimdConstPtr, SimdMutPtr},
 };
 
@@ -621,6 +621,43 @@ where
     #[inline]
     pub fn gather_or(slice: &[T], idxs: Simd<usize, N>, or: Self) -> Self {
         Self::gather_select(slice, Mask::splat(true), idxs, or)
+    }
+
+    /// Reads from potentially discontiguous signed 32-bit indices in `slice`.
+    ///
+    /// Negative indices and indices greater than or equal to `slice.len()` select
+    /// the corresponding value from `or`. This is useful when interoperating with
+    /// APIs whose SIMD gather indices are signed 32-bit integers.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_i32(slice: &[T], idxs: Simd<i32, N>, or: Self) -> Self {
+        Self::gather_or(slice, idxs.cast::<usize>(), or)
+    }
+
+    /// Reads from signed 32-bit indices in `slice`, using `T::default()` for
+    /// negative or out-of-bounds indices.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_default_i32(slice: &[T], idxs: Simd<i32, N>) -> Self
+    where
+        T: Default,
+    {
+        Self::gather_or_i32(slice, idxs, Self::splat(T::default()))
+    }
+
+    /// Reads from signed 32-bit indices in `slice` under a mask.
+    ///
+    /// Disabled lanes, negative indices, and indices greater than or equal to
+    /// `slice.len()` select the corresponding value from `or`.
+    #[must_use]
+    #[inline]
+    pub fn gather_select_i32(
+        slice: &[T],
+        enable: Mask<isize, N>,
+        idxs: Simd<i32, N>,
+        or: Self,
+    ) -> Self {
+        Self::gather_select(slice, enable, idxs.cast::<usize>(), or)
     }
 
     /// Reads from indices in `slice` to construct a SIMD vector.
