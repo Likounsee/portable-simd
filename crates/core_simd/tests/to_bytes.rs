@@ -145,9 +145,18 @@ fn check_odd_lane_byte_layout<const N: usize>() {
         .flat_map(|value| value.to_le_bytes())
         .collect();
 
-    assert_eq!(values.to_ne_bytes().as_array().as_slice(), expected_ne.as_slice());
-    assert_eq!(values.to_be_bytes().as_array().as_slice(), expected_be.as_slice());
-    assert_eq!(values.to_le_bytes().as_array().as_slice(), expected_le.as_slice());
+    assert_eq!(
+        values.to_ne_bytes().as_array().as_slice(),
+        expected_ne.as_slice()
+    );
+    assert_eq!(
+        values.to_be_bytes().as_array().as_slice(),
+        expected_be.as_slice()
+    );
+    assert_eq!(
+        values.to_le_bytes().as_array().as_slice(),
+        expected_le.as_slice()
+    );
 }
 
 #[test]
