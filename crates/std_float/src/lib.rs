@@ -44,6 +44,8 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn mul_add(self, a: Self, b: Self) -> Self {
+        // SAFETY: this trait is implemented only for supported floating-point SIMD vectors,
+        // and all three operands have the same vector type and lane count.
         unsafe { intrinsics::simd_fma(self, a, b) }
     }
 
@@ -63,6 +65,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn sqrt(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_fsqrt(self) }
     }
 
@@ -71,6 +74,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn sin(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_fsin(self) }
     }
 
@@ -79,6 +83,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn cos(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_fcos(self) }
     }
 
@@ -87,6 +92,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn exp(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_fexp(self) }
     }
 
@@ -95,6 +101,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn exp2(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_fexp2(self) }
     }
 
@@ -103,6 +110,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn ln(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_flog(self) }
     }
 
@@ -111,6 +119,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn log(self, base: Self) -> Self {
+        // SAFETY: both logarithms produce the same supported floating-point SIMD type.
         unsafe { intrinsics::simd_div(self.ln(), base.ln()) }
     }
 
@@ -119,6 +128,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn log2(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_flog2(self) }
     }
 
@@ -127,6 +137,7 @@ pub impl(self) trait StdFloat: Sized {
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn log10(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_flog10(self) }
     }
 
@@ -134,6 +145,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn ceil(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_ceil(self) }
     }
 
@@ -141,6 +153,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn floor(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_floor(self) }
     }
 
@@ -148,6 +161,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn round(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_round(self) }
     }
 
@@ -155,6 +169,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn trunc(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_trunc(self) }
     }
 
@@ -163,6 +178,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn round_ties_even(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_round_ties_even(self) }
     }
 
@@ -175,6 +191,7 @@ pub impl(self) trait StdFloat: Sized {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     #[inline]
     fn round_fast(self) -> Self {
+        // SAFETY: `self` is a supported floating-point SIMD vector.
         unsafe { intrinsics::simd_round_ties_even(self) }
     }
 
