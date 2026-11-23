@@ -147,7 +147,7 @@ macro_rules! impl_tests {
             test_helpers::test_lanes! {
                 fn powi<const LANES: usize>() {
                     test_helpers::test_unary_elementwise_approx(
-                        &core_simd::simd::Simd::<$scalar, LANES>::powi,
+                        &|value| value.powi(3),
                         &|x| x.powi(3),
                         &|_| true,
                         16,
