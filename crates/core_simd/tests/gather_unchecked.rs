@@ -70,6 +70,7 @@ fn gather_unchecked_preserves_f64_lane_bits() {
         ]
     );
 }
+
 #[test]
 fn gather_unchecked_supports_single_lane() {
     let values = [42_i32];
