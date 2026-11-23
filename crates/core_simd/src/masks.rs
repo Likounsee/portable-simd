@@ -218,7 +218,15 @@ where
     /// Converts a SIMD mask to an array of bools.
     #[inline]
     pub fn to_array(self) -> [bool; N] {
-        // This follows mostly the same logic as from_array.
+        // LoongArch LLVM code generation miscompiles byte-wide SIMD operations
+        // for four lanes. Avoid vector casts and bitwise operations in that case.
+        #[cfg(target_arch = "loongarch64")]
+        if mem::size_of::<T>() == 1 && N == 4 {
+            return core::array::from_fn(|lane| {
+                T::eq(self.0.as_array()[lane], T::TRUE)
+            });
+        }
+
         // SAFETY: Rust's bool has a layout of 1 byte (u8) with a value of
         //     true:    0b_0000_0001
         //     false:   0b_0000_0000
