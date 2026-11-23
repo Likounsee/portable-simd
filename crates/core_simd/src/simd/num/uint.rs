@@ -143,9 +143,6 @@ pub impl(self) trait SimdUint: Copy {
     where
         Self: SimdPartialEq;
 
-    /// Returns the quotient of each lane using Euclidean division.
-    ///
-    /// Division by zero panics, matching the scalar integer operation.
     /// Returns the Euclidean quotient and a mask indicating lanes where division overflowed.
     ///
     /// Division by zero panics, matching the scalar integer operation.
@@ -160,6 +157,9 @@ pub impl(self) trait SimdUint: Copy {
     where
         Self: SimdPartialEq;
 
+    /// Returns the quotient of each lane using Euclidean division.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
     fn div_euclid(self, rhs: Self) -> Self;
 
     /// Returns the remainder of each lane using Euclidean division.
@@ -246,9 +246,11 @@ pub impl(self) trait SimdUint: Copy {
     fn reduce_xor(self) -> Self::Scalar;
 
     /// Interprets each lane as a big-endian integer and converts it to native endianness.
+    #[allow(clippy::wrong_self_convention)]
     fn from_be(self) -> Self;
 
     /// Interprets each lane as a little-endian integer and converts it to native endianness.
+    #[allow(clippy::wrong_self_convention)]
     fn from_le(self) -> Self;
 
     /// Converts each lane from native endianness to big-endian representation.
