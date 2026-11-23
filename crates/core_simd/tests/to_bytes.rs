@@ -116,21 +116,15 @@ where
     }));
 
     assert_eq!(
-        <Simd<i32, N> as ToBytes>::from_ne_bytes(
-            <Simd<i32, N> as ToBytes>::to_ne_bytes(values)
-        ),
+        <Simd<i32, N> as ToBytes>::from_ne_bytes(<Simd<i32, N> as ToBytes>::to_ne_bytes(values)),
         values
     );
     assert_eq!(
-        <Simd<i32, N> as ToBytes>::from_be_bytes(
-            <Simd<i32, N> as ToBytes>::to_be_bytes(values)
-        ),
+        <Simd<i32, N> as ToBytes>::from_be_bytes(<Simd<i32, N> as ToBytes>::to_be_bytes(values)),
         values
     );
     assert_eq!(
-        <Simd<i32, N> as ToBytes>::from_le_bytes(
-            <Simd<i32, N> as ToBytes>::to_le_bytes(values)
-        ),
+        <Simd<i32, N> as ToBytes>::from_le_bytes(<Simd<i32, N> as ToBytes>::to_le_bytes(values)),
         values
     );
 }
