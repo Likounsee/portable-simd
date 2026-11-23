@@ -109,7 +109,8 @@ macro_rules! impl_tests {
             }
 
             // https://github.com/rust-lang/miri/issues/3555
-            unary_approx_test! { $scalar, sin, cos, exp, exp2, ln, log2, log10 }
+            unary_approx_test! { $scalar, sin, cos, exp, exp2, ln, log2, log10, cbrt, exp_m1, ln_1p }
+            unary_approx_test! { $scalar, hypot, powf }
 
             // The implementation of log is a.ln() / b.ln(), so there are 2 inexact operations,
             // hence a larger ulps is needed.
@@ -125,6 +126,15 @@ macro_rules! impl_tests {
             }
 
             test_helpers::test_lanes! {
+                fn powi<const LANES: usize>() {
+                    test_helpers::test_unary_elementwise_approx(
+                        &core_simd::simd::Simd::<$scalar, LANES>::powi,
+                        &|x| x.powi(3),
+                        &|_| true,
+                        16,
+                    )
+                }
+
                 fn fract<const LANES: usize>() {
                     test_helpers::test_unary_elementwise_flush_subnormals(
                         &core_simd::simd::Simd::<$scalar, LANES>::fract,
