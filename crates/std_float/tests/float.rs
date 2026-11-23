@@ -146,10 +146,12 @@ macro_rules! impl_tests {
 
             test_helpers::test_lanes! {
                 fn powi<const LANES: usize>() {
-                    let input = core::array::from_fn(|lane| {
+                    let input: [$scalar; LANES] = core::array::from_fn(|lane| {
                         0.5 as $scalar + lane as $scalar * 0.125 as $scalar
                     });
-                    let actual = core_simd::simd::Simd::from_array(input).powi(3).to_array();
+                    let actual = core_simd::simd::Simd::<$scalar, LANES>::from_array(input)
+                        .powi(3)
+                        .to_array();
                     let expected = input.map(|value| value.powi(3));
                     assert_eq!(actual, expected);
                 }

@@ -226,7 +226,9 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
 
     #[inline]
     fn hypot(self, other: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].hypot(other.as_array()[i])
+        }))
     }
 
     #[inline]
@@ -246,7 +248,9 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
 
     #[inline]
     fn powf(self, n: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].powf(n.as_array()[i])
+        }))
     }
 
     #[inline]
@@ -263,7 +267,9 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
 
     #[inline]
     fn hypot(self, other: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].hypot(other.as_array()[i])
+        }))
     }
 
     #[inline]
@@ -283,7 +289,9 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
 
     #[inline]
     fn powf(self, n: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].powf(n.as_array()[i])
+        }))
     }
 
     #[inline]
@@ -300,7 +308,9 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
 
     #[inline]
     fn hypot(self, other: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].hypot(other.as_array()[i])
+        }))
     }
 
     #[inline]
@@ -320,7 +330,9 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
 
     #[inline]
     fn powf(self, n: Self) -> Self {
-        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+        Self::from_array(core::array::from_fn(|i| {
+            self.as_array()[i].powf(n.as_array()[i])
+        }))
     }
 
     #[inline]
