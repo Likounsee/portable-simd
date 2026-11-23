@@ -41,7 +41,7 @@ impl<const N: usize> Simd<u8, N> {
             match N {
                 // Aarch64
                 #[cfg(all(
-        not(miri),
+                    not(miri),
                     any(target_arch = "aarch64", target_arch = "arm64ec"),
                     target_feature = "neon",
                     target_endian = "little"
@@ -147,7 +147,7 @@ impl<const N: usize> Simd<u8, N> {
         // AArch64 TBL and ARMv7 VTBL naturally return zero for out-of-range
         // indices, including every index with its most significant bit set.
         #[cfg(all(
-        not(miri),
+            not(miri),
             any(target_arch = "aarch64", target_arch = "arm64ec"),
             target_feature = "neon",
             target_endian = "little"
@@ -287,7 +287,7 @@ unsafe fn armv7_neon_swizzle_u8x16(bytes: Simd<u8, 16>, idxs: Simd<u8, 16>) -> S
 /// # Safety
 /// This requires AArch64 NEON to work
 #[cfg(all(
-        not(miri),
+    not(miri),
     any(target_arch = "aarch64", target_arch = "arm64ec"),
     target_feature = "neon",
     target_endian = "little"
