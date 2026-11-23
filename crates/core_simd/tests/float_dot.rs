@@ -1,6 +1,6 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{num::SimdFloat, Simd};
+use core_simd::simd::{Simd, num::SimdFloat};
 
 #[test]
 fn dot_f32_four_lanes() {
