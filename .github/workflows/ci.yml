@@ -9,10 +9,11 @@ on:
 
 permissions: {}
 
-# Cancel superseded runs so stale CI jobs cannot delay validation of the newest commit.
+# Keep each pushed commit's validation intact while development is active.
+# This prevents a follow-up commit from cancelling an in-progress architecture matrix.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 defaults:
   run:
