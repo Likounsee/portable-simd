@@ -70,3 +70,13 @@ fn gather_unchecked_preserves_f64_lane_bits() {
         ]
     );
 }
+#[test]
+fn gather_unchecked_supports_single_lane() {
+    let values = [42_i32];
+    let indices = Simd::from_array([0_usize]);
+
+    // SAFETY: the only lane index is within the one-element slice.
+    let actual = unsafe { Simd::gather_unchecked(&values, indices) };
+
+    assert_eq!(actual.to_array(), [42]);
+}
