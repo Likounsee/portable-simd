@@ -107,7 +107,6 @@ fn f16_byte_conversions_preserve_all_bit_patterns_and_endiannesses() {
     );
 }
 
-
 fn check_odd_lane_byte_roundtrip<const N: usize>() {
     let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
         (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
