@@ -112,7 +112,7 @@ where
     Simd<i32, N>: ToBytes,
 {
     let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
-        (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
+        (lane as i32).wrapping_mul(0x0102_0304) ^ i32::MIN
     }));
 
     assert_eq!(
@@ -143,7 +143,7 @@ where
     Simd<i32, N>: ToBytes,
 {
     let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
-        (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
+        (lane as i32).wrapping_mul(0x0102_0304) ^ i32::MIN
     }));
     let scalars = values.to_array();
 
