@@ -584,7 +584,7 @@ where
 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
+        self.0.to_array().partial_cmp(&other.0.to_array())
     }
 }
 
