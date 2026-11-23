@@ -125,3 +125,37 @@ fn byte_conversions_support_non_power_of_two_lane_counts() {
     check_odd_lane_byte_roundtrip::<9>();
     check_odd_lane_byte_roundtrip::<15>();
 }
+
+
+fn check_odd_lane_byte_layout<const N: usize>() {
+    let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
+        (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
+    }));
+    let scalars = values.to_array();
+
+    let expected_ne: Vec<u8> = scalars
+        .iter()
+        .flat_map(|value| value.to_ne_bytes())
+        .collect();
+    let expected_be: Vec<u8> = scalars
+        .iter()
+        .flat_map(|value| value.to_be_bytes())
+        .collect();
+    let expected_le: Vec<u8> = scalars
+        .iter()
+        .flat_map(|value| value.to_le_bytes())
+        .collect();
+
+    assert_eq!(values.to_ne_bytes().as_array().as_slice(), expected_ne);
+    assert_eq!(values.to_be_bytes().as_array().as_slice(), expected_be);
+    assert_eq!(values.to_le_bytes().as_array().as_slice(), expected_le);
+}
+
+#[test]
+fn byte_conversions_preserve_lane_order_and_endian_layout_for_odd_lane_counts() {
+    check_odd_lane_byte_layout::<3>();
+    check_odd_lane_byte_layout::<5>();
+    check_odd_lane_byte_layout::<7>();
+    check_odd_lane_byte_layout::<9>();
+    check_odd_lane_byte_layout::<15>();
+}
