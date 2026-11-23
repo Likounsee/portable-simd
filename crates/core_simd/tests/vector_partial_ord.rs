@@ -51,3 +51,15 @@ fn integer_ord_is_lexicographic() {
     assert_eq!(right.cmp(&left), Ordering::Greater);
     assert_eq!(left.cmp(&left), Ordering::Equal);
 }
+
+#[test]
+fn mask_partial_ord_uses_boolean_lane_ordering() {
+    use core_simd::simd::Mask;
+
+    let left = Mask::<i8, 4>::from_array([false, true, false, false]);
+    let right = Mask::<i8, 4>::from_array([false, false, false, true]);
+
+    assert_eq!(left.partial_cmp(&right), Some(Ordering::Greater));
+    assert_eq!(right.partial_cmp(&left), Some(Ordering::Less));
+    assert_eq!(left.partial_cmp(&left), Some(Ordering::Equal));
+}
