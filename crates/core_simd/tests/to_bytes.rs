@@ -126,7 +126,6 @@ fn byte_conversions_support_non_power_of_two_lane_counts() {
     check_odd_lane_byte_roundtrip::<15>();
 }
 
-
 fn check_odd_lane_byte_layout<const N: usize>() {
     let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
         (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
