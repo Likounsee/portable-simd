@@ -56,7 +56,9 @@ macro_rules! unsigned_shift_tests {
                 fn unchecked_shifts<const LANES: usize>() {
                     let lhs: [$ty; LANES] =
                         core::array::from_fn(|lane| (lane as $ty).wrapping_add(4));
-                    let rhs: [$ty; LANES] = core::array::from_fn(|lane| (lane % 2) as $ty);
+                    // Exercise every valid shift count as the lane count grows.
+                    let rhs: [$ty; LANES] =
+                        core::array::from_fn(|lane| (lane % <$ty>::BITS as usize) as $ty);
                     let value = Simd::<$ty, LANES>::from_array(lhs);
                     let amount = Simd::<$ty, LANES>::from_array(rhs);
                     // SAFETY: Every shift amount is either zero or one.
