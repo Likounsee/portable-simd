@@ -115,9 +115,24 @@ where
         (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
     }));
 
-    assert_eq!(Simd::<i32, N>::from_ne_bytes(values.to_ne_bytes()), values);
-    assert_eq!(Simd::<i32, N>::from_be_bytes(values.to_be_bytes()), values);
-    assert_eq!(Simd::<i32, N>::from_le_bytes(values.to_le_bytes()), values);
+    assert_eq!(
+        <Simd<i32, N> as ToBytes>::from_ne_bytes(
+            <Simd<i32, N> as ToBytes>::to_ne_bytes(values)
+        ),
+        values
+    );
+    assert_eq!(
+        <Simd<i32, N> as ToBytes>::from_be_bytes(
+            <Simd<i32, N> as ToBytes>::to_be_bytes(values)
+        ),
+        values
+    );
+    assert_eq!(
+        <Simd<i32, N> as ToBytes>::from_le_bytes(
+            <Simd<i32, N> as ToBytes>::to_le_bytes(values)
+        ),
+        values
+    );
 }
 
 #[test]
@@ -151,9 +166,13 @@ where
         .flat_map(|value| value.to_le_bytes())
         .collect();
 
-    assert_eq!(values.to_ne_bytes().as_ref(), expected_ne.as_slice());
-    assert_eq!(values.to_be_bytes().as_ref(), expected_be.as_slice());
-    assert_eq!(values.to_le_bytes().as_ref(), expected_le.as_slice());
+    let native = <Simd<i32, N> as ToBytes>::to_ne_bytes(values);
+    let big = <Simd<i32, N> as ToBytes>::to_be_bytes(values);
+    let little = <Simd<i32, N> as ToBytes>::to_le_bytes(values);
+
+    assert_eq!(native.as_ref(), expected_ne.as_slice());
+    assert_eq!(big.as_ref(), expected_be.as_slice());
+    assert_eq!(little.as_ref(), expected_le.as_slice());
 }
 
 #[test]
