@@ -407,7 +407,7 @@ impl AlgebraicReduceProduct for f32 {
                 .as_array()
                 .iter()
                 .copied()
-                .fold(1.0, |product, lane| product.algebraic_mul(lane));
+                .fold(1.0, |product, lane| product * lane);
         }
         #[cfg(not(miri))]
         {
@@ -426,7 +426,7 @@ impl AlgebraicReduceProduct for f64 {
                 .as_array()
                 .iter()
                 .copied()
-                .fold(1.0, |product, lane| product.algebraic_mul(lane));
+                .fold(1.0, |product, lane| product * lane);
         }
         #[cfg(not(miri))]
         {
