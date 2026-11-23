@@ -578,6 +578,20 @@ where
         enable: Mask<<T as SimdElement>::Mask, N>,
         or: Self,
     ) -> (Self, usize) {
+        let enabled_bits = enable.to_bitmask();
+        let prefix_len = enabled_bits.trailing_ones() as usize;
+        let prefix_bits = if prefix_len == 64 {
+            u64::MAX
+        } else {
+            (1_u64 << prefix_len) - 1
+        };
+        if enabled_bits == prefix_bits {
+            let consumed = prefix_len.min(slice.len());
+            let mut result = *or.as_array();
+            result[..consumed].copy_from_slice(&slice[..consumed]);
+            return (Self::from_array(result), consumed);
+        }
+
         let mut result = *or.as_array();
         let mut consumed = 0;
         for (lane, selected) in enable.to_array().into_iter().enumerate() {
@@ -817,6 +831,19 @@ where
         slice: &mut [T],
         enable: Mask<<T as SimdElement>::Mask, N>,
     ) -> usize {
+        let enabled_bits = enable.to_bitmask();
+        let prefix_len = enabled_bits.trailing_ones() as usize;
+        let prefix_bits = if prefix_len == 64 {
+            u64::MAX
+        } else {
+            (1_u64 << prefix_len) - 1
+        };
+        if enabled_bits == prefix_bits {
+            let written = prefix_len.min(slice.len());
+            slice[..written].copy_from_slice(&self.as_array()[..written]);
+            return written;
+        }
+
         let mut written = 0;
         for (value, selected) in self.as_array().iter().copied().zip(enable.to_array()) {
             if selected && written < slice.len() {

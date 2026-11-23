@@ -82,3 +82,18 @@ fn compress_and_expand_round_trip_every_four_lane_mask() {
         assert_eq!(expanded, mask.select(values, fallback), "mask={bits:04b}");
     }
 }
+
+#[test]
+fn prefix_masks_use_contiguous_bounded_copies() {
+    let values = Simd::from_array([10_u32, 20, 30, 40]);
+    let prefix = Mask::from_array([true, true, true, false]);
+    let mut output = [99_u32; 2];
+
+    assert_eq!(values.compress_store(&mut output, prefix), 2);
+    assert_eq!(output, [10, 20]);
+
+    let fallback = Simd::from_array([90, 91, 92, 93]);
+    let (expanded, consumed) = Simd::<u32, 4>::expand_load(&[7, 8], prefix, fallback);
+    assert_eq!(consumed, 2);
+    assert_eq!(expanded.to_array(), [7, 8, 92, 93]);
+}
