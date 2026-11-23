@@ -87,7 +87,6 @@ pub impl(self) trait StdFloat: Sized {
     /// Raises each lane to its corresponding floating-point exponent.
     fn powf(self, n: Self) -> Self;
 
-
     /// Computes the tangent of each lane.
     fn tan(self) -> Self;
     /// Computes the inverse sine of each lane.
@@ -278,8 +277,6 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
     }
 
     #[inline]
-
-    #[inline]
     fn tan(self) -> Self { Self::from_array(self.to_array().map(f16::tan)) }
     #[inline]
     fn asin(self) -> Self { Self::from_array(self.to_array().map(f16::asin)) }
@@ -304,6 +301,7 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
     #[inline]
     fn atanh(self) -> Self { Self::from_array(self.to_array().map(f16::atanh)) }
 
+    #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
     }
@@ -345,8 +343,6 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
     }
 
     #[inline]
-
-    #[inline]
     fn tan(self) -> Self { Self::from_array(self.to_array().map(f32::tan)) }
     #[inline]
     fn asin(self) -> Self { Self::from_array(self.to_array().map(f32::asin)) }
@@ -371,6 +367,7 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
     #[inline]
     fn atanh(self) -> Self { Self::from_array(self.to_array().map(f32::atanh)) }
 
+    #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
     }
@@ -412,8 +409,6 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
     }
 
     #[inline]
-
-    #[inline]
     fn tan(self) -> Self { Self::from_array(self.to_array().map(f64::tan)) }
     #[inline]
     fn asin(self) -> Self { Self::from_array(self.to_array().map(f64::asin)) }
@@ -438,6 +433,7 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
     #[inline]
     fn atanh(self) -> Self { Self::from_array(self.to_array().map(f64::atanh)) }
 
+    #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
     }
