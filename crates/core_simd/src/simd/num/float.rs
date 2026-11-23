@@ -208,6 +208,7 @@ pub impl(self) trait SimdFloat: Copy {
     /// let b = f32x4::from_array([5.0, 6.0, 7.0, 8.0]);
     /// assert_eq!(a.dot(b), 70.0);
     /// ```
+    #[inline]
     fn dot(self, rhs: Self) -> Self::Scalar
     where
         Self: core::ops::Mul<Output = Self>,
