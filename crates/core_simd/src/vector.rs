@@ -2,7 +2,7 @@ use core::intrinsics::simd::SimdAlign;
 
 use crate::simd::{
     Mask, MaskElement,
-    cmp::SimdPartialOrd,
+    cmp::{SimdPartialEq, SimdPartialOrd},
     num::SimdUint,
     ptr::{SimdConstPtr, SimdMutPtr},
 };
@@ -1103,11 +1103,14 @@ where
 impl<T, const N: usize> PartialOrd for Simd<T, N>
 where
     T: SimdElement + PartialOrd,
+    Simd<T, N>: SimdPartialEq<Mask = Mask<<T as SimdElement>::Mask, N>>,
 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        // TODO use SIMD equality
-        self.to_array().partial_cmp(other.as_ref())
+        match self.simd_ne(*other).first_set() {
+            Some(index) => self.as_array()[index].partial_cmp(&other.as_array()[index]),
+            None => Some(core::cmp::Ordering::Equal),
+        }
     }
 }
 
@@ -1117,11 +1120,14 @@ impl<T, const N: usize> Eq for Simd<T, N> where T: SimdElement + Eq {}
 impl<T, const N: usize> Ord for Simd<T, N>
 where
     T: SimdElement + Ord,
+    Simd<T, N>: SimdPartialEq<Mask = Mask<<T as SimdElement>::Mask, N>>,
 {
     #[inline]
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        // TODO use SIMD equality
-        self.to_array().cmp(other.as_ref())
+        match self.simd_ne(*other).first_set() {
+            Some(index) => self.as_array()[index].cmp(&other.as_array()[index]),
+            None => core::cmp::Ordering::Equal,
+        }
     }
 }
 
