@@ -263,8 +263,7 @@ fn f64_algebraic_reduce_product_is_correct_for_exact_inputs() {
 #[test]
 fn f32_algebraic_reduce_product_supports_eight_lanes() {
     let actual =
-        Simd::from_array([1.0_f32, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0])
-            .algebraic_reduce_product();
+        Simd::from_array([1.0_f32, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0]).algebraic_reduce_product();
     assert!((actual - 16.0).abs() <= 1e-5);
 }
 
