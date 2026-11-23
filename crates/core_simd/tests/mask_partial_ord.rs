@@ -41,12 +41,36 @@ fn loongarch_four_lane_mask_ordering_regression() {
                 a_bits & (1_u8 << lane) != 0 || b_bits & (1_u8 << lane) != 0
             });
 
-            assert_eq!(a.simd_lt(b).to_array(), expected_lt, "lt: {a_bits:04b}, {b_bits:04b}");
-            assert_eq!(a.simd_le(b).to_array(), expected_le, "le: {a_bits:04b}, {b_bits:04b}");
-            assert_eq!(a.simd_gt(b).to_array(), expected_gt, "gt: {a_bits:04b}, {b_bits:04b}");
-            assert_eq!(a.simd_ge(b).to_array(), expected_ge, "ge: {a_bits:04b}, {b_bits:04b}");
-            assert_eq!(a.simd_min(b).to_array(), expected_min, "min: {a_bits:04b}, {b_bits:04b}");
-            assert_eq!(a.simd_max(b).to_array(), expected_max, "max: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(
+                a.simd_lt(b).to_array(),
+                expected_lt,
+                "lt: {a_bits:04b}, {b_bits:04b}"
+            );
+            assert_eq!(
+                a.simd_le(b).to_array(),
+                expected_le,
+                "le: {a_bits:04b}, {b_bits:04b}"
+            );
+            assert_eq!(
+                a.simd_gt(b).to_array(),
+                expected_gt,
+                "gt: {a_bits:04b}, {b_bits:04b}"
+            );
+            assert_eq!(
+                a.simd_ge(b).to_array(),
+                expected_ge,
+                "ge: {a_bits:04b}, {b_bits:04b}"
+            );
+            assert_eq!(
+                a.simd_min(b).to_array(),
+                expected_min,
+                "min: {a_bits:04b}, {b_bits:04b}"
+            );
+            assert_eq!(
+                a.simd_max(b).to_array(),
+                expected_max,
+                "max: {a_bits:04b}, {b_bits:04b}"
+            );
         }
     }
 }
