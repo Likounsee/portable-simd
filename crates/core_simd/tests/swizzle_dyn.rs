@@ -181,7 +181,6 @@ fn swizzle_dyn_unchecked_zeros_every_high_bit_index() {
     check_all_high_bit_swizzle_indices::<64>();
 }
 
-
 fn check_unchecked_swizzle_valid_indices<const LANES: usize>() {
     let values: [u8; LANES] =
         core::array::from_fn(|lane| (lane as u8).wrapping_mul(17).wrapping_add(5));
