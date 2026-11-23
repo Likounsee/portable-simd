@@ -168,7 +168,6 @@ fn byte_conversions_preserve_lane_order_and_endian_layout_for_odd_lane_counts() 
     check_odd_lane_byte_layout::<15>();
 }
 
-
 macro_rules! check_byte_layout {
     ($ty:ty, $lanes:literal) => {{
         let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
