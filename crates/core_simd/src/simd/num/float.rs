@@ -697,17 +697,17 @@ macro_rules! impl_trait {
             #[inline]
             fn dot3(self, rhs: Self) -> Self::Scalar {
                 const { assert!(N >= 3, "dot3 requires at least 3 lanes") };
-                let product = self * rhs;
-                let lanes = product.as_array();
-                lanes[0] + lanes[1] + lanes[2]
+                let lhs = self.as_array();
+                let rhs = rhs.as_array();
+                lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2]
             }
 
             #[inline]
             fn dot4(self, rhs: Self) -> Self::Scalar {
                 const { assert!(N >= 4, "dot4 requires at least 4 lanes") };
-                let product = self * rhs;
-                let lanes = product.as_array();
-                lanes[0] + lanes[1] + lanes[2] + lanes[3]
+                let lhs = self.as_array();
+                let rhs = rhs.as_array();
+                lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3]
             }
         }
         )*
