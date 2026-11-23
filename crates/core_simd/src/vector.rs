@@ -631,7 +631,7 @@ where
     #[must_use]
     #[inline]
     pub fn gather_or_i32(slice: &[T], idxs: Simd<i32, N>, or: Self) -> Self {
-        Self::gather_or(slice, idxs.cast::<usize>(), or)
+        Self::gather_select_i32(slice, Mask::splat(true), idxs, or)
     }
 
     /// Reads from signed 32-bit indices in `slice`, using `T::default()` for
@@ -657,6 +657,10 @@ where
         idxs: Simd<i32, N>,
         or: Self,
     ) -> Self {
+        // Mask negative signed indices before converting them to usize.
+        // This keeps them out-of-bounds even on targets where the cast could
+        // otherwise produce a nonnegative, in-range unsigned value.
+        let enable = enable & idxs.simd_ge(Simd::splat(0));
         Self::gather_select(slice, enable, idxs.cast::<usize>(), or)
     }
 
