@@ -365,6 +365,18 @@ pub impl(self) trait SimdInt: Copy {
     /// ```
     fn reduce_min(self) -> Self::Scalar;
 
+    /// Returns the index of the first lane containing the minimum value.
+    ///
+    /// If multiple lanes contain the minimum, the lowest lane index is returned.
+    #[must_use]
+    fn reduce_min_index(self) -> usize;
+
+    /// Returns the index of the first lane containing the maximum value.
+    ///
+    /// If multiple lanes contain the maximum, the lowest lane index is returned.
+    #[must_use]
+    fn reduce_max_index(self) -> usize;
+
     /// Returns the cumulative bitwise "and" across the elements of the vector.
     fn reduce_and(self) -> Self::Scalar;
 
@@ -797,6 +809,20 @@ macro_rules! impl_trait {
             fn reduce_min(self) -> Self::Scalar {
                 // Safety: `self` is an integer vector
                 unsafe { core::intrinsics::simd::simd_reduce_min(self) }
+            }
+
+            #[inline]
+            fn reduce_min_index(self) -> usize {
+                self.simd_eq(Self::splat(self.reduce_min()))
+                    .first_set()
+                    .expect("SIMD vectors always have at least one lane")
+            }
+
+            #[inline]
+            fn reduce_max_index(self) -> usize {
+                self.simd_eq(Self::splat(self.reduce_max()))
+                    .first_set()
+                    .expect("SIMD vectors always have at least one lane")
             }
 
             #[inline]

@@ -228,6 +228,22 @@ macro_rules! impl_common_integer_tests {
                 });
             }
 
+            fn reduce_min_index<const LANES: usize>() {
+                test_helpers::test_1(&|x| {
+                    let expected = x.iter().position(|value| *value == *x.iter().min().unwrap()).unwrap();
+                    assert_eq!($vector::<LANES>::from_array(x).reduce_min_index(), expected);
+                    Ok(())
+                });
+            }
+
+            fn reduce_max_index<const LANES: usize>() {
+                test_helpers::test_1(&|x| {
+                    let expected = x.iter().position(|value| *value == *x.iter().max().unwrap()).unwrap();
+                    assert_eq!($vector::<LANES>::from_array(x).reduce_max_index(), expected);
+                    Ok(())
+                });
+            }
+
             fn endian_conversions<const LANES: usize>() {
                 let values: [$scalar; LANES] =
                     core::array::from_fn(|lane| ($scalar::MAX / 3).wrapping_add(lane as $scalar));
