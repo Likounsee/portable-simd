@@ -162,12 +162,12 @@ where
     let rhs =
         core::array::from_fn::<_, N, _>(|lane| T::eq(rhs.to_simd().as_array()[lane], T::TRUE));
     let values = core::array::from_fn(|lane| match OP {
-        0 => !lhs[lane] & rhs[lane],
-        1 => !lhs[lane] | rhs[lane],
-        2 => lhs[lane] & !rhs[lane],
-        3 => lhs[lane] | !rhs[lane],
-        4 => lhs[lane] | rhs[lane],
-        5 => lhs[lane] & rhs[lane],
+        0 => !lhs[lane] && rhs[lane],
+        1 => !lhs[lane] || rhs[lane],
+        2 => lhs[lane] && !rhs[lane],
+        3 => lhs[lane] || !rhs[lane],
+        4 => lhs[lane] || rhs[lane],
+        5 => lhs[lane] && rhs[lane],
         _ => unreachable!(),
     });
     Mask::from_array(values)
