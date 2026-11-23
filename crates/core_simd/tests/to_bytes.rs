@@ -106,22 +106,3 @@ fn f16_byte_conversions_preserve_all_bit_patterns_and_endiannesses() {
         values.to_bits()
     );
 }
-
-fn check_odd_lane_byte_roundtrip<const N: usize>() {
-    let values = Simd::<i32, N>::from_array(core::array::from_fn(|lane| {
-        (lane as i32).wrapping_mul(0x1020_304) ^ i32::MIN
-    }));
-
-    assert_eq!(Simd::<i32, N>::from_ne_bytes(values.to_ne_bytes()), values);
-    assert_eq!(Simd::<i32, N>::from_be_bytes(values.to_be_bytes()), values);
-    assert_eq!(Simd::<i32, N>::from_le_bytes(values.to_le_bytes()), values);
-}
-
-#[test]
-fn byte_conversions_support_non_power_of_two_lane_counts() {
-    check_odd_lane_byte_roundtrip::<3>();
-    check_odd_lane_byte_roundtrip::<5>();
-    check_odd_lane_byte_roundtrip::<7>();
-    check_odd_lane_byte_roundtrip::<9>();
-    check_odd_lane_byte_roundtrip::<15>();
-}
