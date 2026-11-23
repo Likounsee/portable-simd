@@ -740,3 +740,11 @@ This is the change ledger for the `Likounsee/portable-simd` fork. It replaces a 
 - Rechecked the existing pointer and gather/scatter contracts, including disabled-lane handling, pointer alignment for masked contiguous access, and the documented duplicate-scatter behavior. No additional concrete soundness defect was established in this pass.
 - This remains a source-level audit, not a proof of soundness or completion of every unsafe site. Target-specific intrinsic preconditions, unsafe trait implementations, and compiler-dependent behavior still require systematic verification and completed CI/Miri evidence.
 - Validation snapshot: the earlier gather-test run reached 29/30 successful jobs with zero failures; its final Miri shard was still running. The current main-head workflow was queued, so no current-head green result is claimed.
+
+
+### 2026-11-23 — unsafe trait implementation review
+
+- Inspected the unsafe trait contracts and implementations for `SimdElement`, `MaskElement`, and `SimdCast`, including the primitive integer, floating-point, and thin-pointer implementations.
+- The implementations currently in the tree match their documented restrictions: SIMD element implementations are limited to supported primitive lane types and thin pointers; mask elements are signed integer types with canonical all-zero/all-one lane values; cast implementations are limited to supported primitive numeric SIMD element types.
+- Reviewed the public unchecked gather/load APIs in `vector.rs`: their safety requirements are documented, enabled lanes are the only lanes accessed by masked operations, and the unchecked gather helper initializes its passthrough lane before invoking the intrinsic.
+- No concrete defect was found in this focused pass, so no runtime code was changed. This is not a formal proof and does not replace target-by-target intrinsic validation or the full Miri matrix.
