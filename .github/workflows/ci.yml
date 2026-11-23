@@ -9,10 +9,10 @@ on:
 
 permissions: {}
 
-# Keep each pushed commit's validation intact while development is active.
-# This prevents a follow-up commit from cancelling an in-progress architecture matrix.
+# Give every workflow run its own concurrency group. GitHub otherwise keeps only
+# one pending run per group and may replace an older queued commit's validation.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
 defaults:
