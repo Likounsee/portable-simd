@@ -69,6 +69,30 @@ pub impl(self) trait StdFloat: Sized {
         unsafe { intrinsics::simd_fsqrt(self) }
     }
 
+    /// Computes the cube root of each lane using the scalar floating-point implementation.
+    #[inline]
+    fn cbrt(self) -> Self;
+
+    /// Computes the hypotenuse of each pair of corresponding lanes.
+    #[inline]
+    fn hypot(self, other: Self) -> Self;
+
+    /// Computes e^x - 1 for each lane, accurately near zero.
+    #[inline]
+    fn exp_m1(self) -> Self;
+
+    /// Computes ln(1 + x) for each lane, accurately near zero.
+    #[inline]
+    fn ln_1p(self) -> Self;
+
+    /// Raises each lane to the same integer exponent.
+    #[inline]
+    fn powi(self, n: i32) -> Self;
+
+    /// Raises each lane to its corresponding floating-point exponent.
+    #[inline]
+    fn powf(self, n: Self) -> Self;
+
     /// Produces a vector where every element has the sine of the value
     /// in the equivalently-indexed element in `self`.
     #[inline]
@@ -202,6 +226,36 @@ pub impl(self) trait StdFloat: Sized {
 
 impl<const N: usize> StdFloat for Simd<f16, N> {
     #[inline]
+    fn cbrt(self) -> Self {
+        Self::from_array(self.to_array().map(f16::cbrt))
+    }
+
+    #[inline]
+    fn hypot(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+    }
+
+    #[inline]
+    fn exp_m1(self) -> Self {
+        Self::from_array(self.to_array().map(f16::exp_m1))
+    }
+
+    #[inline]
+    fn ln_1p(self) -> Self {
+        Self::from_array(self.to_array().map(f16::ln_1p))
+    }
+
+    #[inline]
+    fn powi(self, n: i32) -> Self {
+        Self::from_array(self.to_array().map(|x| x.powi(n)))
+    }
+
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+    }
+
+    #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
     }
@@ -209,12 +263,72 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
 
 impl<const N: usize> StdFloat for Simd<f32, N> {
     #[inline]
+    fn cbrt(self) -> Self {
+        Self::from_array(self.to_array().map(f32::cbrt))
+    }
+
+    #[inline]
+    fn hypot(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+    }
+
+    #[inline]
+    fn exp_m1(self) -> Self {
+        Self::from_array(self.to_array().map(f32::exp_m1))
+    }
+
+    #[inline]
+    fn ln_1p(self) -> Self {
+        Self::from_array(self.to_array().map(f32::ln_1p))
+    }
+
+    #[inline]
+    fn powi(self, n: i32) -> Self {
+        Self::from_array(self.to_array().map(|x| x.powi(n)))
+    }
+
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+    }
+
+    #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
     }
 }
 
 impl<const N: usize> StdFloat for Simd<f64, N> {
+    #[inline]
+    fn cbrt(self) -> Self {
+        Self::from_array(self.to_array().map(f64::cbrt))
+    }
+
+    #[inline]
+    fn hypot(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].hypot(other.as_array()[i])))
+    }
+
+    #[inline]
+    fn exp_m1(self) -> Self {
+        Self::from_array(self.to_array().map(f64::exp_m1))
+    }
+
+    #[inline]
+    fn ln_1p(self) -> Self {
+        Self::from_array(self.to_array().map(f64::ln_1p))
+    }
+
+    #[inline]
+    fn powi(self, n: i32) -> Self {
+        Self::from_array(self.to_array().map(|x| x.powi(n)))
+    }
+
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].powf(n.as_array()[i])))
+    }
+
     #[inline]
     fn fract(self) -> Self {
         self - self.trunc()
