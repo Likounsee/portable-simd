@@ -9,11 +9,12 @@ on:
 
 permissions: {}
 
-# Give every workflow run its own concurrency group. GitHub otherwise keeps only
-# one pending run per group and may replace an older queued commit's validation.
+# Keep CI focused on the newest commit for each branch. Older queued or
+# running runs are superseded so a burst of direct commits cannot starve the
+# latest validation behind dozens of obsolete matrix runs.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_id }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
