@@ -657,12 +657,19 @@ where
         idxs: Simd<i32, N>,
         or: Self,
     ) -> Self {
-        // Mask negative signed indices before converting them to usize.
-        // This keeps them out-of-bounds even on targets where the cast could
-        // otherwise produce a nonnegative, in-range unsigned value.
+        // Check signed indices before converting them to usize. In particular,
+        // a positive i32 index can truncate on targets whose usize is narrower
+        // than i32 (for example, 16-bit targets).
         let nonnegative = Mask::<isize, N>::from_array(idxs.simd_ge(Simd::splat(0)).to_array());
-        let enable = enable & nonnegative;
-        Self::gather_select(slice, enable, idxs.cast::<usize>(), or)
+        let in_bounds = if slice.len() > i32::MAX as usize {
+            // Every nonnegative i32 index fits in this slice.
+            nonnegative
+        } else {
+            nonnegative & Mask::<isize, N>::from_array(
+                idxs.simd_lt(Simd::splat(slice.len() as i32)).to_array(),
+            )
+        };
+        Self::gather_select(slice, enable & in_bounds, idxs.cast::<usize>(), or)
     }
 
     /// Reads from indices in `slice` to construct a SIMD vector.

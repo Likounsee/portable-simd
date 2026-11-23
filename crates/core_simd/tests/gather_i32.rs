@@ -31,3 +31,23 @@ fn gather_select_i32_respects_mask_and_signed_bounds() {
     let actual = Simd::gather_select_i32(&values, enable, indices, fallback);
     assert_eq!(actual, Simd::from_array([30, -2, -3, 40]));
 }
+
+
+#[test]
+fn gather_or_i32_handles_extreme_signed_indices() {
+    let values = [10_i32, 20, 30, 40];
+    let indices = Simd::from_array([i32::MIN, -1, i32::MAX, 0]);
+    let fallback = Simd::from_array([-10, -20, -30, -40]);
+
+    let actual = Simd::gather_or_i32(&values, indices, fallback);
+    assert_eq!(actual, Simd::from_array([-10, -20, -30, 10]));
+}
+
+#[test]
+fn gather_or_i32_on_empty_slice_returns_fallback_for_every_lane() {
+    let indices = Simd::from_array([0_i32, 1, -1, i32::MAX]);
+    let fallback = Simd::from_array([10, 20, 30, 40]);
+
+    let actual = Simd::<i32, 4>::gather_or_i32(&[], indices, fallback);
+    assert_eq!(actual, fallback);
+}
