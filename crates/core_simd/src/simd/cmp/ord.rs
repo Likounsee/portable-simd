@@ -158,8 +158,14 @@ where
     // LoongArch LLVM code generation miscompiles four-lane byte-mask SIMD
     // operations, including the bitmask conversion intrinsic. Extract each
     // lane individually and rebuild the result from canonical boolean lanes.
-    let lhs = core::array::from_fn::<_, N, _>(|lane| lhs.test(lane));
-    let rhs = core::array::from_fn::<_, N, _>(|lane| rhs.test(lane));
+    // Avoid dynamic SIMD lane extraction here: LLVM miscompiles it for
+    // four byte lanes on LoongArch. Read the canonical scalar lane storage.
+    let lhs = core::array::from_fn::<_, N, _>(|lane| {
+        T::eq(lhs.to_simd().as_array()[lane], T::TRUE)
+    });
+    let rhs = core::array::from_fn::<_, N, _>(|lane| {
+        T::eq(rhs.to_simd().as_array()[lane], T::TRUE)
+    });
     let values = core::array::from_fn(|lane| match OP {
         0 => !lhs[lane] & rhs[lane],
         1 => !lhs[lane] | rhs[lane],
