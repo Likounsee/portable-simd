@@ -867,3 +867,47 @@ fn simd_f16_sum_and_product_follow_iterator_identities() {
     assert_eq!(empty_sum.to_array(), [0.0_f16; 4]);
     assert_eq!(empty_product.to_array(), [1.0_f16; 4]);
 }
+
+
+#[test]
+fn simd_round_ties_even_f32_matches_ieee_scalar_rounding() {
+    let values = [
+        0.5_f32, 1.5, 2.5, 3.5, -0.5, -1.5, -2.5, -3.5,
+    ];
+    let actual = Simd::from_array(values).round_ties_even().to_array();
+    let expected = values.map(f32::round_ties_even);
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn simd_round_ties_even_f64_handles_special_values_and_signed_zero() {
+    let values = [
+        0.5_f64,
+        2.5,
+        -0.5,
+        -2.5,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NAN,
+        -0.0,
+    ];
+    let actual = Simd::from_array(values).round_ties_even().to_array();
+    for (actual, input) in actual.into_iter().zip(values) {
+        if input.is_nan() {
+            assert!(actual.is_nan());
+        } else {
+            assert_eq!(actual.to_bits(), input.round_ties_even().to_bits());
+        }
+    }
+}
+
+#[cfg(target_has_reliable_f16_math)]
+#[test]
+fn simd_round_ties_even_f16_matches_ieee_scalar_rounding() {
+    let values = [
+        0.5_f16, 1.5, 2.5, 3.5, -0.5, -1.5, -2.5, -3.5,
+    ];
+    let actual = Simd::from_array(values).round_ties_even().to_array();
+    let expected = values.map(f16::round_ties_even);
+    assert_eq!(actual, expected);
+}

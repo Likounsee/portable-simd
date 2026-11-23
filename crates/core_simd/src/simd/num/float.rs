@@ -76,6 +76,14 @@ pub impl(self) trait SimdFloat: Copy {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn mul_add_relaxed(self, a: Self, b: Self) -> Self;
 
+    /// Rounds each lane to the nearest integer-valued float, resolving halfway cases
+    /// by choosing the even integer.
+    ///
+    /// This follows the IEEE 754 roundTiesToEven rule and preserves infinities, NaNs,
+    /// and already-integral values.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn round_ties_even(self) -> Self;
+
     /// Rounds toward zero and converts each lane to the requested integer type.
     ///
     /// Unlike [`cast`](Self::cast), this operation does not saturate out-of-range values.
@@ -607,6 +615,12 @@ macro_rules! impl_trait {
             fn abs(self) -> Self {
                 // Safety: `self` is a float vector
                 unsafe { core::intrinsics::simd::simd_fabs(self) }
+            }
+
+            #[inline]
+            fn round_ties_even(self) -> Self {
+                // Safety: `self` is a SIMD vector of supported floating-point lanes.
+                unsafe { core::intrinsics::simd::simd_round_ties_even(self) }
             }
 
             #[inline]
