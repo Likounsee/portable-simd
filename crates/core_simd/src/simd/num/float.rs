@@ -192,6 +192,29 @@ pub impl(self) trait SimdFloat: Copy {
     #[must_use = "method returns a new vector and does not mutate the original value"]
     fn simd_clamp(self, min: Self, max: Self) -> Self;
 
+    /// Computes the dot product of two SIMD vectors.
+    ///
+    /// This is equivalent to multiplying corresponding lanes and reducing their sum:
+    /// `(self * rhs).reduce_sum()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::prelude::*;
+    /// let a = f32x4::from_array([1.0, 2.0, 3.0, 4.0]);
+    /// let b = f32x4::from_array([5.0, 6.0, 7.0, 8.0]);
+    /// assert_eq!(a.dot(b), 70.0);
+    /// ```
+    fn dot(self, rhs: Self) -> Self::Scalar
+    where
+        Self: core::ops::Mul<Output = Self>,
+    {
+        (self * rhs).reduce_sum()
+    }
+
     /// Returns the sum of the elements of the vector.
     ///
     /// # Examples
