@@ -65,3 +65,21 @@ fn empty_mask_and_empty_slice_are_supported() {
     assert_eq!(consumed, 0);
     assert_eq!(result, fallback);
 }
+
+#[test]
+fn compress_and_expand_round_trip_every_four_lane_mask() {
+    let values = Simd::from_array([3_u16, 5, 7, 11]);
+    for bits in 0_u8..16 {
+        let selected = core::array::from_fn(|lane| bits & (1 << lane) != 0);
+        let mask = Mask::from_array(selected);
+        let mut packed = [0_u16; 4];
+
+        let written = values.compress_store(&mut packed, mask);
+        let fallback = Simd::splat(0);
+        let (expanded, consumed) =
+            Simd::<u16, 4>::expand_load(&packed[..written], mask, fallback);
+
+        assert_eq!(consumed, written, "mask={bits:04b}");
+        assert_eq!(expanded, values.select(mask, fallback), "mask={bits:04b}");
+    }
+}
