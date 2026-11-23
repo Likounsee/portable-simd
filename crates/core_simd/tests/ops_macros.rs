@@ -228,6 +228,16 @@ macro_rules! impl_common_integer_tests {
                 });
             }
 
+            fn endian_conversions<const LANES: usize>() {
+                let values: [$scalar; LANES] =
+                    core::array::from_fn(|lane| ($scalar::MAX / 3).wrapping_add(lane as $scalar));
+                let vector = $vector::<LANES>::from_array(values);
+                assert_eq!(vector.from_be().to_array(), values.map($scalar::from_be));
+                assert_eq!(vector.from_le().to_array(), values.map($scalar::from_le));
+                assert_eq!(vector.to_be().to_array(), values.map($scalar::to_be));
+                assert_eq!(vector.to_le().to_array(), values.map($scalar::to_le));
+            }
+
             fn swap_bytes<const LANES: usize>() {
                 test_helpers::test_unary_elementwise(
                     &$vector::<LANES>::swap_bytes,
@@ -307,6 +317,34 @@ macro_rules! impl_signed_tests {
             impl_common_integer_tests! { Vector, Scalar }
 
             test_helpers::test_lanes! {
+                fn overflowing_euclidean_division<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => Scalar::MIN,
+                        1 => Scalar::MIN,
+                        2 => -17,
+                        _ => 17,
+                    });
+                    let rhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => -1,
+                        1 => 3,
+                        2 => -5,
+                        _ => 5,
+                    });
+                    let (actual_div, actual_div_overflow) =
+                        Vector::<LANES>::from_array(lhs)
+                            .overflowing_div_euclid(Vector::from_array(rhs));
+                    let expected_div = core::array::from_fn(|lane| lhs[lane].overflowing_div_euclid(rhs[lane]));
+                    assert_eq!(actual_div.to_array(), expected_div.map(|result| result.0));
+                    assert_eq!(actual_div_overflow.to_array(), expected_div.map(|result| result.1));
+
+                    let (actual_rem, actual_rem_overflow) =
+                        Vector::<LANES>::from_array(lhs)
+                            .overflowing_rem_euclid(Vector::from_array(rhs));
+                    let expected_rem = core::array::from_fn(|lane| lhs[lane].overflowing_rem_euclid(rhs[lane]));
+                    assert_eq!(actual_rem.to_array(), expected_rem.map(|result| result.0));
+                    assert_eq!(actual_rem_overflow.to_array(), expected_rem.map(|result| result.1));
+                }
+
                 fn div_euclid<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| (lane as Scalar).wrapping_mul(7).wrapping_sub(19));
                     let rhs: [Scalar; LANES] = core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });
@@ -1274,6 +1312,26 @@ macro_rules! impl_unsigned_tests {
             impl_common_integer_tests! { Vector, Scalar }
 
             test_helpers::test_lanes! {
+                fn overflowing_euclidean_division<const LANES: usize>() {
+                    let lhs: [Scalar; LANES] =
+                        core::array::from_fn(|lane| (Scalar::MAX / 3).wrapping_add(lane as Scalar));
+                    let rhs: [Scalar; LANES] =
+                        core::array::from_fn(|lane| if lane % 2 == 0 { 3 } else { 5 });
+                    let (actual_div, actual_div_overflow) =
+                        Vector::<LANES>::from_array(lhs)
+                            .overflowing_div_euclid(Vector::from_array(rhs));
+                    let expected_div = core::array::from_fn(|lane| lhs[lane].overflowing_div_euclid(rhs[lane]));
+                    assert_eq!(actual_div.to_array(), expected_div.map(|result| result.0));
+                    assert_eq!(actual_div_overflow.to_array(), expected_div.map(|result| result.1));
+
+                    let (actual_rem, actual_rem_overflow) =
+                        Vector::<LANES>::from_array(lhs)
+                            .overflowing_rem_euclid(Vector::from_array(rhs));
+                    let expected_rem = core::array::from_fn(|lane| lhs[lane].overflowing_rem_euclid(rhs[lane]));
+                    assert_eq!(actual_rem.to_array(), expected_rem.map(|result| result.0));
+                    assert_eq!(actual_rem_overflow.to_array(), expected_rem.map(|result| result.1));
+                }
+
                 fn div_euclid<const LANES: usize>() {
                     let lhs: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 6 {
                         0 => 0,
