@@ -122,15 +122,15 @@ fn swizzle_dyn_unchecked_zeroes_high_bit_indices_u8x16() {
 fn swizzle_dyn_unchecked_zeroes_high_bit_indices_u8x32() {
     let bytes = Simd::from_array(core::array::from_fn(|i| i as u8));
     let indices = Simd::from_array([
-        0, 31, 128, 255, 1, 30, 129, 254, 2, 29, 130, 253, 3, 28, 131, 252,
-        4, 27, 132, 251, 5, 26, 133, 250, 6, 25, 134, 249, 7, 24, 135, 248,
+        0, 31, 128, 255, 1, 30, 129, 254, 2, 29, 130, 253, 3, 28, 131, 252, 4, 27, 132, 251, 5, 26,
+        133, 250, 6, 25, 134, 249, 7, 24, 135, 248,
     ]);
 
     assert_eq!(
         bytes.swizzle_dyn_unchecked(indices).to_array(),
         [
-            0, 31, 0, 0, 1, 30, 0, 0, 2, 29, 0, 0, 3, 28, 0, 0, 4, 27, 0, 0,
-            5, 26, 0, 0, 6, 25, 0, 0, 7, 24, 0, 0,
+            0, 31, 0, 0, 1, 30, 0, 0, 2, 29, 0, 0, 3, 28, 0, 0, 4, 27, 0, 0, 5, 26, 0, 0, 6, 25, 0,
+            0, 7, 24, 0, 0,
         ]
     );
 }
