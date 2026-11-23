@@ -155,11 +155,8 @@ fn loongarch_mask_i8x4_cmp<T, const N: usize, const OP: u8>(
 where
     T: crate::simd::MaskElement,
 {
-    // LoongArch LLVM code generation miscompiles four-lane byte-mask SIMD
-    // operations, including the bitmask conversion intrinsic. Extract each
-    // lane individually and rebuild the result from canonical boolean lanes.
-    // Avoid dynamic SIMD lane extraction here: LLVM miscompiles it for
-    // four byte lanes on LoongArch. Read the canonical scalar lane storage.
+    // LoongArch LLVM code generation miscompiles bitwise operations on
+    // four-lane byte masks. Rebuild the result from their scalar lane values.
     let lhs =
         core::array::from_fn::<_, N, _>(|lane| T::eq(lhs.to_simd().as_array()[lane], T::TRUE));
     let rhs =
