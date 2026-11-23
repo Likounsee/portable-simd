@@ -564,6 +564,31 @@ where
         }
     }
 
+    /// Loads packed values from `slice` into the lanes enabled by `enable`.
+    ///
+    /// Values are consumed from the beginning of the slice in lane order. Disabled lanes,
+    /// and enabled lanes for which the slice has no remaining value, retain the value
+    /// from `or`. Returns the number of values consumed from `slice`.
+    ///
+    /// This is the safe, bounds-checked counterpart to an expand-load operation.
+    #[must_use]
+    #[inline]
+    pub fn expand_load(
+        slice: &[T],
+        enable: Mask<<T as SimdElement>::Mask, N>,
+        or: Self,
+    ) -> (Self, usize) {
+        let mut result = *or.as_array();
+        let mut consumed = 0;
+        for (lane, selected) in enable.to_array().into_iter().enumerate() {
+            if selected && consumed < slice.len() {
+                result[lane] = slice[consumed];
+                consumed += 1;
+            }
+        }
+        (Self::from_array(result), consumed)
+    }
+
     /// Reads from potentially discontiguous indices in `slice` to construct a SIMD vector.
     /// If an index is out-of-bounds, the element is instead selected from the `or` vector.
     ///
@@ -778,6 +803,28 @@ where
     ) -> Self {
         // Safety: The caller is responsible for upholding all invariants
         unsafe { core::intrinsics::simd::simd_gather(or, source, enable.to_simd()) }
+    }
+
+    /// Writes the enabled lanes to the beginning of `slice`, preserving lane order.
+    ///
+    /// If the destination is too short, only the values that fit are written. Returns
+    /// the number of values written. This is a safe, bounds-checked counterpart to
+    /// a SIMD compress-store operation.
+    #[must_use]
+    #[inline]
+    pub fn compress_store(
+        self,
+        slice: &mut [T],
+        enable: Mask<<T as SimdElement>::Mask, N>,
+    ) -> usize {
+        let mut written = 0;
+        for (value, selected) in self.as_array().iter().copied().zip(enable.to_array()) {
+            if selected && written < slice.len() {
+                slice[written] = value;
+                written += 1;
+            }
+        }
+        written
     }
 
     /// Conditionally write contiguous elements to `slice`. The `enable` mask controls
