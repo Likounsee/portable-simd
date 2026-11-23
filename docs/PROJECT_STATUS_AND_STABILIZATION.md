@@ -206,7 +206,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 1. Obtain a completed green CI run for the current head.
 2. Keep the new exhaustive gather/scatter tests and check their results on the complete matrix.
-3. Batch related changes when practical; superseded runs are cancelled automatically so the newest main-branch commit can be validated.
+3. Keep validation runs for pushed commits intact. The workflow now sets `cancel-in-progress: false`; GitHub may still queue runners, so validation must be checked through completion rather than inferred from a pending run.
 4. Record the final run URL and job counts in this document.
 
 **Exit criteria:** current head has a completed green full matrix, not merely an earlier green commit.
@@ -243,10 +243,10 @@ This classification intentionally distinguishes an upstream issue's current stat
 ### Phase 5 — upstream preparation
 
 1. Rebase/compare against current `rust-lang/portable-simd` without pushing to upstream.
-2. Split work into small reviewable PRs with one concern per change.
+2. Do not create pull requests as part of this project workflow. Continue with direct commits to this fork's `main` branch only; do not create branches or submit upstream PRs unless the user explicitly changes this instruction.
 3. Include tests, Miri results, target matrix, codegen artifacts, benchmark methodology, and issue links.
 4. Ask Rust library/compiler maintainers to review compiler-dependent changes and stabilization blockers.
-5. Follow the Rust stabilization process; the fork cannot itself make `std::simd` stable.
+5. Follow the Rust stabilization process through design discussion and maintainer feedback when requested. The fork cannot itself make `std::simd` stable, and this workflow does not create pull requests.
 
 **Exit criteria:** maintainers agree the API and implementation are ready for the appropriate RFC/unstable-feature stabilization process and the required compiler work is merged.
 
@@ -292,11 +292,11 @@ The development log records additional implementation and issue-triage work afte
 - **#447, #373, #459, #146, #297, #242, #387, #14, #211, #369, #356, #286:** investigated against the current API/compiler discussions; the development log records whether the need is already covered, compiler-dependent, or unsuitable for a safe library-only workaround.
 - **Miri follow-up:** revised the algebraic_reduce_sum property-test tolerance after Miri exposed cancellation/subnormal false negatives. The latest fix still needs the current CI run to validate it.
 
-These additions change the fork's implementation and test inventory, but do not close all corresponding upstream discussions or establish stabilization readiness. Issue states must be checked again immediately before any upstream PR because maintainers may update them independently.
+These additions change the fork's implementation and test inventory, but do not close all corresponding upstream discussions or establish stabilization readiness. Upstream issue states can change independently and should be checked before recording any issue disposition.
 
 ## 9. First-pass unsafe audit status
 
-A source-level inventory has started, covering vector.rs, masks.rs, select.rs, simd/ptr.rs, simd/ptr/const_ptr.rs, simd/ptr/mut_ptr.rs, and std_float/src/lib.rs. This first pass found unsafe operations in the following broad categories:
+A source-level inventory has started, covering vector.rs, masks.rs, select.rs, simd/ptr.rs, simd/ptr/const_ptr.rs, simd/ptr/mut_ptr.rs, and std_float/src/lib.rs. A follow-up review has also inspected the unchecked gather/pointer-gather contracts, masked pointer load/store alignment, scatter pointer preconditions, and the architecture-specific dynamic-swizzle feature/width guards. No concrete defect was established in those inspected paths, but this is not a complete audit. The inventory found unsafe operations in the following broad categories:
 
 - SIMD intrinsic calls whose validity and lane-shape contracts must be matched to the compiler intrinsic documentation;
 - pointer loads/stores, gather/scatter, and unchecked slice operations requiring bounds, alignment, initialization, aliasing, and provenance arguments;
@@ -320,7 +320,7 @@ The following five upstream requests have been selected for a focused fork-side 
 | [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | Elementwise algebraic add/sub/mul/div/rem are implemented by applying the scalar algebraic operation lane by lane; `mul_add_relaxed` uses `simd_relaxed_fma`. `algebraic_reduce_sum` uses unordered SIMD reduction for f32/f64 and a scalar fold for f16. Regression tests cover f16/f32/f64 and multiple reduction widths. | Correct semantics and optimized codegen still require current-head CI. In particular, lane-wise source code alone does not prove vector instruction generation; inspect optimized IR/assembly and measure before claiming SIMD performance benefits. |
 | [#447](https://github.com/rust-lang/portable-simd/issues/447) | Generic-lane-count shorthand aliases | `i8xN<N>`, `u32xN<N>`, `f32xN<N>`, and corresponding integer/float aliases are already exported for all supported scalar types. Existing tests check type equivalence for all scalar types; added a const-generic f32 operation test. | The optional inverse aliases (`Tx1<T>`, `Tx2<T>`, etc.) were not part of the core request and remain intentionally omitted. Current-head CI must pass. |
 
-The latest test and diagnostic changes are on `main`. The workflow has repeatedly been superseded by newer pushes while GitHub runners remain queued; no test-pass claim is made until the current-head run completes successfully. This table records fork-side scope and explicit evidence gates, not upstream issue closure.
+The latest test and diagnostic changes are on `main`. The workflow's concurrency setting now preserves in-progress runs, but the current run can still wait for an available GitHub runner. No test-pass claim is made until the current-head run completes successfully. This table records fork-side scope and explicit evidence gates, not upstream issue closure.
 
 ## Follow-up implementation — algebraic reduction (2026-11-16)
 
