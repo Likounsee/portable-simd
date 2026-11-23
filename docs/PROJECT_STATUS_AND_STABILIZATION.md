@@ -206,7 +206,7 @@ This classification intentionally distinguishes an upstream issue's current stat
 
 1. Obtain a completed green CI run for the current head.
 2. Keep the new exhaustive gather/scatter tests and check their results on the complete matrix.
-3. Keep validation runs for pushed commits intact. The workflow now sets `cancel-in-progress: false`; GitHub may still queue runners, so validation must be checked through completion rather than inferred from a pending run.
+3. Keep validation runs for pushed commits intact. Each workflow run now has a unique concurrency group based on `github.run_id`, preventing GitHub from replacing an older pending run in the same branch/workflow group. Runner capacity can still delay execution, so validation must be checked through completion.
 4. Record the final run URL and job counts in this document.
 
 **Exit criteria:** current head has a completed green full matrix, not merely an earlier green commit.
@@ -320,7 +320,7 @@ The following five upstream requests have been selected for a focused fork-side 
 | [#539](https://github.com/rust-lang/portable-simd/issues/539) | Algebraic floating-point SIMD operations | Elementwise algebraic add/sub/mul/div/rem are implemented by applying the scalar algebraic operation lane by lane; `mul_add_relaxed` uses `simd_relaxed_fma`. `algebraic_reduce_sum` uses unordered SIMD reduction for f32/f64 and a scalar fold for f16. Regression tests cover f16/f32/f64 and multiple reduction widths. | Correct semantics and optimized codegen still require current-head CI. In particular, lane-wise source code alone does not prove vector instruction generation; inspect optimized IR/assembly and measure before claiming SIMD performance benefits. |
 | [#447](https://github.com/rust-lang/portable-simd/issues/447) | Generic-lane-count shorthand aliases | `i8xN<N>`, `u32xN<N>`, `f32xN<N>`, and corresponding integer/float aliases are already exported for all supported scalar types. Existing tests check type equivalence for all scalar types; added a const-generic f32 operation test. | The optional inverse aliases (`Tx1<T>`, `Tx2<T>`, etc.) were not part of the core request and remain intentionally omitted. Current-head CI must pass. |
 
-The latest test and diagnostic changes are on `main`. The workflow's concurrency setting now preserves in-progress runs, but the current run can still wait for an available GitHub runner. No test-pass claim is made until the current-head run completes successfully. This table records fork-side scope and explicit evidence gates, not upstream issue closure.
+The latest test and diagnostic changes are on `main`. Each workflow run now has a unique concurrency group so a later push cannot replace an earlier pending validation. Runner capacity can still delay execution. No test-pass claim is made until the current-head run completes successfully. This table records fork-side scope and explicit evidence gates, not upstream issue closure.
 
 ## Follow-up implementation — algebraic reduction (2026-11-16)
 
