@@ -1,6 +1,6 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{Mask, Simd};
+use core_simd::simd::{Mask, Select, Simd};
 
 #[test]
 fn compress_store_preserves_selected_lane_order() {
@@ -80,6 +80,6 @@ fn compress_and_expand_round_trip_every_four_lane_mask() {
             Simd::<u16, 4>::expand_load(&packed[..written], mask, fallback);
 
         assert_eq!(consumed, written, "mask={bits:04b}");
-        assert_eq!(expanded, values.select(mask, fallback), "mask={bits:04b}");
+        assert_eq!(expanded, mask.select(values, fallback), "mask={bits:04b}");
     }
 }
