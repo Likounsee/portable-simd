@@ -215,6 +215,42 @@ pub impl(self) trait SimdFloat: Copy {
         (self * rhs).reduce_sum()
     }
 
+    /// Computes the dot product of the first three lanes, ignoring all remaining lanes.
+    ///
+    /// This is useful for 3D vectors stored in four-lane SIMD values, where the fourth
+    /// lane is padding or a homogeneous coordinate. The vector must have at least three lanes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::prelude::*;
+    /// let a = f32x4::from_array([1.0, 2.0, 3.0, 999.0]);
+    /// let b = f32x4::from_array([4.0, 5.0, 6.0, 888.0]);
+    /// assert_eq!(a.dot3(b), 32.0);
+    /// ```
+    #[must_use = "method returns the dot product and does not mutate the original value"]
+    fn dot3(self, rhs: Self) -> Self::Scalar;
+
+    /// Computes the dot product of the first four lanes, ignoring all remaining lanes.
+    /// The vector must have at least four lanes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd;
+    /// # use simd::prelude::*;
+    /// let a = f32x4::from_array([1.0, 2.0, 3.0, 4.0]);
+    /// let b = f32x4::from_array([5.0, 6.0, 7.0, 8.0]);
+    /// assert_eq!(a.dot4(b), 70.0);
+    /// ```
+    #[must_use = "method returns the dot product and does not mutate the original value"]
+    fn dot4(self, rhs: Self) -> Self::Scalar;
+
     /// Returns the sum of the elements of the vector.
     ///
     /// # Examples
@@ -656,6 +692,22 @@ macro_rules! impl_trait {
             #[inline]
             fn reduce_min(self) -> Self::Scalar {
                 self.as_array().iter().copied().fold(Self::Scalar::NAN, Self::Scalar::min)
+            }
+
+            #[inline]
+            fn dot3(self, rhs: Self) -> Self::Scalar {
+                const { assert!(N >= 3, "dot3 requires at least 3 lanes") };
+                let product = self * rhs;
+                let lanes = product.as_array();
+                lanes[0] + lanes[1] + lanes[2]
+            }
+
+            #[inline]
+            fn dot4(self, rhs: Self) -> Self::Scalar {
+                const { assert!(N >= 4, "dot4 requires at least 4 lanes") };
+                let product = self * rhs;
+                let lanes = product.as_array();
+                lanes[0] + lanes[1] + lanes[2] + lanes[3]
             }
         }
         )*
