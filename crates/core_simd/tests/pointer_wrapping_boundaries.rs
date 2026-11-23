@@ -92,8 +92,7 @@ fn check_mut_pointer_arithmetic<T, const N: usize>() {
         .wrapping_offset(Simd::from_array(offsets))
         .addr()
         .to_array();
-    let expected_offset =
-        core::array::from_fn(|lane| base.wrapping_offset(offsets[lane]).addr());
+    let expected_offset = core::array::from_fn(|lane| base.wrapping_offset(offsets[lane]).addr());
     assert_eq!(
         actual_offset, expected_offset,
         "mut pointer wrapping_offset, N={N}"
