@@ -222,9 +222,7 @@ where
         // for four lanes. Avoid vector casts and bitwise operations in that case.
         #[cfg(target_arch = "loongarch64")]
         if mem::size_of::<T>() == 1 && N == 4 {
-            return core::array::from_fn(|lane| {
-                T::eq(self.0.as_array()[lane], T::TRUE)
-            });
+            return core::array::from_fn(|lane| T::eq(self.0.as_array()[lane], T::TRUE));
         }
 
         // SAFETY: Rust's bool has a layout of 1 byte (u8) with a value of
