@@ -234,6 +234,14 @@ macro_rules! impl_common_integer_tests {
                     assert_eq!($vector::<LANES>::from_array(x).reduce_min_index(), expected);
                     Ok(())
                 });
+
+                // Tied extrema must return the first matching lane, including
+                // vectors whose minimum is at both ends.
+                let mut tied = [$scalar::MAX; LANES];
+                tied[0] = $scalar::MIN;
+                tied[LANES - 1] = $scalar::MIN;
+                assert_eq!($vector::<LANES>::from_array(tied).reduce_min_index(), 0);
+                assert_eq!($vector::<LANES>::splat($scalar::MAX).reduce_min_index(), 0);
             }
 
             fn reduce_max_index<const LANES: usize>() {
@@ -242,6 +250,14 @@ macro_rules! impl_common_integer_tests {
                     assert_eq!($vector::<LANES>::from_array(x).reduce_max_index(), expected);
                     Ok(())
                 });
+
+                // Tied extrema must return the first matching lane, including
+                // vectors whose maximum is at both ends.
+                let mut tied = [$scalar::MIN; LANES];
+                tied[0] = $scalar::MAX;
+                tied[LANES - 1] = $scalar::MAX;
+                assert_eq!($vector::<LANES>::from_array(tied).reduce_max_index(), 0);
+                assert_eq!($vector::<LANES>::splat($scalar::MIN).reduce_max_index(), 0);
             }
 
             fn endian_conversions<const LANES: usize>() {
