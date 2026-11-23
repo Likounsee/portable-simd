@@ -230,7 +230,7 @@ macro_rules! impl_common_integer_tests {
 
             fn reduce_min_index<const LANES: usize>() {
                 test_helpers::test_1(&|x| {
-                    let min = x.iter().copied().min().unwrap();
+                    let min: $scalar = x.iter().copied().min().unwrap();
                     let expected = x.iter().position(|value| *value == min).unwrap();
                     assert_eq!($vector::<LANES>::from_array(x).reduce_min_index(), expected);
                     Ok(())
@@ -247,7 +247,7 @@ macro_rules! impl_common_integer_tests {
 
             fn reduce_max_index<const LANES: usize>() {
                 test_helpers::test_1(&|x| {
-                    let max = x.iter().copied().max().unwrap();
+                    let max: $scalar = x.iter().copied().max().unwrap();
                     let expected = x.iter().position(|value| *value == max).unwrap();
                     assert_eq!($vector::<LANES>::from_array(x).reduce_max_index(), expected);
                     Ok(())
