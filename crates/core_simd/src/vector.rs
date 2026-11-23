@@ -703,15 +703,15 @@ where
     #[must_use]
     #[inline]
     #[cfg_attr(miri, track_caller)]
-    pub unsafe fn gather_unchecked(slice: &[T], idxs: Simd<usize, N>) -> Self
-    where
-        T: Default,
-    {
-        // SAFETY: The caller guarantees that every index is in bounds, so all
-        // lanes can be enabled. The fallback vector is never selected.
-        unsafe {
-            Self::gather_select_unchecked(slice, Mask::splat(true), idxs, Self::splat(T::default()))
-        }
+    pub unsafe fn gather_unchecked(slice: &[T], idxs: Simd<usize, N>) -> Self {
+        // The gather intrinsic requires a passthru vector even when every lane
+        // is enabled. Use lane 0 as an initialized passthru value, and disable
+        // that lane in the intrinsic so each element is read exactly once.
+        // SAFETY: The caller guarantees that every index is in bounds.
+        let first = unsafe { *slice.get_unchecked(idxs[0]) };
+        let enable = Mask::<isize, N>::from_array(core::array::from_fn(|lane| lane != 0));
+        // SAFETY: Every enabled index is in bounds, and lane 0 is supplied by first.
+        unsafe { Self::gather_select_unchecked(slice, enable, idxs, Self::splat(first)) }
     }
 
     /// Reads elementwise from pointers into a SIMD vector.
@@ -735,13 +735,15 @@ where
     #[must_use]
     #[inline]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
-    pub unsafe fn gather_ptr(source: Simd<*const T, N>) -> Self
-    where
-        T: Default,
-    {
-        // TODO: add an intrinsic that doesn't use a passthru vector, and remove the T: Default bound
-        // Safety: The caller is responsible for upholding all invariants
-        unsafe { Self::gather_select_ptr(source, Mask::splat(true), Self::default()) }
+    pub unsafe fn gather_ptr(source: Simd<*const T, N>) -> Self {
+        // The gather intrinsic requires a passthru vector even when every lane
+        // is enabled. Use lane 0 as an initialized passthru value, and disable
+        // that lane in the intrinsic so each element is read exactly once.
+        // SAFETY: The caller guarantees that every pointer is valid to read.
+        let first = unsafe { source.as_array()[0].read() };
+        let enable = Mask::<isize, N>::from_array(core::array::from_fn(|lane| lane != 0));
+        // SAFETY: Every enabled pointer is valid to read, and lane 0 is supplied by first.
+        unsafe { Self::gather_select_ptr(source, enable, Self::splat(first)) }
     }
 
     /// Conditionally read elementwise from pointers into a SIMD vector.
