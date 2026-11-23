@@ -167,3 +167,77 @@ fn byte_conversions_preserve_lane_order_and_endian_layout_for_odd_lane_counts() 
     check_odd_lane_byte_layout::<9>();
     check_odd_lane_byte_layout::<15>();
 }
+
+
+macro_rules! check_byte_layout {
+    ($ty:ty, $lanes:literal) => {{
+        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            (lane as $ty).wrapping_mul(3).wrapping_add(1)
+        }));
+        let scalars = values.to_array();
+
+        let expected_ne: Vec<u8> = scalars
+            .iter()
+            .flat_map(|value| value.to_ne_bytes())
+            .collect();
+        let expected_be: Vec<u8> = scalars
+            .iter()
+            .flat_map(|value| value.to_be_bytes())
+            .collect();
+        let expected_le: Vec<u8> = scalars
+            .iter()
+            .flat_map(|value| value.to_le_bytes())
+            .collect();
+
+        let native = values.to_ne_bytes();
+        let big = values.to_be_bytes();
+        let little = values.to_le_bytes();
+
+        assert_eq!(native.as_array().as_slice(), expected_ne.as_slice());
+        assert_eq!(big.as_array().as_slice(), expected_be.as_slice());
+        assert_eq!(little.as_array().as_slice(), expected_le.as_slice());
+
+        assert_eq!(Simd::<$ty, $lanes>::from_ne_bytes(native), values);
+        assert_eq!(Simd::<$ty, $lanes>::from_be_bytes(big), values);
+        assert_eq!(Simd::<$ty, $lanes>::from_le_bytes(little), values);
+    }};
+}
+
+#[test]
+fn byte_conversions_cover_odd_lane_counts_across_integer_widths() {
+    check_byte_layout!(u8, 3);
+    check_byte_layout!(u8, 7);
+    check_byte_layout!(u8, 9);
+    check_byte_layout!(u8, 15);
+    check_byte_layout!(u8, 31);
+    check_byte_layout!(u8, 63);
+
+    check_byte_layout!(i8, 5);
+    check_byte_layout!(i8, 17);
+    check_byte_layout!(i8, 33);
+    check_byte_layout!(i8, 63);
+
+    check_byte_layout!(u16, 3);
+    check_byte_layout!(u16, 5);
+    check_byte_layout!(u16, 7);
+    check_byte_layout!(u16, 15);
+    check_byte_layout!(u16, 31);
+
+    check_byte_layout!(i16, 3);
+    check_byte_layout!(i16, 9);
+    check_byte_layout!(i16, 17);
+    check_byte_layout!(i16, 31);
+
+    check_byte_layout!(u32, 3);
+    check_byte_layout!(u32, 5);
+    check_byte_layout!(u32, 7);
+    check_byte_layout!(u32, 9);
+    check_byte_layout!(u32, 15);
+
+    check_byte_layout!(i64, 3);
+    check_byte_layout!(i64, 5);
+    check_byte_layout!(i64, 7);
+    check_byte_layout!(u64, 3);
+    check_byte_layout!(u64, 5);
+    check_byte_layout!(u64, 7);
+}
