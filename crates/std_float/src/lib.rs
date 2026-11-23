@@ -70,27 +70,21 @@ pub impl(self) trait StdFloat: Sized {
     }
 
     /// Computes the cube root of each lane using the scalar floating-point implementation.
-    #[inline]
     fn cbrt(self) -> Self;
 
     /// Computes the hypotenuse of each pair of corresponding lanes.
-    #[inline]
     fn hypot(self, other: Self) -> Self;
 
     /// Computes e^x - 1 for each lane, accurately near zero.
-    #[inline]
     fn exp_m1(self) -> Self;
 
     /// Computes ln(1 + x) for each lane, accurately near zero.
-    #[inline]
     fn ln_1p(self) -> Self;
 
     /// Raises each lane to the same integer exponent.
-    #[inline]
     fn powi(self, n: i32) -> Self;
 
     /// Raises each lane to its corresponding floating-point exponent.
-    #[inline]
     fn powf(self, n: Self) -> Self;
 
     /// Produces a vector where every element has the sine of the value
