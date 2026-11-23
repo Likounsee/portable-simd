@@ -22,14 +22,20 @@ fn check_const_pointer_arithmetic<T, const N: usize>() {
         .addr()
         .to_array();
     let expected_add = core::array::from_fn(|lane| base.wrapping_add(counts[lane]).addr());
-    assert_eq!(actual_add, expected_add, "const pointer wrapping_add, N={N}");
+    assert_eq!(
+        actual_add, expected_add,
+        "const pointer wrapping_add, N={N}"
+    );
 
     let actual_sub = pointers
         .wrapping_sub(Simd::from_array(counts))
         .addr()
         .to_array();
     let expected_sub = core::array::from_fn(|lane| base.wrapping_sub(counts[lane]).addr());
-    assert_eq!(actual_sub, expected_sub, "const pointer wrapping_sub, N={N}");
+    assert_eq!(
+        actual_sub, expected_sub,
+        "const pointer wrapping_sub, N={N}"
+    );
 
     let offsets = core::array::from_fn(|lane| match lane % 5 {
         0 => 0,
@@ -42,8 +48,7 @@ fn check_const_pointer_arithmetic<T, const N: usize>() {
         .wrapping_offset(Simd::from_array(offsets))
         .addr()
         .to_array();
-    let expected_offset =
-        core::array::from_fn(|lane| base.wrapping_offset(offsets[lane]).addr());
+    let expected_offset = core::array::from_fn(|lane| base.wrapping_offset(offsets[lane]).addr());
     assert_eq!(
         actual_offset, expected_offset,
         "const pointer wrapping_offset, N={N}"
