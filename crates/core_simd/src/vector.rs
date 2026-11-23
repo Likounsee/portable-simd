@@ -660,7 +660,8 @@ where
         // Mask negative signed indices before converting them to usize.
         // This keeps them out-of-bounds even on targets where the cast could
         // otherwise produce a nonnegative, in-range unsigned value.
-        let enable = enable & idxs.simd_ge(Simd::splat(0));
+        let nonnegative = Mask::<isize, N>::from_array(idxs.simd_ge(Simd::splat(0)).to_array());
+        let enable = enable & nonnegative;
         Self::gather_select(slice, enable, idxs.cast::<usize>(), or)
     }
 
