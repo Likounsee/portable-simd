@@ -109,9 +109,19 @@ macro_rules! impl_tests {
             }
 
             // https://github.com/rust-lang/miri/issues/3555
-            unary_approx_test! { $scalar, sin, cos, exp, exp2, ln, log2, log10, cbrt, exp_m1, ln_1p }
+            unary_approx_test! { $scalar, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, exp, exp2, ln, log2, log10, cbrt, exp_m1, ln_1p }
 
             test_helpers::test_lanes! {
+
+                fn atan2<const LANES: usize>() {
+                    test_helpers::test_binary_elementwise_approx(
+                        &core_simd::simd::Simd::<$scalar, LANES>::atan2,
+                        &$scalar::atan2,
+                        &|_, _| true,
+                        16,
+                    )
+                }
+
                 fn hypot<const LANES: usize>() {
                     test_helpers::test_binary_elementwise_approx(
                         &core_simd::simd::Simd::<$scalar, LANES>::hypot,

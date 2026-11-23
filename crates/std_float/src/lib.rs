@@ -87,6 +87,30 @@ pub impl(self) trait StdFloat: Sized {
     /// Raises each lane to its corresponding floating-point exponent.
     fn powf(self, n: Self) -> Self;
 
+
+    /// Computes the tangent of each lane.
+    fn tan(self) -> Self;
+    /// Computes the inverse sine of each lane.
+    fn asin(self) -> Self;
+    /// Computes the inverse cosine of each lane.
+    fn acos(self) -> Self;
+    /// Computes the inverse tangent of each lane.
+    fn atan(self) -> Self;
+    /// Computes the four-quadrant inverse tangent of each lane pair.
+    fn atan2(self, other: Self) -> Self;
+    /// Computes the hyperbolic sine of each lane.
+    fn sinh(self) -> Self;
+    /// Computes the hyperbolic cosine of each lane.
+    fn cosh(self) -> Self;
+    /// Computes the hyperbolic tangent of each lane.
+    fn tanh(self) -> Self;
+    /// Computes the inverse hyperbolic sine of each lane.
+    fn asinh(self) -> Self;
+    /// Computes the inverse hyperbolic cosine of each lane.
+    fn acosh(self) -> Self;
+    /// Computes the inverse hyperbolic tangent of each lane.
+    fn atanh(self) -> Self;
+
     /// Produces a vector where every element has the sine of the value
     /// in the equivalently-indexed element in `self`.
     #[inline]
@@ -254,6 +278,32 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
     }
 
     #[inline]
+
+    #[inline]
+    fn tan(self) -> Self { Self::from_array(self.to_array().map(f16::tan)) }
+    #[inline]
+    fn asin(self) -> Self { Self::from_array(self.to_array().map(f16::asin)) }
+    #[inline]
+    fn acos(self) -> Self { Self::from_array(self.to_array().map(f16::acos)) }
+    #[inline]
+    fn atan(self) -> Self { Self::from_array(self.to_array().map(f16::atan)) }
+    #[inline]
+    fn atan2(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].atan2(other.as_array()[i])))
+    }
+    #[inline]
+    fn sinh(self) -> Self { Self::from_array(self.to_array().map(f16::sinh)) }
+    #[inline]
+    fn cosh(self) -> Self { Self::from_array(self.to_array().map(f16::cosh)) }
+    #[inline]
+    fn tanh(self) -> Self { Self::from_array(self.to_array().map(f16::tanh)) }
+    #[inline]
+    fn asinh(self) -> Self { Self::from_array(self.to_array().map(f16::asinh)) }
+    #[inline]
+    fn acosh(self) -> Self { Self::from_array(self.to_array().map(f16::acosh)) }
+    #[inline]
+    fn atanh(self) -> Self { Self::from_array(self.to_array().map(f16::atanh)) }
+
     fn fract(self) -> Self {
         self - self.trunc()
     }
@@ -295,6 +345,32 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
     }
 
     #[inline]
+
+    #[inline]
+    fn tan(self) -> Self { Self::from_array(self.to_array().map(f32::tan)) }
+    #[inline]
+    fn asin(self) -> Self { Self::from_array(self.to_array().map(f32::asin)) }
+    #[inline]
+    fn acos(self) -> Self { Self::from_array(self.to_array().map(f32::acos)) }
+    #[inline]
+    fn atan(self) -> Self { Self::from_array(self.to_array().map(f32::atan)) }
+    #[inline]
+    fn atan2(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].atan2(other.as_array()[i])))
+    }
+    #[inline]
+    fn sinh(self) -> Self { Self::from_array(self.to_array().map(f32::sinh)) }
+    #[inline]
+    fn cosh(self) -> Self { Self::from_array(self.to_array().map(f32::cosh)) }
+    #[inline]
+    fn tanh(self) -> Self { Self::from_array(self.to_array().map(f32::tanh)) }
+    #[inline]
+    fn asinh(self) -> Self { Self::from_array(self.to_array().map(f32::asinh)) }
+    #[inline]
+    fn acosh(self) -> Self { Self::from_array(self.to_array().map(f32::acosh)) }
+    #[inline]
+    fn atanh(self) -> Self { Self::from_array(self.to_array().map(f32::atanh)) }
+
     fn fract(self) -> Self {
         self - self.trunc()
     }
@@ -336,6 +412,32 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
     }
 
     #[inline]
+
+    #[inline]
+    fn tan(self) -> Self { Self::from_array(self.to_array().map(f64::tan)) }
+    #[inline]
+    fn asin(self) -> Self { Self::from_array(self.to_array().map(f64::asin)) }
+    #[inline]
+    fn acos(self) -> Self { Self::from_array(self.to_array().map(f64::acos)) }
+    #[inline]
+    fn atan(self) -> Self { Self::from_array(self.to_array().map(f64::atan)) }
+    #[inline]
+    fn atan2(self, other: Self) -> Self {
+        Self::from_array(core::array::from_fn(|i| self.as_array()[i].atan2(other.as_array()[i])))
+    }
+    #[inline]
+    fn sinh(self) -> Self { Self::from_array(self.to_array().map(f64::sinh)) }
+    #[inline]
+    fn cosh(self) -> Self { Self::from_array(self.to_array().map(f64::cosh)) }
+    #[inline]
+    fn tanh(self) -> Self { Self::from_array(self.to_array().map(f64::tanh)) }
+    #[inline]
+    fn asinh(self) -> Self { Self::from_array(self.to_array().map(f64::asinh)) }
+    #[inline]
+    fn acosh(self) -> Self { Self::from_array(self.to_array().map(f64::acosh)) }
+    #[inline]
+    fn atanh(self) -> Self { Self::from_array(self.to_array().map(f64::atanh)) }
+
     fn fract(self) -> Self {
         self - self.trunc()
     }
