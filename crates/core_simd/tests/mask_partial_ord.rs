@@ -11,15 +11,44 @@ use core_simd::simd::{
 
 #[test]
 fn loongarch_four_lane_mask_ordering_regression() {
-    let a = Mask::<i8, 4>::from_array([false, true, false, false]);
-    let b = Mask::<i8, 4>::from_array([false, false, false, true]);
+    // Exhaust every pair of four-lane masks. This exercises all 16 x 16
+    // combinations through the LoongArch-specific comparison/min/max path.
+    for a_bits in 0_u8..16 {
+        for b_bits in 0_u8..16 {
+            let a = Mask::<i8, 4>::from_array(core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) != 0
+            }));
+            let b = Mask::<i8, 4>::from_array(core::array::from_fn(|lane| {
+                b_bits & (1_u8 << lane) != 0
+            }));
 
-    assert_eq!(a.simd_lt(b).to_array(), [false, false, false, true]);
-    assert_eq!(a.simd_le(b).to_array(), [true, false, true, true]);
-    assert_eq!(a.simd_gt(b).to_array(), [false, true, false, false]);
-    assert_eq!(a.simd_ge(b).to_array(), [true, true, true, false]);
-    assert_eq!(a.simd_min(b).to_array(), [false, false, false, false]);
-    assert_eq!(a.simd_max(b).to_array(), [false, true, false, true]);
+            let expected_lt = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) == 0 && b_bits & (1_u8 << lane) != 0
+            });
+            let expected_le = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) == 0 || b_bits & (1_u8 << lane) != 0
+            });
+            let expected_gt = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) != 0 && b_bits & (1_u8 << lane) == 0
+            });
+            let expected_ge = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) != 0 || b_bits & (1_u8 << lane) == 0
+            });
+            let expected_min = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) != 0 && b_bits & (1_u8 << lane) != 0
+            });
+            let expected_max = core::array::from_fn(|lane| {
+                a_bits & (1_u8 << lane) != 0 || b_bits & (1_u8 << lane) != 0
+            });
+
+            assert_eq!(a.simd_lt(b).to_array(), expected_lt, "lt: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(a.simd_le(b).to_array(), expected_le, "le: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(a.simd_gt(b).to_array(), expected_gt, "gt: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(a.simd_ge(b).to_array(), expected_ge, "ge: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(a.simd_min(b).to_array(), expected_min, "min: {a_bits:04b}, {b_bits:04b}");
+            assert_eq!(a.simd_max(b).to_array(), expected_max, "max: {a_bits:04b}, {b_bits:04b}");
+        }
+    }
 }
 
 #[test]
