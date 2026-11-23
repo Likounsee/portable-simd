@@ -99,38 +99,38 @@ fn interleave_one() {
 
 /// Regression coverage for portable-simd#486.
 ///
-/// The unchecked variant requires every index to be in bounds or equal to
-/// 0xFF. The sentinel value must produce zero.
+/// The unchecked variant requires every index to be in bounds or to have
+/// its most significant bit set. Such out-of-bounds indices must produce zero.
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
-fn swizzle_dyn_unchecked_zeroes_0xff_indices_u8x16() {
+fn swizzle_dyn_unchecked_zeroes_high_bit_indices_u8x16() {
     let bytes = Simd::from_array(core::array::from_fn(|i| i as u8));
     let indices = Simd::from_array([
-        0, 15, 255, 1, 14, 255, 2, 13, 255, 3, 12, 255, 4, 11, 255, 5,
+        0, 15, 128, 255, 1, 14, 129, 254, 2, 13, 130, 253, 3, 12, 131, 252,
     ]);
 
     assert_eq!(
         bytes.swizzle_dyn_unchecked(indices).to_array(),
-        [0, 15, 0, 1, 14, 0, 2, 13, 0, 3, 12, 0, 4, 11, 0, 5]
+        [0, 15, 0, 0, 1, 14, 0, 0, 2, 13, 0, 0, 3, 12, 0, 0]
     );
 }
 
-/// The same sentinel contract must hold when the implementation splits a
-/// 32-byte vector into narrower native-width shuffles.
+/// The same contract must hold when the implementation splits a 32-byte
+/// vector into narrower native-width shuffles.
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
-fn swizzle_dyn_unchecked_zeroes_0xff_indices_u8x32() {
+fn swizzle_dyn_unchecked_zeroes_high_bit_indices_u8x32() {
     let bytes = Simd::from_array(core::array::from_fn(|i| i as u8));
     let indices = Simd::from_array([
-        0, 31, 255, 1, 30, 255, 2, 29, 255, 3, 28, 255, 4, 27, 255, 5,
-        26, 255, 6, 25, 255, 7, 24, 255, 8, 23, 255, 9, 22, 255, 10, 21,
+        0, 31, 128, 255, 1, 30, 129, 254, 2, 29, 130, 253, 3, 28, 131, 252,
+        4, 27, 132, 251, 5, 26, 133, 250, 6, 25, 134, 249, 7, 24, 135, 248,
     ]);
 
     assert_eq!(
         bytes.swizzle_dyn_unchecked(indices).to_array(),
         [
-            0, 31, 0, 1, 30, 0, 2, 29, 0, 3, 28, 0, 4, 27, 0, 5, 26, 0, 6, 25, 0, 7, 24, 0,
-            8, 23, 0, 9, 22, 0, 10, 21,
+            0, 31, 0, 0, 1, 30, 0, 0, 2, 29, 0, 0, 3, 28, 0, 0, 4, 27, 0, 0,
+            5, 26, 0, 0, 6, 25, 0, 0, 7, 24, 0, 0,
         ]
     );
 }
