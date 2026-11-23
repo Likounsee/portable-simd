@@ -17,16 +17,16 @@ macro_rules! signed_shift_tests {
                         core::array::from_fn(|lane| (lane % <$ty>::BITS as usize) as $ty);
                     let value = Simd::<$ty, LANES>::from_array(lhs);
                     let amount = Simd::<$ty, LANES>::from_array(rhs);
-                    // SAFETY: Every shift amount is either zero or one.
+                    // SAFETY: Every shift amount is less than the lane bit width.
                     let left = unsafe { value.unchecked_shl(amount) };
-                    // SAFETY: Every shift amount is either zero or one.
+                    // SAFETY: Every shift amount is less than the lane bit width.
                     let right = unsafe { value.unchecked_shr(amount) };
                     let expected_left = core::array::from_fn(|lane| {
-                        // SAFETY: Every shift amount is either zero or one.
+                        // SAFETY: Every shift amount is less than the lane bit width.
                         unsafe { lhs[lane].unchecked_shl(rhs[lane] as u32) }
                     });
                     let expected_right = core::array::from_fn(|lane| {
-                        // SAFETY: Every shift amount is either zero or one.
+                        // SAFETY: Every shift amount is less than the lane bit width.
                         unsafe { lhs[lane].unchecked_shr(rhs[lane] as u32) }
                     });
                     assert_eq!(left.to_array(), expected_left);
@@ -61,16 +61,16 @@ macro_rules! unsigned_shift_tests {
                         core::array::from_fn(|lane| (lane % <$ty>::BITS as usize) as $ty);
                     let value = Simd::<$ty, LANES>::from_array(lhs);
                     let amount = Simd::<$ty, LANES>::from_array(rhs);
-                    // SAFETY: Every shift amount is either zero or one.
+                    // SAFETY: Every shift amount is less than the lane bit width.
                     let left = unsafe { value.unchecked_shl(amount) };
-                    // SAFETY: Every shift amount is either zero or one.
+                    // SAFETY: Every shift amount is less than the lane bit width.
                     let right = unsafe { value.unchecked_shr(amount) };
                     let expected_left = core::array::from_fn(|lane| {
-                        // SAFETY: Every shift amount is either zero or one.
+                        // SAFETY: Every shift amount is less than the lane bit width.
                         unsafe { lhs[lane].unchecked_shl(rhs[lane] as u32) }
                     });
                     let expected_right = core::array::from_fn(|lane| {
-                        // SAFETY: Every shift amount is either zero or one.
+                        // SAFETY: Every shift amount is less than the lane bit width.
                         unsafe { lhs[lane].unchecked_shr(rhs[lane] as u32) }
                     });
                     assert_eq!(left.to_array(), expected_left);
