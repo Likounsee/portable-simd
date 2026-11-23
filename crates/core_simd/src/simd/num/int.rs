@@ -134,10 +134,6 @@ pub impl(self) trait SimdInt: Copy {
     /// Division by zero panics, matching the scalar integer operation.
     fn overflowing_div(self, second: Self) -> (Self, Self::Mask);
 
-    /// Returns the Euclidean quotient of each lane.
-    ///
-    /// Division by zero panics, matching the scalar integer operation. The signed `MIN / -1`
-    /// overflow case also panics, as it does for the scalar operation.
     /// Returns the Euclidean quotient and a mask indicating lanes where division overflowed.
     ///
     /// Division by zero panics, matching the scalar integer operation.
@@ -148,6 +144,10 @@ pub impl(self) trait SimdInt: Copy {
     /// Division by zero panics, matching the scalar integer operation.
     fn overflowing_rem_euclid(self, rhs: Self) -> (Self, Self::Mask);
 
+    /// Returns the Euclidean quotient of each lane.
+    ///
+    /// Division by zero panics, matching the scalar integer operation. The signed `MIN / -1`
+    /// overflow case also panics, as it does for the scalar operation.
     fn div_euclid(self, rhs: Self) -> Self;
 
     /// Returns the Euclidean remainder of each lane.
@@ -375,9 +375,11 @@ pub impl(self) trait SimdInt: Copy {
     fn reduce_xor(self) -> Self::Scalar;
 
     /// Interprets each lane as a big-endian integer and converts it to native endianness.
+    #[allow(clippy::wrong_self_convention)]
     fn from_be(self) -> Self;
 
     /// Interprets each lane as a little-endian integer and converts it to native endianness.
+    #[allow(clippy::wrong_self_convention)]
     fn from_le(self) -> Self;
 
     /// Converts each lane from native endianness to big-endian representation.
