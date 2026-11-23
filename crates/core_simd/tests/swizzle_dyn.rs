@@ -188,11 +188,11 @@ fn check_unchecked_swizzle_valid_indices<const LANES: usize>() {
 
     // Exercise every valid index through the unchecked fast paths, including
     // the cross-128-bit AVX2 implementation for u8x32.
-    for index in 0..LANES {
+    for (index, &value) in values.iter().enumerate() {
         let indices = core_simd::simd::Simd::splat(index as u8);
         assert_eq!(
             vector.swizzle_dyn_unchecked(indices).to_array(),
-            [values[index]; LANES],
+            [value; LANES],
             "LANES={LANES}, index={index}"
         );
     }
