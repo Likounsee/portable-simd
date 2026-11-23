@@ -12,7 +12,9 @@ macro_rules! signed_shift_tests {
                     let lhs: [$ty; LANES] = core::array::from_fn(|lane| {
                         if lane % 2 == 0 { -4 } else { 3 }
                     });
-                    let rhs: [$ty; LANES] = core::array::from_fn(|lane| (lane % 2) as $ty);
+                    // Exercise every valid shift count as the lane count grows.
+                    let rhs: [$ty; LANES] =
+                        core::array::from_fn(|lane| (lane % <$ty>::BITS as usize) as $ty);
                     let value = Simd::<$ty, LANES>::from_array(lhs);
                     let amount = Simd::<$ty, LANES>::from_array(rhs);
                     // SAFETY: Every shift amount is either zero or one.
@@ -29,6 +31,17 @@ macro_rules! signed_shift_tests {
                     });
                     assert_eq!(left.to_array(), expected_left);
                     assert_eq!(right.to_array(), expected_right);
+                }
+
+                fn unchecked_shifts_at_max_valid_count<const LANES: usize>() {
+                    let lhs = Simd::<$ty, LANES>::splat(-1);
+                    let rhs = Simd::<$ty, LANES>::splat((<$ty>::BITS - 1) as $ty);
+                    // SAFETY: BITS - 1 is the largest valid shift count.
+                    let left = unsafe { lhs.unchecked_shl(rhs) };
+                    // SAFETY: BITS - 1 is the largest valid shift count.
+                    let right = unsafe { lhs.unchecked_shr(rhs) };
+                    assert_eq!(left.to_array(), [<$ty>::MIN; LANES]);
+                    assert_eq!(right.to_array(), [-1; LANES]);
                 }
             }
         }
@@ -60,6 +73,17 @@ macro_rules! unsigned_shift_tests {
                     });
                     assert_eq!(left.to_array(), expected_left);
                     assert_eq!(right.to_array(), expected_right);
+                }
+
+                fn unchecked_shifts_at_max_valid_count<const LANES: usize>() {
+                    let lhs = Simd::<$ty, LANES>::splat(<$ty>::MAX);
+                    let rhs = Simd::<$ty, LANES>::splat((<$ty>::BITS - 1) as $ty);
+                    // SAFETY: BITS - 1 is the largest valid shift count.
+                    let left = unsafe { lhs.unchecked_shl(rhs) };
+                    // SAFETY: BITS - 1 is the largest valid shift count.
+                    let right = unsafe { lhs.unchecked_shr(rhs) };
+                    assert_eq!(left.to_array(), [<$ty>::MAX - ((<$ty>::MAX) >> 1); LANES]);
+                    assert_eq!(right.to_array(), [1; LANES]);
                 }
             }
         }
