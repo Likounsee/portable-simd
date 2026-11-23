@@ -156,20 +156,20 @@ where
     T: crate::simd::MaskElement,
 {
     // LoongArch LLVM code generation miscompiles four-lane byte-mask SIMD
-    // operations. Convert to scalar bitmasks before applying the boolean
-    // operation, then rebuild the mask without using byte-lane SIMD logic.
-    let lhs = lhs.to_bitmask();
-    let rhs = rhs.to_bitmask();
-    let bits = match OP {
-        0 => !lhs & rhs,
-        1 => !lhs | rhs,
-        2 => lhs & !rhs,
-        3 => lhs | !rhs,
-        4 => lhs | rhs,
-        5 => lhs & rhs,
+    // operations, including the bitmask conversion intrinsic. Extract each
+    // lane individually and rebuild the result from canonical boolean lanes.
+    let lhs = core::array::from_fn::<_, N, _>(|lane| lhs.test(lane));
+    let rhs = core::array::from_fn::<_, N, _>(|lane| rhs.test(lane));
+    let values = core::array::from_fn(|lane| match OP {
+        0 => !lhs[lane] & rhs[lane],
+        1 => !lhs[lane] | rhs[lane],
+        2 => lhs[lane] & !rhs[lane],
+        3 => lhs[lane] | !rhs[lane],
+        4 => lhs[lane] | rhs[lane],
+        5 => lhs[lane] & rhs[lane],
         _ => unreachable!(),
-    };
-    Mask::from_bitmask(bits)
+    });
+    Mask::from_array(values)
 }
 
 macro_rules! impl_mask {
