@@ -146,6 +146,20 @@ pub impl(self) trait SimdUint: Copy {
     /// Returns the quotient of each lane using Euclidean division.
     ///
     /// Division by zero panics, matching the scalar integer operation.
+    /// Returns the Euclidean quotient and a mask indicating lanes where division overflowed.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn overflowing_div_euclid(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
+
+    /// Returns the Euclidean remainder and a mask indicating lanes where remainder overflowed.
+    ///
+    /// Division by zero panics, matching the scalar integer operation.
+    fn overflowing_rem_euclid(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+    where
+        Self: SimdPartialEq;
+
     fn div_euclid(self, rhs: Self) -> Self;
 
     /// Returns the remainder of each lane using Euclidean division.
@@ -230,6 +244,18 @@ pub impl(self) trait SimdUint: Copy {
 
     /// Returns the cumulative bitwise "xor" across the elements of the vector.
     fn reduce_xor(self) -> Self::Scalar;
+
+    /// Interprets each lane as a big-endian integer and converts it to native endianness.
+    fn from_be(self) -> Self;
+
+    /// Interprets each lane as a little-endian integer and converts it to native endianness.
+    fn from_le(self) -> Self;
+
+    /// Converts each lane from native endianness to big-endian representation.
+    fn to_be(self) -> Self;
+
+    /// Converts each lane from native endianness to little-endian representation.
+    fn to_le(self) -> Self;
 
     /// Reverses the byte order of each element.
     fn swap_bytes(self) -> Self;
@@ -460,6 +486,44 @@ macro_rules! impl_trait {
             }
 
             #[inline]
+            fn overflowing_div_euclid(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_div_euclid(rhs.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
+            fn overflowing_rem_euclid(self, rhs: Self) -> (Self, <Self as SimdPartialEq>::Mask)
+            where
+                Self: SimdPartialEq
+            {
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_rem_euclid(rhs.as_array()[lane]);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
+            }
+
+            #[inline]
             fn div_euclid(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     self.as_array()[lane].div_euclid(rhs.as_array()[lane])
@@ -587,6 +651,26 @@ macro_rules! impl_trait {
             fn reduce_xor(self) -> Self::Scalar {
                 // Safety: `self` is an integer vector
                 unsafe { core::intrinsics::simd::simd_reduce_xor(self) }
+            }
+
+            #[inline]
+            fn from_be(self) -> Self {
+                Simd::<$ty, N>::from_array(self.to_array().map($ty::from_be))
+            }
+
+            #[inline]
+            fn from_le(self) -> Self {
+                Simd::<$ty, N>::from_array(self.to_array().map($ty::from_le))
+            }
+
+            #[inline]
+            fn to_be(self) -> Self {
+                Simd::<$ty, N>::from_array(self.to_array().map($ty::to_be))
+            }
+
+            #[inline]
+            fn to_le(self) -> Self {
+                Simd::<$ty, N>::from_array(self.to_array().map($ty::to_le))
             }
 
             #[inline]
