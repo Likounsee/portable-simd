@@ -151,18 +151,9 @@ where
         .flat_map(|value| value.to_le_bytes())
         .collect();
 
-    assert_eq!(
-        values.to_ne_bytes().as_ref(),
-        expected_ne.as_slice()
-    );
-    assert_eq!(
-        values.to_be_bytes().as_ref(),
-        expected_be.as_slice()
-    );
-    assert_eq!(
-        values.to_le_bytes().as_ref(),
-        expected_le.as_slice()
-    );
+    assert_eq!(values.to_ne_bytes().as_ref(), expected_ne.as_slice());
+    assert_eq!(values.to_be_bytes().as_ref(), expected_be.as_slice());
+    assert_eq!(values.to_le_bytes().as_ref(), expected_le.as_slice());
 }
 
 #[test]
