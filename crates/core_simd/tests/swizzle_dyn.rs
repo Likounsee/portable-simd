@@ -180,3 +180,39 @@ fn swizzle_dyn_unchecked_zeros_every_high_bit_index() {
     check_all_high_bit_swizzle_indices::<63>();
     check_all_high_bit_swizzle_indices::<64>();
 }
+
+
+fn check_unchecked_swizzle_valid_indices<const LANES: usize>() {
+    let values: [u8; LANES] =
+        core::array::from_fn(|lane| (lane as u8).wrapping_mul(17).wrapping_add(5));
+    let vector = core_simd::simd::Simd::from_array(values);
+
+    // Exercise every valid index through the unchecked fast paths, including
+    // the cross-128-bit AVX2 implementation for u8x32.
+    for index in 0..LANES {
+        let indices = core_simd::simd::Simd::splat(index as u8);
+        assert_eq!(
+            vector.swizzle_dyn_unchecked(indices).to_array(),
+            [values[index]; LANES],
+            "LANES={LANES}, index={index}"
+        );
+    }
+}
+
+#[test]
+fn swizzle_dyn_unchecked_selects_every_valid_index() {
+    check_unchecked_swizzle_valid_indices::<1>();
+    check_unchecked_swizzle_valid_indices::<7>();
+    check_unchecked_swizzle_valid_indices::<8>();
+    check_unchecked_swizzle_valid_indices::<9>();
+    check_unchecked_swizzle_valid_indices::<15>();
+    check_unchecked_swizzle_valid_indices::<16>();
+    check_unchecked_swizzle_valid_indices::<17>();
+    check_unchecked_swizzle_valid_indices::<24>();
+    check_unchecked_swizzle_valid_indices::<31>();
+    check_unchecked_swizzle_valid_indices::<32>();
+    check_unchecked_swizzle_valid_indices::<33>();
+    check_unchecked_swizzle_valid_indices::<48>();
+    check_unchecked_swizzle_valid_indices::<63>();
+    check_unchecked_swizzle_valid_indices::<64>();
+}
