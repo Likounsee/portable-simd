@@ -247,3 +247,33 @@ fn f64_algebraic_reduce_sum_supports_two_lanes() {
     let actual = Simd::from_array([1.0_f64, 2.0]).algebraic_reduce_sum();
     assert!((actual - 3.0).abs() <= 1e-12);
 }
+
+#[test]
+fn f32_algebraic_reduce_product_is_correct_for_exact_inputs() {
+    let actual = Simd::from_array([2.0_f32, 3.0, 4.0, 5.0]).algebraic_reduce_product();
+    assert!((actual - 120.0).abs() <= 1e-5);
+}
+
+#[test]
+fn f64_algebraic_reduce_product_is_correct_for_exact_inputs() {
+    let actual = Simd::from_array([2.0_f64, -3.0, 4.0, 0.5]).algebraic_reduce_product();
+    assert!((actual + 12.0).abs() <= 1e-12);
+}
+
+#[test]
+fn f32_algebraic_reduce_product_supports_eight_lanes() {
+    let actual =
+        Simd::from_array([1.0_f32, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0])
+            .algebraic_reduce_product();
+    assert!((actual - 16.0).abs() <= 1e-5);
+}
+
+#[test]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
+fn f16_algebraic_reduce_product_is_correct_for_exact_inputs() {
+    let actual = Simd::from_array([2.0_f16, 3.0, 1.0, 2.0]).algebraic_reduce_product();
+    assert!((actual - 12.0_f16).abs() <= 0.1_f16);
+}
