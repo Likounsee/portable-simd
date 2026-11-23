@@ -1,5 +1,8 @@
 #![feature(portable_simd)]
 #![feature(f16)]
+#![expect(internal_features)]
+#![feature(cfg_target_has_reliable_f16_f128)]
+#![allow(unused_features)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -15,6 +18,10 @@ fn assert_f64_close(actual: [f64; 4], expected: [f64; 4]) {
     }
 }
 
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 fn assert_f16_close(actual: [f16; 4], expected: [f16; 4], operation: &str) {
     for i in 0..4 {
         // Algebraic operations may choose a different rounding path. Compare in
@@ -91,6 +98,10 @@ fn assert_f64_lanewise(a: [f64; 4], b: [f64; 4]) {
     );
 }
 
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 fn assert_f16_lanewise(a: [f16; 4], b: [f16; 4]) {
     let va = Simd::from_array(a);
     let vb = Simd::from_array(b);
@@ -129,6 +140,10 @@ fn assert_f16_lanewise(a: [f16; 4], b: [f16; 4]) {
     ignore = "Miri f16 arithmetic emulation is not numerically reliable"
 )]
 #[test]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 fn f16_algebraic_lanewise_operations_remain_close_to_scalar_results() {
     assert_f16_lanewise([1.25_f16, -8.0, 0.125, 64.0], [0.5_f16, 2.0, -0.25, 4.0]);
 }
@@ -186,12 +201,20 @@ fn f64_algebraic_reduce_sum_is_correct_for_exact_inputs() {
 }
 
 #[test]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 fn f16_algebraic_reduce_sum_is_correct_for_exact_inputs() {
     let actual = Simd::from_array([1.0_f16, 2.0, 4.0, 8.0]).algebraic_reduce_sum();
     assert!((actual - 15.0_f16).abs() <= 0.1_f16);
 }
 
 #[test]
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 fn f16_mul_add_relaxed_matches_a_valid_scalar_relaxed_result() {
     let x = [1.25_f16, -8.0, 0.125, 64.0];
     let a = [0.5_f16, 2.0, -0.25, 4.0];
