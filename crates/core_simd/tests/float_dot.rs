@@ -35,7 +35,7 @@ fn dot3_ignores_fourth_lane_and_larger_vectors() {
     let a = Simd::<f32, 4>::from_array([1.0, 2.0, 3.0, 999.0]);
     let b = Simd::<f32, 4>::from_array([4.0, 5.0, 6.0, 888.0]);
     assert_eq!(a.dot3(b), 32.0);
-    assert_eq!(a.dot4(b), 70.0);
+    assert_eq!(a.dot4(b), 999.0 * 888.0 + 32.0);
 
     let a = Simd::<f32, 8>::from_array([1.0, 2.0, 3.0, 4.0, 100.0, 200.0, 300.0, 400.0]);
     let b = Simd::<f32, 8>::from_array([4.0, 5.0, 6.0, 7.0, 999.0, 888.0, 777.0, 666.0]);
