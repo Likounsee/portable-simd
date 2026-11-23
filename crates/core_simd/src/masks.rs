@@ -32,26 +32,25 @@ impl_fix_endianness! { u8, u16, u32, u64 }
 mod private_methods {
     /// Implementation-only operations for the built-in mask element types.
     ///
-    /// This trait is visible only inside this crate so sibling implementation modules
-    /// can use its helpers. As a crate-private supertrait, it does not expose these
-    /// associated items to downstream crates.
+    /// This trait lives in a private module so its implementation-only helpers are
+    /// not exposed through the public `MaskElement` trait.
     pub impl(super) trait PrivateMethods {
         fn valid<const N: usize>(values: Simd<Self, N>) -> bool
         where
             Self: SimdElement;
-    
+
         fn eq(self, other: Self) -> bool;
-    
+
         fn to_usize(self) -> usize;
         fn max_unsigned() -> u64;
-    
+
         type Unsigned: SimdElement;
-    
+
         const TRUE: Self;
-    
+
         const FALSE: Self;
     }
-    
+
 }
 
 use private_methods::PrivateMethods;
