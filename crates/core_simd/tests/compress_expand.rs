@@ -76,8 +76,7 @@ fn compress_and_expand_round_trip_every_four_lane_mask() {
 
         let written = values.compress_store(&mut packed, mask);
         let fallback = Simd::splat(0);
-        let (expanded, consumed) =
-            Simd::<u16, 4>::expand_load(&packed[..written], mask, fallback);
+        let (expanded, consumed) = Simd::<u16, 4>::expand_load(&packed[..written], mask, fallback);
 
         assert_eq!(consumed, written, "mask={bits:04b}");
         assert_eq!(expanded, mask.select(values, fallback), "mask={bits:04b}");
