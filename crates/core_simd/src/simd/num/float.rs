@@ -273,6 +273,13 @@ pub impl(self) trait SimdFloat: Copy {
     #[must_use]
     fn algebraic_reduce_sum(self) -> Self::Scalar;
 
+    /// Returns the product of the elements using relaxed algebraic floating-point semantics.
+    ///
+    /// This permits reassociation and other algebraic optimizations that may change rounding,
+    /// NaN, infinity, and signed-zero behavior. Use it only when those differences are acceptable.
+    #[must_use]
+    fn algebraic_reduce_product(self) -> Self::Scalar;
+
     /// Reducing multiply.  Returns the product of the elements of the vector.
     ///
     /// # Examples
@@ -373,6 +380,59 @@ fn f64_to_mask_lanes<const N: usize>(value: &[f64; N]) -> Mask<<i64 as SimdEleme
 
 trait AlgebraicReduce: SimdElement {
     fn reduce<const N: usize>(value: Simd<Self, N>) -> Self;
+}
+
+trait AlgebraicReduceProduct: SimdElement {
+    fn reduce_product<const N: usize>(value: Simd<Self, N>) -> Self;
+}
+
+impl AlgebraicReduceProduct for f16 {
+    #[inline]
+    fn reduce_product<const N: usize>(value: Simd<Self, N>) -> Self {
+        value
+            .as_array()
+            .iter()
+            .copied()
+            .fold(1.0, |product, lane| product.algebraic_mul(lane))
+    }
+}
+
+impl AlgebraicReduceProduct for f32 {
+    #[inline]
+    fn reduce_product<const N: usize>(value: Simd<Self, N>) -> Self {
+        #[cfg(miri)]
+        {
+            return value
+                .as_array()
+                .iter()
+                .copied()
+                .fold(1.0, |product, lane| product.algebraic_mul(lane));
+        }
+        #[cfg(not(miri))]
+        {
+            // SAFETY: value is a supported f32 SIMD vector; algebraic reduction permits reassociation.
+            unsafe { core::intrinsics::simd::simd_reduce_mul_unordered(value) }
+        }
+    }
+}
+
+impl AlgebraicReduceProduct for f64 {
+    #[inline]
+    fn reduce_product<const N: usize>(value: Simd<Self, N>) -> Self {
+        #[cfg(miri)]
+        {
+            return value
+                .as_array()
+                .iter()
+                .copied()
+                .fold(1.0, |product, lane| product.algebraic_mul(lane));
+        }
+        #[cfg(not(miri))]
+        {
+            // SAFETY: value is a supported f64 SIMD vector; algebraic reduction permits reassociation.
+            unsafe { core::intrinsics::simd::simd_reduce_mul_unordered(value) }
+        }
+    }
 }
 
 impl AlgebraicReduce for f16 {
@@ -669,6 +729,11 @@ macro_rules! impl_trait {
             #[inline]
             fn algebraic_reduce_sum(self) -> Self::Scalar {
                 <$ty as AlgebraicReduce>::reduce(self)
+            }
+
+            #[inline]
+            fn algebraic_reduce_product(self) -> Self::Scalar {
+                <$ty as AlgebraicReduceProduct>::reduce_product(self)
             }
 
             #[inline]
