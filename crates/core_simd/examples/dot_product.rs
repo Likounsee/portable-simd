@@ -36,7 +36,16 @@ pub fn dot_prod_scalar_1(a: &[f32], b: &[f32]) -> f32 {
 // `(a * b).reduce_sum()`: Multiply both f32x4 vectors together, and then reduce them.
 // Each chunk is multiplied and immediately reduced to a scalar. This performs one
 // horizontal reduction per chunk instead of accumulating lanes and reducing once.
-// TODO: ASCII diagrams
+//
+// For one four-element chunk, the data flow is:
+//
+//   a: [a0, a1, a2, a3]       b: [b0, b1, b2, b3]
+//          \                       /
+//           SIMD multiply: [a0*b0, a1*b1, a2*b2, a3*b3]
+//                              |
+//                       horizontal sum
+//                              |
+//                    a0*b0 + a1*b1 + a2*b2 + a3*b3
 pub fn dot_prod_simd_0(a: &[f32], b: &[f32]) -> f32 {
     assert_eq!(a.len(), b.len());
     let (a_chunks, a_remainder) = a.as_chunks::<4>();
