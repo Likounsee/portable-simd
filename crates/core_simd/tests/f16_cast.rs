@@ -9,7 +9,7 @@
     not(all(target_arch = "wasm32", target_feature = "simd128"))
 ))]
 mod tests {
-    use core_simd::simd::Simd;
+    use core_simd::simd::{Simd, num::SimdFloat};
 
     #[test]
     fn f16_to_f32_and_f64_matches_scalar_casts() {
