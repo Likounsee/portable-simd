@@ -665,9 +665,10 @@ where
             // Every nonnegative i32 index fits in this slice.
             nonnegative
         } else {
-            nonnegative & Mask::<isize, N>::from_array(
-                idxs.simd_lt(Simd::splat(slice.len() as i32)).to_array(),
-            )
+            nonnegative
+                & Mask::<isize, N>::from_array(
+                    idxs.simd_lt(Simd::splat(slice.len() as i32)).to_array(),
+                )
         };
         Self::gather_select(slice, enable & in_bounds, idxs.cast::<usize>(), or)
     }

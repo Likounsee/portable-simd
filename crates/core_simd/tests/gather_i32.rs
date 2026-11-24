@@ -32,7 +32,6 @@ fn gather_select_i32_respects_mask_and_signed_bounds() {
     assert_eq!(actual, Simd::from_array([30, -2, -3, 40]));
 }
 
-
 #[test]
 fn gather_or_i32_handles_extreme_signed_indices() {
     let values = [10_i32, 20, 30, 40];

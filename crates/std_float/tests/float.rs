@@ -155,14 +155,12 @@ macro_rules! impl_tests {
 
             test_helpers::test_lanes! {
                 fn powi<const LANES: usize>() {
-                    let input: [$scalar; LANES] = core::array::from_fn(|lane| {
-                        0.5 as $scalar + lane as $scalar * 0.125 as $scalar
-                    });
-                    let actual = core_simd::simd::Simd::<$scalar, LANES>::from_array(input)
-                        .powi(3)
-                        .to_array();
-                    let expected = input.map(|value| value.powi(3));
-                    assert_eq!(actual, expected);
+                    test_helpers::test_unary_elementwise_approx(
+                        &|value: core_simd::simd::Simd<$scalar, LANES>| value.powi(3),
+                        &|value: $scalar| value.powi(3),
+                        &|_| true,
+                        16,
+                    )
                 }
 
                 fn fract<const LANES: usize>() {
