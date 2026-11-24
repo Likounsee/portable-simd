@@ -349,6 +349,36 @@ macro_rules! overflowing_add_sub_impl {
     }};
 }
 
+macro_rules! rotate_impl {
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, vectorized) => {{
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let left = $value << Simd::<$ty, $lanes>::splat(shift as $ty);
+        let right = $value
+            >> Simd::<$ty, $lanes>::splat((<$ty>::BITS - shift) as $ty);
+        left | right
+    }};
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            $value.as_array()[lane].rotate_left($rhs)
+        }))
+    }};
+}
+
+macro_rules! rotate_right_impl {
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, vectorized) => {{
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let right = $value >> Simd::<$ty, $lanes>::splat(shift as $ty);
+        let left = $value
+            << Simd::<$ty, $lanes>::splat((<$ty>::BITS - shift) as $ty);
+        left | right
+    }};
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            $value.as_array()[lane].rotate_right($rhs)
+        }))
+    }};
+}
+
 macro_rules! mul_high_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -489,16 +519,12 @@ macro_rules! impl_trait {
 
             #[inline]
             fn rotate_left(self, rhs: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].rotate_left(rhs)
-                }))
+                rotate_impl!($ty, N, self, rhs, $strategy)
             }
 
             #[inline]
             fn rotate_right(self, rhs: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].rotate_right(rhs)
-                }))
+                rotate_right_impl!($ty, N, self, rhs, $strategy)
             }
 
             #[inline]
