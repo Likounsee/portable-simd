@@ -35,6 +35,10 @@ macro_rules! signed_unchecked_arithmetic_tests {
                     let sub = unsafe { left.unchecked_sub(right) };
                     // SAFETY: The chosen operands cannot overflow for any supported integer width.
                     let mul = unsafe { left.unchecked_mul(right) };
+                    // SAFETY: Every divisor is nonzero and no signed MIN / -1 pair occurs.
+                    let div = unsafe { left.unchecked_div(right) };
+                    // SAFETY: Every divisor is nonzero and no signed MIN % -1 pair occurs.
+                    let rem = unsafe { left.unchecked_rem(right) };
 
                     let expected_add = core::array::from_fn(|lane| {
                         // SAFETY: The chosen operands cannot overflow.
@@ -48,10 +52,20 @@ macro_rules! signed_unchecked_arithmetic_tests {
                         // SAFETY: The chosen operands cannot overflow.
                         unsafe { lhs[lane].unchecked_mul(rhs[lane]) }
                     });
+                    let expected_div = core::array::from_fn(|lane| {
+                        // SAFETY: Every divisor is nonzero and no signed MIN / -1 pair occurs.
+                        unsafe { lhs[lane].unchecked_div(rhs[lane]) }
+                    });
+                    let expected_rem = core::array::from_fn(|lane| {
+                        // SAFETY: Every divisor is nonzero and no signed MIN % -1 pair occurs.
+                        unsafe { lhs[lane].unchecked_rem(rhs[lane]) }
+                    });
 
                     assert_eq!(add.to_array(), expected_add);
                     assert_eq!(sub.to_array(), expected_sub);
                     assert_eq!(mul.to_array(), expected_mul);
+                    assert_eq!(div.to_array(), expected_div);
+                    assert_eq!(rem.to_array(), expected_rem);
                 }
             }
         }
@@ -78,6 +92,10 @@ macro_rules! unsigned_unchecked_arithmetic_tests {
                     let sub = unsafe { left.unchecked_sub(right) };
                     // SAFETY: The chosen operands cannot overflow for any supported integer width.
                     let mul = unsafe { left.unchecked_mul(right) };
+                    // SAFETY: rhs is always nonzero.
+                    let div = unsafe { left.unchecked_div(right) };
+                    // SAFETY: rhs is always nonzero.
+                    let rem = unsafe { left.unchecked_rem(right) };
 
                     let expected_add = core::array::from_fn(|lane| {
                         // SAFETY: The chosen operands cannot overflow.
@@ -91,10 +109,20 @@ macro_rules! unsigned_unchecked_arithmetic_tests {
                         // SAFETY: The chosen operands cannot overflow.
                         unsafe { lhs[lane].unchecked_mul(rhs[lane]) }
                     });
+                    let expected_div = core::array::from_fn(|lane| {
+                        // SAFETY: rhs is always nonzero.
+                        unsafe { lhs[lane].unchecked_div(rhs[lane]) }
+                    });
+                    let expected_rem = core::array::from_fn(|lane| {
+                        // SAFETY: rhs is always nonzero.
+                        unsafe { lhs[lane].unchecked_rem(rhs[lane]) }
+                    });
 
                     assert_eq!(add.to_array(), expected_add);
                     assert_eq!(sub.to_array(), expected_sub);
                     assert_eq!(mul.to_array(), expected_mul);
+                    assert_eq!(div.to_array(), expected_div);
+                    assert_eq!(rem.to_array(), expected_rem);
                 }
             }
         }
