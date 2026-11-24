@@ -156,7 +156,7 @@ float_rounding_test! { f64, i64 }
 
 #[test]
 fn f16_round_fast_matches_round_ties_even() {
-    use core_simd::simd::{Simd, num::SimdFloat};
+    use core_simd::simd::Simd;
     use std_float::StdFloat;
 
     let input = Simd::<f16, 16>::from_array([
@@ -178,8 +178,12 @@ fn f16_round_fast_matches_round_ties_even() {
         f16::MIN_POSITIVE,
     ]);
 
-    let expected = input.round_ties_even().to_array().map(f16::to_bits);
-    let actual = input.round_fast().to_array().map(f16::to_bits);
+    let expected = <Simd<f16, 16> as StdFloat>::round_ties_even(input)
+        .to_array()
+        .map(f16::to_bits);
+    let actual = <Simd<f16, 16> as StdFloat>::round_fast(input)
+        .to_array()
+        .map(f16::to_bits);
 
     assert_eq!(actual, expected);
 }
