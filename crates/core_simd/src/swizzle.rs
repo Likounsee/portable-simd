@@ -197,13 +197,13 @@ where
     where
         crate::simd::LaneCount<HALF_LANES>: crate::simd::SupportedLaneCount,
     {
-        struct Half<const HIGH: bool>;
+        struct Half<const HIGH: bool, const HALF: usize, const INPUT: usize>;
 
-        impl<const HIGH: bool, const HALF: usize, const N: usize> Swizzle<HALF>
-            for Half<HIGH>
+        impl<const HIGH: bool, const HALF: usize, const INPUT: usize> Swizzle<HALF>
+            for Half<HIGH, HALF, INPUT>
         {
             const INDEX: [usize; HALF] = const {
-                assert!(HALF * 2 == N, "split requires exactly half the input lanes");
+                assert!(HALF * 2 == INPUT, "split requires exactly half the input lanes");
                 let offset = if HIGH { HALF } else { 0 };
                 let mut indices = [0; HALF];
                 let mut lane = 0;
@@ -215,7 +215,10 @@ where
             };
         }
 
-        [Half::<false>::swizzle(self), Half::<true>::swizzle(self)]
+        [
+            Half::<false, HALF_LANES, N>::swizzle(self),
+            Half::<true, HALF_LANES, N>::swizzle(self),
+        ]
     }
 
     /// Concatenates two vectors with the same number of lanes.
@@ -228,9 +231,10 @@ where
     where
         crate::simd::LaneCount<OUTPUT_LANES>: crate::simd::SupportedLaneCount,
     {
-        struct Concat<const OUTPUT: usize>;
+        struct Concat<const OUTPUT: usize, const INPUT: usize>;
 
-        impl<const OUTPUT: usize, const INPUT: usize> Swizzle<OUTPUT> for Concat<OUTPUT> {
+        impl<const OUTPUT: usize, const INPUT: usize> Swizzle<OUTPUT>
+            for Concat<OUTPUT, INPUT> {
             const INDEX: [usize; OUTPUT] = const {
                 assert!(
                     OUTPUT == INPUT * 2,
@@ -246,7 +250,7 @@ where
             };
         }
 
-        Concat::<OUTPUT_LANES>::concat_swizzle(self, other)
+        Concat::<OUTPUT_LANES, N>::concat_swizzle(self, other)
     }
 
     /// Swaps each lane with the lane whose index is XORed with `SWAP_MASK`.
