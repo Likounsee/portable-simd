@@ -268,7 +268,6 @@ generic_alias! {
     f64 => f64xN,
 }
 
-
 // Generic-lane-count mask aliases complement the fixed-width aliases above.
 macro_rules! generic_mask_alias {
     ($($element_ty:ty => $alias:ident),* $(,)?) => {
