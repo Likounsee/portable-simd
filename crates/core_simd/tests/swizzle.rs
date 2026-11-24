@@ -165,6 +165,22 @@ fn mask_rotate_runtime() {
     let mask = Mask::<i32, 4>::from_array([true, false, false, true]);
 
     assert_eq!(
+        mask.rotate_elements_left::<1>().to_array(),
+        [false, false, true, true]
+    );
+    assert_eq!(
+        mask.rotate_elements_right::<1>().to_array(),
+        [true, true, false, false]
+    );
+    assert_eq!(
+        mask.rotate_elements_left::<5>().to_array(),
+        [false, false, true, true]
+    );
+    assert_eq!(
+        mask.rotate_elements_right::<usize::MAX>().to_array(),
+        [false, true, true, false]
+    );
+    assert_eq!(
         mask.rotate_elements_left_dyn(1).to_array(),
         [false, false, true, true]
     );
