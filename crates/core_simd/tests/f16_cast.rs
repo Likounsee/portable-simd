@@ -4,10 +4,11 @@
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![allow(unused_features)]
 
-#[cfg(all(
-    target_has_reliable_f16_math,
-    not(all(target_arch = "wasm32", target_feature = "simd128"))
-))]
+// The wasm32 Firefox test runner currently cannot deserialize the generated
+// f16 cast test module (an i32/i64 type mismatch in the Wasm code section).
+// Keep these cast tests enabled on native targets until that toolchain issue
+// is resolved.
+#[cfg(all(target_has_reliable_f16_math, not(target_arch = "wasm32")))]
 mod tests {
     use core_simd::simd::{Simd, num::SimdFloat};
 
