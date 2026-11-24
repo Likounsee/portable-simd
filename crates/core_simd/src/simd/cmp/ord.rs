@@ -21,6 +21,24 @@ pub trait SimdPartialOrd: SimdPartialEq {
     /// Test if each element is greater than or equal to the corresponding element in `other`.
     #[must_use = "method returns a new mask and does not mutate the original value"]
     fn simd_ge(self, other: Self) -> Self::Mask;
+
+    /// Returns a mask indicating whether each lane is within the inclusive range
+    /// from `min` to `max`.
+    ///
+    /// A lane is `true` when it is greater than or equal to the corresponding
+    /// lane in `min` and less than or equal to the corresponding lane in `max`.
+    /// If a lane contains a floating-point NaN, its result is `false`.
+    ///
+    /// This operation does not check that `min` is less than or equal to `max`;
+    /// lanes with an inverted interval simply evaluate to `false`.
+    #[must_use = "method returns a new mask and does not mutate the original value"]
+    #[inline]
+    fn simd_in_range(self, min: Self, max: Self) -> Self::Mask
+    where
+        Self::Mask: core::ops::BitAnd<Output = Self::Mask>,
+    {
+        self.simd_ge(min) & self.simd_le(max)
+    }
 }
 
 /// Parallel `Ord`.
