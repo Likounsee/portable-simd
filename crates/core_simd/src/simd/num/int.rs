@@ -539,7 +539,7 @@ macro_rules! rotate_right_impl {
         let value: Simd<$unsigned, $lanes> = $value.cast();
         let right = value >> Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
         let left = value
-            << Simd::<$unsigned, $lanes>::splat((<$ty>::BITS - shift) as $unsigned);
+            << Simd::<$unsigned, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $unsigned);
         (left | right).cast()
     }};
     ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
