@@ -50,6 +50,20 @@ fn rotate() {
 
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn rotate_runtime() {
+    let vector = Simd::from_array([0, 1, 2, 3]);
+    let amount = core::hint::black_box(2usize);
+    assert_eq!(vector.rotate_elements_left_dyn(amount).to_array(), [2, 3, 0, 1]);
+    assert_eq!(vector.rotate_elements_right_dyn(amount).to_array(), [2, 3, 0, 1]);
+    assert_eq!(vector.rotate_elements_left_dyn(0).to_array(), [0, 1, 2, 3]);
+    assert_eq!(vector.rotate_elements_right_dyn(4).to_array(), [0, 1, 2, 3]);
+    assert_eq!(vector.rotate_elements_left_dyn(5).to_array(), [1, 2, 3, 0]);
+    assert_eq!(vector.rotate_elements_right_dyn(5).to_array(), [3, 0, 1, 2]);
+    assert_eq!(vector.rotate_elements_left_dyn(usize::MAX).to_array(), [3, 0, 1, 2]);
+}
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn shift() {
     let a = Simd::from_array([1, 2, 3, 4]);
     assert_eq!(a.shift_elements_left::<0>(0).to_array(), [1, 2, 3, 4]);
