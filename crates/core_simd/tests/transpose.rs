@@ -28,12 +28,7 @@ fn transpose_square_matrix() {
     let columns = transpose(rows);
     assert_eq!(
         columns.map(|column| column.to_array()),
-        [
-            [0, 4, 8, 12],
-            [1, 5, 9, 13],
-            [2, 6, 10, 14],
-            [3, 7, 11, 15],
-        ],
+        [[0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15],],
     );
 }
 
