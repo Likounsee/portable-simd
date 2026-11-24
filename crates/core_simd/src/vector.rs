@@ -113,6 +113,48 @@ pub struct Simd<T, const N: usize>([T; N])
 where
     T: SimdElement;
 
+
+/// Transposes an array of SIMD vectors.
+///
+/// Given `M` vectors with `N` lanes each, returns `N` vectors with `M` lanes each.
+/// This is useful for changing between row-oriented and column-oriented data.
+///
+/// The operation is defined for any dimensions supported by `Simd<T, N>` and
+/// `Simd<T, M>`. It is a convenience operation; its generated machine code depends
+/// on the target and compiler.
+///
+/// # Examples
+///
+/// ```
+/// # #![feature(portable_simd)]
+/// use core::simd::{Simd, transpose};
+///
+/// let rows = [
+///     Simd::from_array([1, 2, 3, 4]),
+///     Simd::from_array([5, 6, 7, 8]),
+/// ];
+/// let columns = transpose(rows);
+///
+/// assert_eq!(columns.map(Simd::to_array), [
+///     [1, 5],
+///     [2, 6],
+///     [3, 7],
+///     [4, 8],
+/// ]);
+/// ```
+#[inline]
+pub fn transpose<T, const M: usize, const N: usize>(
+    vectors: [Simd<T, N>; M],
+) -> [Simd<T, M>; N]
+where
+    T: SimdElement,
+{
+    core::array::from_fn(|row| {
+        Simd::from_array(core::array::from_fn(|column| vectors[column].as_array()[row]))
+    })
+}
+
+
 impl<T, const N: usize> Simd<T, N>
 where
     T: SimdElement,
