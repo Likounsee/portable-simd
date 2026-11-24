@@ -70,6 +70,14 @@ macro_rules! float_rounding_test {
                     )
                 }
 
+                fn round_fast<const LANES: usize>() {
+                    test_helpers::test_unary_elementwise(
+                        &Vector::<LANES>::round_fast,
+                        &Scalar::round_ties_even,
+                        &|_| true,
+                    )
+                }
+
                 fn fract<const LANES: usize>() {
                     test_helpers::test_unary_elementwise_flush_subnormals(
                         &Vector::<LANES>::fract,
