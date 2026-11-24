@@ -285,7 +285,8 @@ where
     ///
     /// ```
     /// # #![feature(portable_simd)]
-    /// # use core::simd::u32x4;
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd::u32x4;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd::u32x4;
     /// let vector = u32x4::from_array([0, 1, 2, 3]);
     /// let amount = 2;
     /// assert_eq!(vector.rotate_elements_left_dyn(amount).to_array(), [2, 3, 0, 1]);
