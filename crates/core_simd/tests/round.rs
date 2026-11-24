@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(f16)]
 
 macro_rules! float_rounding_test {
     { $scalar:tt, $int_scalar:tt } => {
@@ -151,3 +152,34 @@ macro_rules! float_rounding_test {
 
 float_rounding_test! { f32, i32 }
 float_rounding_test! { f64, i64 }
+
+
+#[test]
+fn f16_round_fast_matches_round_ties_even() {
+    use core_simd::simd::{Simd, num::SimdFloat};
+    use std_float::StdFloat;
+
+    let input = Simd::<f16, 16>::from_array([
+        0.5_f16,
+        1.5_f16,
+        2.5_f16,
+        3.5_f16,
+        -0.5_f16,
+        -1.5_f16,
+        -2.5_f16,
+        -3.5_f16,
+        1.25_f16,
+        -1.25_f16,
+        0.0_f16,
+        -0.0_f16,
+        f16::INFINITY,
+        f16::NEG_INFINITY,
+        f16::NAN,
+        f16::MIN_POSITIVE,
+    ]);
+
+    let expected = input.round_ties_even().to_array().map(f16::to_bits);
+    let actual = input.round_fast().to_array().map(f16::to_bits);
+
+    assert_eq!(actual, expected);
+}
