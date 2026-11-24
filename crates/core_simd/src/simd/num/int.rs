@@ -7,7 +7,7 @@ macro_rules! mul_high_impl {
     (i16, $wide:ident, $lhs:ident, $rhs:ident) => {{
         let lhs: Simd<$wide, N> = $lhs.cast();
         let rhs: Simd<$wide, N> = $rhs.cast();
-        ((lhs * rhs) >> i16::BITS).cast()
+        ((lhs * rhs) >> (i16::BITS as $wide)).cast()
     }};
     (i32, $wide:ident, $lhs:ident, $rhs:ident) => {{
         let lhs: Simd<$wide, N> = $lhs.cast();
