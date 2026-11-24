@@ -113,7 +113,10 @@ fn compress_expand_cover_every_eight_lane_mask_and_slice_capacity() {
             let written = values.compress_store(&mut packed[..capacity], mask);
             let expected_written = selected_count.min(capacity);
 
-            assert_eq!(written, expected_written, "compress mask={bits:08b}, capacity={capacity}");
+            assert_eq!(
+                written, expected_written,
+                "compress mask={bits:08b}, capacity={capacity}"
+            );
             let expected_packed: Vec<i32> = values
                 .to_array()
                 .into_iter()
@@ -121,14 +124,18 @@ fn compress_expand_cover_every_eight_lane_mask_and_slice_capacity() {
                 .filter_map(|(value, is_selected)| is_selected.then_some(value))
                 .take(capacity)
                 .collect();
-            assert_eq!(&packed[..written], expected_packed.as_slice(),
-                "packed values for mask={bits:08b}, capacity={capacity}");
-            assert!(packed[written..].iter().all(|&value| value == 999),
-                "compress_store modified beyond its returned length: mask={bits:08b}, capacity={capacity}");
+            assert_eq!(
+                &packed[..written],
+                expected_packed.as_slice(),
+                "packed values for mask={bits:08b}, capacity={capacity}"
+            );
+            assert!(
+                packed[written..].iter().all(|&value| value == 999),
+                "compress_store modified beyond its returned length: mask={bits:08b}, capacity={capacity}"
+            );
 
             let input: Vec<i32> = (0..capacity).map(|index| 100 + index as i32).collect();
-            let (expanded, consumed) =
-                Simd::<i32, 8>::expand_load(&input, mask, fallback);
+            let (expanded, consumed) = Simd::<i32, 8>::expand_load(&input, mask, fallback);
             let expected_consumed = selected_count.min(capacity);
             let mut expected = fallback.to_array();
             let mut input_index = 0;
@@ -139,11 +146,15 @@ fn compress_expand_cover_every_eight_lane_mask_and_slice_capacity() {
                 }
             }
 
-            assert_eq!(consumed, expected_consumed,
-                "expand_load consumed count for mask={bits:08b}, capacity={capacity}");
-            assert_eq!(expanded.to_array(), expected,
-                "expanded lanes for mask={bits:08b}, capacity={capacity}");
+            assert_eq!(
+                consumed, expected_consumed,
+                "expand_load consumed count for mask={bits:08b}, capacity={capacity}"
+            );
+            assert_eq!(
+                expanded.to_array(),
+                expected,
+                "expanded lanes for mask={bits:08b}, capacity={capacity}"
+            );
         }
     }
 }
-
