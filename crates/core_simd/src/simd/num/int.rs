@@ -522,8 +522,8 @@ macro_rules! rotate_impl {
         let shift = $rhs & (<$ty>::BITS - 1);
         let value: Simd<$unsigned, $lanes> = $value.cast();
         let left = value << Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
-        let right = value
-            >> Simd::<$unsigned, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $unsigned);
+        let right_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let right = value >> Simd::<$unsigned, $lanes>::splat(right_shift as $unsigned);
         (left | right).cast()
     }};
     ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
@@ -538,8 +538,8 @@ macro_rules! rotate_right_impl {
         let shift = $rhs & (<$ty>::BITS - 1);
         let value: Simd<$unsigned, $lanes> = $value.cast();
         let right = value >> Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
-        let left = value
-            << Simd::<$unsigned, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $unsigned);
+        let left_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let left = value << Simd::<$unsigned, $lanes>::splat(left_shift as $unsigned);
         (left | right).cast()
     }};
     ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
