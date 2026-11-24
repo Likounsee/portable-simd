@@ -740,6 +740,30 @@ where
         unsafe { Self::from_simd_unchecked(self.to_simd().rotate_elements_right::<OFFSET>()) }
     }
 
+    /// Rotates the mask elements to the left by a constant amount.
+    ///
+    /// The rotation amount is reduced modulo the number of lanes.
+    #[inline]
+    #[must_use = "method returns a new mask and does not mutate the original inputs"]
+    pub fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
+        // SAFETY: rotating a mask's canonical SIMD representation preserves its elements.
+        unsafe {
+            Self::from_simd_unchecked(self.to_simd().rotate_elements_left::<OFFSET>())
+        }
+    }
+
+    /// Rotates the mask elements to the right by a constant amount.
+    ///
+    /// The rotation amount is reduced modulo the number of lanes.
+    #[inline]
+    #[must_use = "method returns a new mask and does not mutate the original inputs"]
+    pub fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
+        // SAFETY: rotating a mask's canonical SIMD representation preserves its elements.
+        unsafe {
+            Self::from_simd_unchecked(self.to_simd().rotate_elements_right::<OFFSET>())
+        }
+    }
+
     /// Rotates the mask elements to the left by a runtime amount.
     ///
     /// The rotation amount is reduced modulo the number of lanes.
