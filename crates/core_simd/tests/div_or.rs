@@ -18,6 +18,15 @@ macro_rules! signed_fallback_tests {
 
                 assert_eq!(lhs.div_or(rhs, fallback).to_array(), [91, 92, -4, 94]);
                 assert_eq!(lhs.rem_or(rhs, fallback).to_array(), [91, 92, -1, 94]);
+
+                let all_zero = Simd::splat(0);
+                assert_eq!(lhs.div_or(all_zero, fallback), fallback);
+                assert_eq!(lhs.rem_or(all_zero, fallback), fallback);
+
+                let all_overflow = Simd::splat(-1);
+                let min = Simd::splat(<$ty>::MIN);
+                assert_eq!(min.div_or(all_overflow, fallback), fallback);
+                assert_eq!(min.rem_or(all_overflow, fallback), fallback);
             }
         }
     };
@@ -36,6 +45,10 @@ macro_rules! unsigned_fallback_tests {
 
                 assert_eq!(lhs.div_or(rhs, fallback).to_array(), [91, 4, 4, 94]);
                 assert_eq!(lhs.rem_or(rhs, fallback).to_array(), [91, 0, 1, 94]);
+
+                let all_zero = Simd::splat(0);
+                assert_eq!(lhs.div_or(all_zero, fallback), fallback);
+                assert_eq!(lhs.rem_or(all_zero, fallback), fallback);
             }
         }
     };
