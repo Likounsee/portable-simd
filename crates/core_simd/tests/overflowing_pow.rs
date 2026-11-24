@@ -44,8 +44,20 @@ macro_rules! signed_overflowing_pow_tests {
                         });
 
                         for exponent in EXPONENTS {
-                            let (actual, actual_overflow) =
-                                Simd::<$ty, LANES>::from_array(values).overflowing_pow(exponent);
+                            let vector = Simd::<$ty, LANES>::from_array(values);
+                            let wrapping = vector.wrapping_pow(exponent);
+                            let expected_wrapping: [$ty; LANES] = core::array::from_fn(|lane| {
+                                values[lane].wrapping_pow(exponent)
+                            });
+                            assert_eq!(wrapping.to_array(), expected_wrapping);
+
+                            let saturating = vector.saturating_pow(exponent);
+                            let expected_saturating: [$ty; LANES] = core::array::from_fn(|lane| {
+                                values[lane].saturating_pow(exponent)
+                            });
+                            assert_eq!(saturating.to_array(), expected_saturating);
+
+                            let (actual, actual_overflow) = vector.overflowing_pow(exponent);
                             let expected: [($ty, bool); LANES] = core::array::from_fn(|lane| {
                                 values[lane].overflowing_pow(exponent)
                             });
@@ -79,8 +91,20 @@ macro_rules! unsigned_overflowing_pow_tests {
                         });
 
                         for exponent in EXPONENTS {
-                            let (actual, actual_overflow) =
-                                Simd::<$ty, LANES>::from_array(values).overflowing_pow(exponent);
+                            let vector = Simd::<$ty, LANES>::from_array(values);
+                            let wrapping = vector.wrapping_pow(exponent);
+                            let expected_wrapping: [$ty; LANES] = core::array::from_fn(|lane| {
+                                values[lane].wrapping_pow(exponent)
+                            });
+                            assert_eq!(wrapping.to_array(), expected_wrapping);
+
+                            let saturating = vector.saturating_pow(exponent);
+                            let expected_saturating: [$ty; LANES] = core::array::from_fn(|lane| {
+                                values[lane].saturating_pow(exponent)
+                            });
+                            assert_eq!(saturating.to_array(), expected_saturating);
+
+                            let (actual, actual_overflow) = vector.overflowing_pow(exponent);
                             let expected: [($ty, bool); LANES] = core::array::from_fn(|lane| {
                                 values[lane].overflowing_pow(exponent)
                             });
