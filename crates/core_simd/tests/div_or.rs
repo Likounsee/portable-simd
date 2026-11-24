@@ -10,20 +10,33 @@ macro_rules! signed_tests {
         mod $module {
             use super::*;
 
-            #[test]
-            fn division_and_remainder_substitute_invalid_lanes() {
-                let lhs = Simd::<$ty, 4>::from_array([12 as $ty, <$ty>::MIN, -9 as $ty, 8 as $ty]);
-                let rhs = Simd::<$ty, 4>::from_array([3 as $ty, -1 as $ty, 0 as $ty, 2 as $ty]);
-                let fallback = Simd::splat(77 as $ty);
+            test_helpers::test_lanes! {
+                fn division_and_remainder_substitute_invalid_lanes<const LANES: usize>() {
+                    let lhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => <$ty>::MIN,
+                        1 => 12,
+                        2 => -9,
+                        _ => 8,
+                    });
+                    let rhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => -1,
+                        1 => 3,
+                        2 => 0,
+                        _ => 2,
+                    });
+                    let fallback = 77 as $ty;
+                    let expected_div =
+                        core::array::from_fn(|lane| lhs[lane].checked_div(rhs[lane]).unwrap_or(fallback));
+                    let expected_rem =
+                        core::array::from_fn(|lane| lhs[lane].checked_rem(rhs[lane]).unwrap_or(fallback));
 
-                assert_eq!(
-                    lhs.div_or(rhs, fallback).to_array(),
-                    [4 as $ty, 77 as $ty, 77 as $ty, 4 as $ty]
-                );
-                assert_eq!(
-                    lhs.rem_or(rhs, fallback).to_array(),
-                    [0 as $ty, 77 as $ty, 77 as $ty, 0 as $ty]
-                );
+                    let lhs = Simd::<$ty, LANES>::from_array(lhs);
+                    let rhs = Simd::<$ty, LANES>::from_array(rhs);
+                    let fallback = Simd::splat(fallback);
+
+                    assert_eq!(lhs.div_or(rhs, fallback).to_array(), expected_div);
+                    assert_eq!(lhs.rem_or(rhs, fallback).to_array(), expected_rem);
+                }
             }
         }
     };
@@ -34,20 +47,33 @@ macro_rules! unsigned_tests {
         mod $module {
             use super::*;
 
-            #[test]
-            fn division_and_remainder_substitute_zero_divisors() {
-                let lhs = Simd::<$ty, 4>::from_array([12 as $ty, 8 as $ty, 7 as $ty, <$ty>::MAX]);
-                let rhs = Simd::<$ty, 4>::from_array([3 as $ty, 0 as $ty, 2 as $ty, 1 as $ty]);
-                let fallback = Simd::splat(77 as $ty);
+            test_helpers::test_lanes! {
+                fn division_and_remainder_substitute_zero_divisors<const LANES: usize>() {
+                    let lhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => <$ty>::MAX,
+                        1 => 12,
+                        2 => 7,
+                        _ => 8,
+                    });
+                    let rhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 4 {
+                        0 => 0,
+                        1 => 3,
+                        2 => 2,
+                        _ => 1,
+                    });
+                    let fallback = 77 as $ty;
+                    let expected_div =
+                        core::array::from_fn(|lane| lhs[lane].checked_div(rhs[lane]).unwrap_or(fallback));
+                    let expected_rem =
+                        core::array::from_fn(|lane| lhs[lane].checked_rem(rhs[lane]).unwrap_or(fallback));
 
-                assert_eq!(
-                    lhs.div_or(rhs, fallback).to_array(),
-                    [4 as $ty, 77 as $ty, 3 as $ty, <$ty>::MAX]
-                );
-                assert_eq!(
-                    lhs.rem_or(rhs, fallback).to_array(),
-                    [0 as $ty, 77 as $ty, 1 as $ty, 0 as $ty]
-                );
+                    let lhs = Simd::<$ty, LANES>::from_array(lhs);
+                    let rhs = Simd::<$ty, LANES>::from_array(rhs);
+                    let fallback = Simd::splat(fallback);
+
+                    assert_eq!(lhs.div_or(rhs, fallback).to_array(), expected_div);
+                    assert_eq!(lhs.rem_or(rhs, fallback).to_array(), expected_rem);
+                }
             }
         }
     };
