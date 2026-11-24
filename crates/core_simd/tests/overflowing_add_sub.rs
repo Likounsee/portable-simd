@@ -33,6 +33,16 @@ macro_rules! signed_tests {
                     assert_eq!(add_mask.to_array(), expected_add.map(|x| x.1));
                     assert_eq!(sub.to_array(), expected_sub.map(|x| x.0));
                     assert_eq!(sub_mask.to_array(), expected_sub.map(|x| x.1));
+                    let (neg, neg_mask) = Simd::<$ty, LANES>::from_array(lhs).overflowing_neg();
+                    let (abs, abs_mask) = Simd::<$ty, LANES>::from_array(lhs).overflowing_abs();
+                    let expected_neg: [($ty, bool); LANES] =
+                        core::array::from_fn(|i| lhs[i].overflowing_neg());
+                    let expected_abs: [($ty, bool); LANES] =
+                        core::array::from_fn(|i| lhs[i].overflowing_abs());
+                    assert_eq!(neg.to_array(), expected_neg.map(|x| x.0));
+                    assert_eq!(neg_mask.to_array(), expected_neg.map(|x| x.1));
+                    assert_eq!(abs.to_array(), expected_abs.map(|x| x.0));
+                    assert_eq!(abs_mask.to_array(), expected_abs.map(|x| x.1));
                 }
             }
         }
