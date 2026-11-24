@@ -354,7 +354,7 @@ macro_rules! rotate_impl {
         let shift = $rhs & (<$ty>::BITS - 1);
         let left = $value << Simd::<$ty, $lanes>::splat(shift as $ty);
         let right = $value
-            >> Simd::<$ty, $lanes>::splat((<$ty>::BITS - shift) as $ty);
+            >> Simd::<$ty, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $ty);
         left | right
     }};
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
