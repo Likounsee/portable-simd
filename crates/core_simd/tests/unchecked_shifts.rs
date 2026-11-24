@@ -124,3 +124,25 @@ fn signed_unchecked_shifts_use_u32_converted_counts() {
     assert_eq!(left.to_array(), [2, -8, 24, 64]);
     assert_eq!(right.to_array(), [0, -1, 0, 0]);
 }
+
+
+#[test]
+fn unsigned_unchecked_shifts_use_u32_converted_counts() {
+    let value = Simd::from_array([1_u64, 2, 3, 4]);
+    let amount = Simd::from_array([
+        (1_u64 << 32) + 1,
+        (1_u64 << 32) + 2,
+        (1_u64 << 32) + 3,
+        (1_u64 << 32) + 4,
+    ]);
+
+    // SAFETY: After conversion to u32, the shift amounts are 1, 2, 3, and 4,
+    // all of which are less than the 64-bit lane width.
+    let left = unsafe { value.unchecked_shl(amount) };
+    // SAFETY: After conversion to u32, the shift amounts are 1, 2, 3, and 4,
+    // all of which are less than the 64-bit lane width.
+    let right = unsafe { value.unchecked_shr(amount) };
+
+    assert_eq!(left.to_array(), [2, 8, 24, 64]);
+    assert_eq!(right.to_array(), [0, 0, 0, 0]);
+}
