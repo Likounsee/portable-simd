@@ -322,7 +322,8 @@ macro_rules! overflowing_add_sub_impl {
         let overflow_mask = result.simd_gt(Simd::splat(<$ty>::MAX as $wide));
         let overflow = overflow_mask
             .select(Simd::<$wide, $lanes>::splat(1), Simd::splat(0))
-            .cast::<$ty>().to_mask();
+            .cast::<$ty>()
+            .to_mask();
         (result.cast(), overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, sub, vectorized) => {{
@@ -332,7 +333,8 @@ macro_rules! overflowing_add_sub_impl {
         let result = lhs - rhs;
         let overflow = overflow_mask
             .select(Simd::<$wide, $lanes>::splat(1), Simd::splat(0))
-            .cast::<$ty>().to_mask();
+            .cast::<$ty>()
+            .to_mask();
         (result.cast(), overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, add, scalar) => {{
@@ -343,9 +345,9 @@ macro_rules! overflowing_add_sub_impl {
             overflow[lane] = did_overflow;
             value
         }));
-        let overflow = Simd::<$ty, $lanes>::from_array(
-            overflow.map(|did_overflow| did_overflow as $ty),
-        ).to_mask();
+        let overflow =
+            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
+                .to_mask();
         (values, overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, sub, scalar) => {{
@@ -356,9 +358,9 @@ macro_rules! overflowing_add_sub_impl {
             overflow[lane] = did_overflow;
             value
         }));
-        let overflow = Simd::<$ty, $lanes>::from_array(
-            overflow.map(|did_overflow| did_overflow as $ty),
-        ).to_mask();
+        let overflow =
+            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
+                .to_mask();
         (values, overflow)
     }};
 }
@@ -401,8 +403,8 @@ macro_rules! mul_high_impl {
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, scalar) => {{
         Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let product = ($lhs.as_array()[lane] as $wide)
-                .wrapping_mul($rhs.as_array()[lane] as $wide);
+            let product =
+                ($lhs.as_array()[lane] as $wide).wrapping_mul($rhs.as_array()[lane] as $wide);
             (product >> <$ty>::BITS) as $ty
         }))
     }};
@@ -428,9 +430,9 @@ macro_rules! overflowing_mul_impl {
             overflow[lane] = did_overflow;
             value
         }));
-        let overflow = Simd::<$ty, $lanes>::from_array(
-            overflow.map(|did_overflow| did_overflow as $ty),
-        ).to_mask();
+        let overflow =
+            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
+                .to_mask();
         (values, overflow)
     }};
 }
