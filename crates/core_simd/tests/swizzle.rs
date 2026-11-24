@@ -7,6 +7,39 @@ use wasm_bindgen_test::*;
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test_configure!(run_in_browser);
 
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn dynamic_get_set() {
+    let mut vector = Simd::from_array([10_u32, 20, 30, 40]);
+    let index = core::hint::black_box(2usize);
+
+    assert_eq!(vector.get(index), 30);
+    vector.set(index, 99);
+    assert_eq!(vector.to_array(), [10, 20, 99, 40]);
+
+    let index = core::hint::black_box(3usize);
+    // SAFETY: index is less than the four lanes in the vector.
+    assert_eq!(unsafe { vector.get_unchecked(index) }, 40);
+    // SAFETY: index is less than the four lanes in the vector.
+    unsafe { vector.set_unchecked(index, 77) };
+    assert_eq!(vector.to_array(), [10, 20, 99, 77]);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn dynamic_get_checks_bounds() {
+    let vector = Simd::from_array([1_u32, 2, 3, 4]);
+    let _ = vector.get(4);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn dynamic_set_checks_bounds() {
+    let mut vector = Simd::from_array([1_u32, 2, 3, 4]);
+    vector.set(4, 5);
+}
+
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn swizzle() {
