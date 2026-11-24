@@ -591,20 +591,18 @@ macro_rules! impl_trait {
 
             #[inline]
             fn div_or(self, rhs: Self, fallback: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane]
-                        .checked_div(rhs.as_array()[lane])
-                        .unwrap_or(fallback.as_array()[lane])
-                }))
+                let zero = rhs.simd_eq(Simd::splat(0));
+                let safe_rhs = zero.select(Simd::splat(1), rhs);
+                let quotient = self / safe_rhs;
+                zero.select(fallback, quotient)
             }
 
             #[inline]
             fn rem_or(self, rhs: Self, fallback: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane]
-                        .checked_rem(rhs.as_array()[lane])
-                        .unwrap_or(fallback.as_array()[lane])
-                }))
+                let zero = rhs.simd_eq(Simd::splat(0));
+                let safe_rhs = zero.select(Simd::splat(1), rhs);
+                let remainder = self % safe_rhs;
+                zero.select(fallback, remainder)
             }
             #[inline]
             fn div_euclid(self, rhs: Self) -> Self {
