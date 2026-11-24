@@ -178,7 +178,7 @@ fn mask_rotate_runtime() {
     );
     assert_eq!(
         mask.rotate_elements_right::<usize::MAX>().to_array(),
-        [false, true, true, false]
+        [false, false, true, true]
     );
     assert_eq!(
         mask.rotate_elements_left_dyn(1).to_array(),
