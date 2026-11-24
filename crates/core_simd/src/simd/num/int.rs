@@ -483,6 +483,40 @@ macro_rules! overflowing_add_sub_impl {
     }};
 }
 
+macro_rules! overflowing_neg_abs_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, neg, vectorized) => {{
+        let value: Simd<$wide, $lanes> = $value.cast();
+        let overflow_mask = value.simd_eq(Simd::splat(<$ty>::MIN as $wide));
+        let result = Simd::<$wide, $lanes>::splat(0) - value;
+        let overflow = overflow_mask
+            .select(Simd::<$wide, $lanes>::splat(1), Simd::splat(0))
+            .cast::<$ty>().to_mask();
+        (result.cast(), overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, abs, vectorized) => {{
+        let value: Simd<$wide, $lanes> = $value.cast();
+        let overflow_mask = value.simd_eq(Simd::splat(<$ty>::MIN as $wide));
+        let result = value.simd_lt(Simd::splat(0))
+            .select(Simd::<$wide, $lanes>::splat(0) - value, value);
+        let overflow = overflow_mask
+            .select(Simd::<$wide, $lanes>::splat(1), Simd::splat(0))
+            .cast::<$ty>().to_mask();
+        (result.cast(), overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $op:ident, scalar) => {{
+        let mut overflow = [false; $lanes];
+        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            let (value, did_overflow) = $value.as_array()[lane].$op();
+            overflow[lane] = did_overflow;
+            value
+        }));
+        let overflow = Simd::<$ty, $lanes>::from_array(
+            overflow.map(|did_overflow| did_overflow as $ty),
+        ).to_mask();
+        (values, overflow)
+    }};
+}
+
 macro_rules! overflowing_mul_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -778,32 +812,12 @@ macro_rules! impl_trait {
 
             #[inline]
             fn overflowing_neg(self) -> (Self, Self::Mask) {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) = self.as_array()[lane].overflowing_neg();
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                overflowing_neg_abs_impl!($ty, $wide, N, self, neg, $strategy)
             }
 
             #[inline]
             fn overflowing_abs(self) -> (Self, Self::Mask) {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) = self.as_array()[lane].overflowing_abs();
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                overflowing_neg_abs_impl!($ty, $wide, N, self, abs, $strategy)
             }
 
             #[inline]
