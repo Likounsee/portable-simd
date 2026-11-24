@@ -52,14 +52,12 @@ macro_rules! signed_unchecked_arithmetic_tests {
                         // SAFETY: The chosen operands cannot overflow.
                         unsafe { lhs[lane].unchecked_mul(rhs[lane]) }
                     });
-                    let expected_div = core::array::from_fn(|lane| {
-                        // SAFETY: Every divisor is nonzero and no signed MIN / -1 pair occurs.
-                        unsafe { lhs[lane].unchecked_div(rhs[lane]) }
-                    });
-                    let expected_rem = core::array::from_fn(|lane| {
-                        // SAFETY: Every divisor is nonzero and no signed MIN % -1 pair occurs.
-                        unsafe { lhs[lane].unchecked_rem(rhs[lane]) }
-                    });
+                    // The scalar reference uses checked operators; the selected inputs are
+                    // valid, so this independently verifies the SIMD unchecked operations.
+                    let expected_div =
+                        core::array::from_fn(|lane| lhs[lane] / rhs[lane]);
+                    let expected_rem =
+                        core::array::from_fn(|lane| lhs[lane] % rhs[lane]);
 
                     assert_eq!(add.to_array(), expected_add);
                     assert_eq!(sub.to_array(), expected_sub);
@@ -109,14 +107,11 @@ macro_rules! unsigned_unchecked_arithmetic_tests {
                         // SAFETY: The chosen operands cannot overflow.
                         unsafe { lhs[lane].unchecked_mul(rhs[lane]) }
                     });
-                    let expected_div = core::array::from_fn(|lane| {
-                        // SAFETY: rhs is always nonzero.
-                        unsafe { lhs[lane].unchecked_div(rhs[lane]) }
-                    });
-                    let expected_rem = core::array::from_fn(|lane| {
-                        // SAFETY: rhs is always nonzero.
-                        unsafe { lhs[lane].unchecked_rem(rhs[lane]) }
-                    });
+                    // The scalar reference uses checked operators; rhs is always nonzero.
+                    let expected_div =
+                        core::array::from_fn(|lane| lhs[lane] / rhs[lane]);
+                    let expected_rem =
+                        core::array::from_fn(|lane| lhs[lane] % rhs[lane]);
 
                     assert_eq!(add.to_array(), expected_add);
                     assert_eq!(sub.to_array(), expected_sub);
