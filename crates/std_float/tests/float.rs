@@ -163,8 +163,9 @@ macro_rules! impl_tests {
                         .to_array();
                     let expected = input.map(|value| value.powi(3));
 
-                    if cfg!(miri) {
-                        // Miri's f16 arithmetic can differ by a few ULPs from native execution.
+                    if stringify!($scalar) == "f16" {
+                        // f16 powi can differ by a few ULPs across scalar and SIMD
+                        // implementations, including on native targets.
                         for (actual, expected) in actual.into_iter().zip(expected) {
                             assert!(
                                 test_helpers::approxeq::ApproxEq::approxeq(&actual, &expected, 16),
