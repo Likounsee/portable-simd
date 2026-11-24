@@ -254,6 +254,20 @@ where
         unsafe { self.get_unchecked(index) }
     }
 
+    /// Returns the element at `index`, or `None` if it is out of bounds.
+    ///
+    /// Unlike [`Self::get`], this method does not panic when `index` is outside the vector.
+    #[inline]
+    #[must_use]
+    pub fn get_checked(&self, index: usize) -> Option<T> {
+        if index < N {
+            // SAFETY: the bounds check above guarantees index < N.
+            Some(unsafe { self.get_unchecked(index) })
+        } else {
+            None
+        }
+    }
+
     /// Returns the element at `index` without checking bounds.
     ///
     /// # Safety
