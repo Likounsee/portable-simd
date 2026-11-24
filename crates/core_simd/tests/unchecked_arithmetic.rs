@@ -8,6 +8,20 @@ macro_rules! signed_unchecked_arithmetic_tests {
         mod $module {
             use super::*;
 
+            #[test]
+            fn unchecked_div_rem_signed_boundaries() {
+                let lhs = Simd::<$ty, 4>::from_array([<$ty>::MIN, <$ty>::MAX, -1, 1]);
+                let rhs = Simd::<$ty, 4>::from_array([1, -1, <$ty>::MIN, <$ty>::MAX]);
+
+                // SAFETY: Divisors are nonzero and MIN / -1 is never evaluated.
+                let quotient = unsafe { lhs.unchecked_div(rhs) };
+                // SAFETY: Divisors are nonzero and MIN % -1 is never evaluated.
+                let remainder = unsafe { lhs.unchecked_rem(rhs) };
+
+                assert_eq!(quotient.to_array(), [<$ty>::MIN, -(<$ty>::MAX), 0, 0]);
+                assert_eq!(remainder.to_array(), [0, 0, -1, 1]);
+            }
+
             test_helpers::test_lanes! {
                 fn unchecked_arithmetic<const LANES: usize>() {
                     let lhs: [$ty; LANES] = core::array::from_fn(|lane| {
@@ -74,6 +88,20 @@ macro_rules! unsigned_unchecked_arithmetic_tests {
     ($module:ident, $ty:ty) => {
         mod $module {
             use super::*;
+
+            #[test]
+            fn unchecked_div_rem_unsigned_boundaries() {
+                let lhs = Simd::<$ty, 4>::from_array([<$ty>::MAX, <$ty>::MAX, 0, <$ty>::MAX]);
+                let rhs = Simd::<$ty, 4>::from_array([1, <$ty>::MAX, <$ty>::MAX, 2]);
+
+                // SAFETY: Every divisor is nonzero.
+                let quotient = unsafe { lhs.unchecked_div(rhs) };
+                // SAFETY: Every divisor is nonzero.
+                let remainder = unsafe { lhs.unchecked_rem(rhs) };
+
+                assert_eq!(quotient.to_array(), [<$ty>::MAX, 1, 0, <$ty>::MAX / 2]);
+                assert_eq!(remainder.to_array(), [0, 0, 0, <$ty>::MAX % 2]);
+            }
 
             test_helpers::test_lanes! {
                 fn unchecked_arithmetic<const LANES: usize>() {
