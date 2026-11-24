@@ -171,8 +171,8 @@ fn register_compress_expand_round_trip_every_eight_lane_mask() {
         let compressed = values.compress(mask, fallback);
         let mut expected_compressed = fallback.to_array();
         let mut packed = 0;
-        for lane in 0..8 {
-            if selected[lane] {
+        for (lane, is_selected) in selected.iter().copied().enumerate() {
+            if is_selected {
                 expected_compressed[packed] = values.as_array()[lane];
                 packed += 1;
             }

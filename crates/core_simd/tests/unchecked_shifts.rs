@@ -125,7 +125,6 @@ fn signed_unchecked_shifts_use_u32_converted_counts() {
     assert_eq!(right.to_array(), [0, -1, 0, 0]);
 }
 
-
 #[test]
 fn unsigned_unchecked_shifts_use_u32_converted_counts() {
     let value = Simd::from_array([1_u64, 2, 3, 4]);

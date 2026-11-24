@@ -665,11 +665,7 @@ where
     /// counterpart to compress_store.
     #[must_use]
     #[inline]
-    pub fn compress(
-        self,
-        enable: Mask<<T as SimdElement>::Mask, N>,
-        or: Self,
-    ) -> Self {
+    pub fn compress(self, enable: Mask<<T as SimdElement>::Mask, N>, or: Self) -> Self {
         let mut result = *or.as_array();
         let mut packed = 0;
         for (lane, selected) in enable.to_array().into_iter().enumerate() {
@@ -688,11 +684,7 @@ where
     /// counterpart to expand_load.
     #[must_use]
     #[inline]
-    pub fn expand(
-        self,
-        enable: Mask<<T as SimdElement>::Mask, N>,
-        or: Self,
-    ) -> Self {
+    pub fn expand(self, enable: Mask<<T as SimdElement>::Mask, N>, or: Self) -> Self {
         let mut result = *or.as_array();
         let mut packed = 0;
         for (lane, selected) in enable.to_array().into_iter().enumerate() {
