@@ -40,3 +40,19 @@ fn concat_and_split_support_float_lanes() {
     assert_eq!(first, left);
     assert_eq!(second, right);
 }
+
+#[test]
+fn concat_supports_different_input_widths_and_split_round_trips() {
+    let left = Simd::<u32, 2>::from_array([10, 11]);
+    let right = Simd::<u32, 4>::from_array([12, 13, 14, 15]);
+
+    let joined: Simd<u32, 6> = left.concat::<6, 4>(right);
+    assert_eq!(joined.to_array(), [10, 11, 12, 13, 14, 15]);
+
+    let [first, second] = joined.split::<3>();
+    assert_eq!(first.to_array(), [10, 11, 12]);
+    assert_eq!(second.to_array(), [13, 14, 15]);
+
+    let round_trip: Simd<u32, 6> = first.concat::<6, 3>(second);
+    assert_eq!(round_trip, joined);
+}
