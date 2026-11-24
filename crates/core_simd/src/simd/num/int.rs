@@ -46,6 +46,21 @@ pub impl(self) trait SimdInt: Copy {
     /// Every lane product must be representable by the scalar element type.
     unsafe fn unchecked_mul(self, second: Self) -> Self;
 
+    /// Divides corresponding lanes without checking for division by zero or signed overflow.
+    ///
+    /// # Safety
+    /// Every divisor must be nonzero. For signed integers, no lane may divide the
+    /// minimum value by -1.
+    unsafe fn unchecked_div(self, second: Self) -> Self;
+
+    /// Computes the remainder of corresponding lanes without checking for division by zero
+    /// or signed overflow.
+    ///
+    /// # Safety
+    /// Every divisor must be nonzero. For signed integers, no lane may compute the
+    /// remainder of the minimum value by -1.
+    unsafe fn unchecked_rem(self, second: Self) -> Self;
+
     /// Shifts each lane left without masking the shift amount.
     ///
     /// Each lane's shift amount is converted to `u32`, matching the scalar
@@ -472,6 +487,22 @@ macro_rules! impl_trait {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees that every lane product is representable.
                     unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_div(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees nonzero divisors and no MIN / -1 lanes.
+                    unsafe { self.as_array()[lane].unchecked_div(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_rem(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees nonzero divisors and no MIN % -1 lanes.
+                    unsafe { self.as_array()[lane].unchecked_rem(second.as_array()[lane]) }
                 }))
             }
 
