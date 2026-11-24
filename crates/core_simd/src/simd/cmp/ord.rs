@@ -35,7 +35,7 @@ pub trait SimdPartialOrd: SimdPartialEq {
     #[inline]
     fn simd_in_range(self, min: Self, max: Self) -> Self::Mask
     where
-        Self: Sized,
+        Self: Copy + Sized,
         Self::Mask: core::ops::BitAnd<Output = Self::Mask>,
     {
         self.simd_ge(min) & self.simd_le(max)
