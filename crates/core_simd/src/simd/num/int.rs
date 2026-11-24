@@ -446,8 +446,24 @@ pub impl(self) trait SimdInt: Copy {
     fn trailing_ones(self) -> Self::Unsigned;
 }
 
+macro_rules! saturating_mul_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
+        let lhs: Simd<$wide, $lanes> = $lhs.cast();
+        let rhs: Simd<$wide, $lanes> = $rhs.cast();
+        (lhs * rhs)
+            .simd_max(Simd::splat(<$ty>::MIN as $wide))
+            .simd_min(Simd::splat(<$ty>::MAX as $wide))
+            .cast()
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            $lhs.as_array()[lane].saturating_mul($rhs.as_array()[lane])
+        }))
+    }};
+}
+
 macro_rules! impl_trait {
-    { $($ty:ident ($unsigned:ident, $wide:ident)),* } => {
+    { $($ty:ident ($unsigned:ident, $wide:ident, $strategy:ident)),* } => {
         $(
         impl<const N: usize> SimdInt for Simd<$ty, N> {
             type Mask = Mask<<$ty as SimdElement>::Mask, N>;
@@ -553,23 +569,37 @@ macro_rules! impl_trait {
 
             #[inline]
             fn saturating_mul(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].saturating_mul(second.as_array()[lane])
-                }))
+                saturating_mul_impl!($ty, $wide, N, self, second, $strategy)
             }
 
             #[inline]
-            fn wrapping_pow(self, exp: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].wrapping_pow(exp)
-                }))
+            fn wrapping_pow(mut self, mut exp: u32) -> Self {
+                let mut result = Self::splat(1);
+                while exp != 0 {
+                    if exp & 1 != 0 {
+                        result = result * self;
+                    }
+                    exp >>= 1;
+                    if exp != 0 {
+                        self = self * self;
+                    }
+                }
+                result
             }
 
             #[inline]
-            fn saturating_pow(self, exp: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].saturating_pow(exp)
-                }))
+            fn saturating_pow(mut self, mut exp: u32) -> Self {
+                let mut result = Self::splat(1);
+                while exp != 0 {
+                    if exp & 1 != 0 {
+                        result = result.saturating_mul(self);
+                    }
+                    exp >>= 1;
+                    if exp != 0 {
+                        self = self.saturating_mul(self);
+                    }
+                }
+                result
             }
 
             #[inline]
@@ -952,4 +982,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { i8 (u8, i16), i16 (u16, i32), i32 (u32, i64), i64 (u64, i128), isize (usize, i128) }
+impl_trait! { i8 (u8, i16, vectorized), i16 (u16, i32, vectorized), i32 (u32, i64, vectorized), i64 (u64, i128, scalar), isize (usize, i128, scalar) }
