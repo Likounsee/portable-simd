@@ -87,7 +87,7 @@ pub trait SimdPartialOrd: SimdPartialEq {
             (None, None) => {
                 let equal = self.simd_eq(self);
                 equal | !equal
-            },
+            }
         }
     }
 }

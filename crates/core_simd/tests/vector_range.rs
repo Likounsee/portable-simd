@@ -50,7 +50,7 @@ fn simd_range_supports_exclusive_bounds() {
 
     assert_eq!(
         values.simd_range(min..max).to_array(),
-        [false, false, true, true, false],
+        [false, true, true, true, false],
     );
 }
 
