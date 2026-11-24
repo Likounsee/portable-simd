@@ -163,19 +163,16 @@ macro_rules! impl_tests {
                         .to_array();
                     let expected = input.map(|value| value.powi(3));
 
-                    if stringify!($scalar) == "f16" {
-                        // f16 powi can differ by a few ULPs across scalar and SIMD
-                        // implementations, including on native targets.
-                        for (actual, expected) in actual.into_iter().zip(expected) {
-                            assert!(
-                                test_helpers::approxeq::ApproxEq::approxeq(&actual, &expected, 16),
-                                "SIMD powi result {:?} differs from scalar result {:?}",
-                                actual,
-                                expected,
-                            );
-                        }
-                    } else {
-                        assert_eq!(actual, expected);
+                    // powi may use different scalar math implementations under Miri
+                    // and on native targets. Compare with a small ULP tolerance instead
+                    // of requiring bit-for-bit identical results for every float type.
+                    for (actual, expected) in actual.into_iter().zip(expected) {
+                        assert!(
+                            test_helpers::approxeq::ApproxEq::approxeq(&actual, &expected, 16),
+                            "SIMD powi result {:?} differs from scalar result {:?}",
+                            actual,
+                            expected,
+                        );
                     }
                 }
 
