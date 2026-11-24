@@ -41,7 +41,6 @@ fn generic_float_aliases_work_with_const_generics() {
     assert_eq!(scale(input).to_array(), [2.5; 8]);
 }
 
-
 #[test]
 fn generic_mask_aliases_match_mask() {
     let _: mask8xN<4> = Mask::<i8, 4>::splat(true);
