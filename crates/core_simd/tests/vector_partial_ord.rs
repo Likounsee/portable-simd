@@ -77,6 +77,14 @@ fn mask_simd_partial_ord_matches_boolean_lane_ordering() {
             let left = Mask::<i8, 4>::from_array(left_lanes);
             let right = Mask::<i8, 4>::from_array(right_lanes);
 
+            // PartialOrd on Mask must follow bool-array lexicographic ordering,
+            // not the signed integer representation used internally by masks.
+            assert_eq!(
+                left.partial_cmp(&right),
+                left_lanes.partial_cmp(&right_lanes),
+                "partial_cmp: left={left_lanes:?}, right={right_lanes:?}",
+            );
+
             let expected_lt = core::array::from_fn(|lane| left_lanes[lane] < right_lanes[lane]);
             let expected_le = core::array::from_fn(|lane| left_lanes[lane] <= right_lanes[lane]);
             let expected_gt = core::array::from_fn(|lane| left_lanes[lane] > right_lanes[lane]);
