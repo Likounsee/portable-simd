@@ -720,26 +720,6 @@ where
         unsafe { Self::from_simd_unchecked(self.to_simd().reverse()) }
     }
 
-    /// Rotates the mask such that the first `OFFSET` elements of the slice move to the end
-    /// while the last `self.len() - OFFSET` elements move to the front. After calling `rotate_elements_left`,
-    /// the element previously at index `OFFSET` will become the first element in the slice.
-    #[inline]
-    #[must_use = "method returns a new vector and does not mutate the original inputs"]
-    pub fn rotate_elements_left<const OFFSET: usize>(self) -> Self {
-        // Safety: swizzles are safe for masks
-        unsafe { Self::from_simd_unchecked(self.to_simd().rotate_elements_left::<OFFSET>()) }
-    }
-
-    /// Rotates the mask such that the first `self.len() - OFFSET` elements of the mask move to
-    /// the end while the last `OFFSET` elements move to the front. After calling `rotate_elements_right`,
-    /// the element previously at index `self.len() - OFFSET` will become the first element in the slice.
-    #[inline]
-    #[must_use = "method returns a new vector and does not mutate the original inputs"]
-    pub fn rotate_elements_right<const OFFSET: usize>(self) -> Self {
-        // Safety: swizzles are safe for masks
-        unsafe { Self::from_simd_unchecked(self.to_simd().rotate_elements_right::<OFFSET>()) }
-    }
-
     /// Rotates the mask elements to the left by a constant amount.
     ///
     /// The rotation amount is reduced modulo the number of lanes.
