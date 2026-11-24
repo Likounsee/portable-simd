@@ -8,8 +8,8 @@
 #[doc(no_inline)]
 pub use super::{
     Mask, Select, Simd, SimdSelect, ToBytes,
-    mask8xN, mask16xN, mask32xN, mask64xN, masksizexN,
     cmp::{SimdOrd, SimdPartialEq, SimdPartialOrd},
+    mask8xN, mask16xN, mask32xN, mask64xN, masksizexN,
     num::{SimdFloat, SimdInt, SimdUint},
     ptr::{SimdConstPtr, SimdMutPtr},
     simd_swizzle,
