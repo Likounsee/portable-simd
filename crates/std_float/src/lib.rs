@@ -128,6 +128,12 @@ pub impl(self) trait StdFloat: Sized {
         unsafe { intrinsics::simd_fcos(self) }
     }
 
+    /// Computes the sine and cosine of every lane in one operation.
+    ///
+    /// This is useful when both results are needed, and preserves the scalar
+    /// floating-point implementation's accuracy and special-case behavior.
+    fn sin_cos(self) -> (Self, Self);
+
     /// Produces a vector where every element has the exponential (base e) of the value
     /// in the equivalently-indexed element in `self`.
     #[inline]
@@ -277,6 +283,15 @@ impl<const N: usize> StdFloat for Simd<f16, N> {
     }
 
     #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        let pairs = self.to_array().map(f16::sin_cos);
+        (
+            Self::from_array(pairs.map(|pair| pair.0)),
+            Self::from_array(pairs.map(|pair| pair.1)),
+        )
+    }
+
+    #[inline]
     fn tan(self) -> Self {
         Self::from_array(self.to_array().map(f16::tan))
     }
@@ -365,6 +380,15 @@ impl<const N: usize> StdFloat for Simd<f32, N> {
     }
 
     #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        let pairs = self.to_array().map(f32::sin_cos);
+        (
+            Self::from_array(pairs.map(|pair| pair.0)),
+            Self::from_array(pairs.map(|pair| pair.1)),
+        )
+    }
+
+    #[inline]
     fn tan(self) -> Self {
         Self::from_array(self.to_array().map(f32::tan))
     }
@@ -450,6 +474,15 @@ impl<const N: usize> StdFloat for Simd<f64, N> {
         Self::from_array(core::array::from_fn(|i| {
             self.as_array()[i].powf(n.as_array()[i])
         }))
+    }
+
+    #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        let pairs = self.to_array().map(f64::sin_cos);
+        (
+            Self::from_array(pairs.map(|pair| pair.0)),
+            Self::from_array(pairs.map(|pair| pair.1)),
+        )
     }
 
     #[inline]

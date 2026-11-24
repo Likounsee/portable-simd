@@ -112,6 +112,20 @@ macro_rules! impl_tests {
             unary_approx_test! { $scalar, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, exp, exp2, ln, log2, log10, cbrt, exp_m1, ln_1p }
 
             test_helpers::test_lanes! {
+                fn sin_cos<const LANES: usize>() {
+                    let input: [$scalar; LANES] = core::array::from_fn(|lane| {
+                        lane as $scalar * 0.25 as $scalar - 0.5 as $scalar
+                    });
+                    let (sin, cos) =
+                        core_simd::simd::Simd::<$scalar, LANES>::from_array(input).sin_cos();
+                    let expected_sin = input.map(|value| value.sin_cos().0);
+                    let expected_cos = input.map(|value| value.sin_cos().1);
+                    assert_eq!(sin.to_array(), expected_sin);
+                    assert_eq!(cos.to_array(), expected_cos);
+                }
+            }
+
+            test_helpers::test_lanes! {
                 fn atan2<const LANES: usize>() {
                     test_helpers::test_binary_elementwise_approx(
                         &core_simd::simd::Simd::<$scalar, LANES>::atan2,
