@@ -194,8 +194,6 @@ where
     #[inline]
     #[must_use = "method returns two new vectors and does not mutate the original"]
     pub fn split<const HALF_LANES: usize>(self) -> [Simd<T, HALF_LANES>; 2]
-    where
-        crate::simd::LaneCount<HALF_LANES>: crate::simd::SupportedLaneCount,
     {
         struct Half<const HIGH: bool, const HALF: usize, const INPUT: usize>;
 
@@ -228,8 +226,6 @@ where
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original inputs"]
     pub fn concat<const OUTPUT_LANES: usize>(self, other: Self) -> Simd<T, OUTPUT_LANES>
-    where
-        crate::simd::LaneCount<OUTPUT_LANES>: crate::simd::SupportedLaneCount,
     {
         struct Concat<const OUTPUT: usize, const INPUT: usize>;
 
