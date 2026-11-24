@@ -219,34 +219,58 @@ where
         ]
     }
 
-    /// Concatenates two vectors with the same number of lanes.
+    /// Concatenates two vectors, which may have different numbers of lanes.
     ///
-    /// Specify the output lane count explicitly. It must be twice the
-    /// number of lanes in either input vector.
+    /// Specify the output lane count explicitly. It must equal the sum of
+    /// the input lane counts.
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original inputs"]
-    pub fn concat<const OUTPUT_LANES: usize>(self, other: Self) -> Simd<T, OUTPUT_LANES>
-    {
-        struct Concat<const OUTPUT: usize, const INPUT: usize>;
+    pub fn concat<const OUTPUT_LANES: usize, const OTHER_LANES: usize>(
+        self,
+        other: Simd<T, OTHER_LANES>,
+    ) -> Simd<T, OUTPUT_LANES> {
+        struct Concat<const OUTPUT: usize, const FIRST: usize, const SECOND: usize>;
 
-        impl<const OUTPUT: usize, const INPUT: usize> Swizzle<OUTPUT>
-            for Concat<OUTPUT, INPUT> {
+        impl<const OUTPUT: usize, const FIRST: usize, const SECOND: usize> Swizzle<OUTPUT>
+            for Concat<OUTPUT, FIRST, SECOND>
+        {
             const INDEX: [usize; OUTPUT] = const {
                 assert!(
-                    OUTPUT == INPUT * 2,
-                    "concat output must have twice as many lanes as either input"
+                    FIRST + SECOND == OUTPUT,
+                    "concat output must equal the sum of the input lane counts"
                 );
                 let mut indices = [0; OUTPUT];
                 let mut lane = 0;
                 while lane < OUTPUT {
-                    indices[lane] = lane;
+                    indices[lane] = if lane < FIRST {
+                        lane
+                    } else {
+                        OUTPUT + lane - FIRST
+                    };
                     lane += 1;
                 }
                 indices
             };
         }
 
-        Concat::<OUTPUT_LANES, N>::concat_swizzle(self, other)
+        // Pad each input to the output width so the existing two-vector
+        // shuffle intrinsic can concatenate inputs with different widths.
+        let first: Simd<T, OUTPUT_LANES> = Simd::from_array(core::array::from_fn(|lane| {
+            if lane < N {
+                self.get(lane)
+            } else {
+                self.get(0)
+            }
+        }));
+        let second: Simd<T, OUTPUT_LANES> = Simd::from_array(core::array::from_fn(|lane| {
+            if lane < OTHER_LANES {
+                other.get(lane)
+            } else {
+                other.get(0)
+            }
+        }));
+
+        Concat::<OUTPUT_LANES, N, OTHER_LANES>::concat_swizzle(first, second)
     }
 
     /// Swaps each lane with the lane whose index is XORed with `SWAP_MASK`.
