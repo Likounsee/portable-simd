@@ -517,6 +517,22 @@ macro_rules! overflowing_neg_abs_impl {
     }};
 }
 
+macro_rules! rotate_impl {
+    ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, vectorized) => {{
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let value: Simd<$unsigned, $lanes> = $value.cast();
+        let left = value << Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
+        let right = value
+            >> Simd::<$unsigned, $lanes>::splat((<$ty>::BITS - shift) as $unsigned);
+        (left | right).cast()
+    }};
+    ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            $value.as_array()[lane].rotate_left($rhs)
+        }))
+    }};
+}
+
 macro_rules! mul_high_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -655,16 +671,12 @@ macro_rules! impl_trait {
 
             #[inline]
             fn rotate_left(self, rhs: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].rotate_left(rhs)
-                }))
+                rotate_impl!($ty, $unsigned, N, self, rhs, $strategy)
             }
 
             #[inline]
             fn rotate_right(self, rhs: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].rotate_right(rhs)
-                }))
+                rotate_impl!($ty, $unsigned, N, self, rhs, $strategy)
             }
 
             #[inline]
