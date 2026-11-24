@@ -158,3 +158,54 @@ fn compress_expand_cover_every_eight_lane_mask_and_slice_capacity() {
         }
     }
 }
+
+#[test]
+fn register_compress_expand_round_trip_every_eight_lane_mask() {
+    let values = Simd::from_array([10_i32, 20, 30, 40, 50, 60, 70, 80]);
+    let fallback = Simd::from_array([-1_i32, -2, -3, -4, -5, -6, -7, -8]);
+
+    for bits in 0_u16..256 {
+        let selected = core::array::from_fn(|lane| bits & (1 << lane) != 0);
+        let mask = Mask::from_array(selected);
+
+        let compressed = values.compress(mask, fallback);
+        let mut expected_compressed = fallback.to_array();
+        let mut packed = 0;
+        for lane in 0..8 {
+            if selected[lane] {
+                expected_compressed[packed] = values.as_array()[lane];
+                packed += 1;
+            }
+        }
+        assert_eq!(
+            compressed.to_array(),
+            expected_compressed,
+            "compressed lanes for mask={bits:08b}"
+        );
+
+        let expanded = compressed.expand(mask, fallback);
+        assert_eq!(
+            expanded,
+            mask.select(values, fallback),
+            "round-trip lanes for mask={bits:08b}"
+        );
+    }
+}
+
+#[test]
+fn register_compress_and_expand_preserve_fallback_lanes() {
+    let fallback = Simd::from_array([-1_i16, -2, -3, -4, -5, -6]);
+    let mask = Mask::from_array([false, true, false, true, true, false]);
+    let values = Simd::from_array([10_i16, 20, 30, 40, 50, 60]);
+
+    assert_eq!(
+        values.compress(mask, fallback).to_array(),
+        [20, 40, 50, -4, -5, -6]
+    );
+    assert_eq!(
+        Simd::from_array([20_i16, 40, 50, 0, 0, 0])
+            .expand(mask, fallback)
+            .to_array(),
+        [-1, 20, -3, 40, 50, -6]
+    );
+}

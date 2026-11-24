@@ -658,6 +658,52 @@ where
         (Self::from_array(result), consumed)
     }
 
+    /// Packs the lanes selected by enable into the beginning of the result.
+    ///
+    /// Selected lanes retain their original relative order. Remaining lanes are
+    /// copied from the corresponding prefix of or. This is the register-to-register
+    /// counterpart to compress_store.
+    #[must_use]
+    #[inline]
+    pub fn compress(
+        self,
+        enable: Mask<<T as SimdElement>::Mask, N>,
+        or: Self,
+    ) -> Self {
+        let mut result = *or.as_array();
+        let mut packed = 0;
+        for (lane, selected) in enable.to_array().into_iter().enumerate() {
+            if selected {
+                result[packed] = self.as_array()[lane];
+                packed += 1;
+            }
+        }
+        Self::from_array(result)
+    }
+
+    /// Expands packed lanes into the positions selected by enable.
+    ///
+    /// Selected positions consume values from the beginning of self in lane order.
+    /// Unselected positions are copied from or. This is the register-to-register
+    /// counterpart to expand_load.
+    #[must_use]
+    #[inline]
+    pub fn expand(
+        self,
+        enable: Mask<<T as SimdElement>::Mask, N>,
+        or: Self,
+    ) -> Self {
+        let mut result = *or.as_array();
+        let mut packed = 0;
+        for (lane, selected) in enable.to_array().into_iter().enumerate() {
+            if selected {
+                result[lane] = self.as_array()[packed];
+                packed += 1;
+            }
+        }
+        Self::from_array(result)
+    }
+
     /// Reads from potentially discontiguous indices in `slice` to construct a SIMD vector.
     /// If an index is out-of-bounds, the element is instead selected from the `or` vector.
     ///
