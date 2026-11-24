@@ -53,7 +53,9 @@ pub trait SimdPartialOrd: SimdPartialEq {
     /// # #![feature(portable_simd)]
     /// # use core::simd::{Simd, cmp::SimdPartialOrd};
     /// let values = Simd::from_array([0, 1, 2, 3, 4]);
-    /// let inside = values.simd_range(1..=3);
+    /// let min = Simd::splat(1);
+    /// let max = Simd::splat(3);
+    /// let inside = values.simd_range(min..=max);
     /// assert_eq!(inside.to_array(), [false, true, true, true, false]);
     /// ```
     #[must_use = "method returns a new mask and does not mutate the original value"]
@@ -62,7 +64,8 @@ pub trait SimdPartialOrd: SimdPartialEq {
     where
         Self: Copy + Sized,
         Self::Mask: core::ops::BitAnd<Output = Self::Mask>
-            + core::ops::BitOr<Output = Self::Mask>,
+            + core::ops::BitOr<Output = Self::Mask>
+            + core::ops::Not<Output = Self::Mask>,
     {
         use core::ops::Bound;
 
@@ -80,7 +83,10 @@ pub trait SimdPartialOrd: SimdPartialEq {
         match (start, end) {
             (Some(start), Some(end)) => start & end,
             (Some(one), None) | (None, Some(one)) => one,
-            (None, None) => self.simd_eq(self) | self.simd_ne(self),
+            (None, None) => {
+                let equal = self.simd_eq(self);
+                equal | !equal
+            },
         }
     }
 }

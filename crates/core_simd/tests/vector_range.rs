@@ -45,16 +45,28 @@ fn simd_in_range_rejects_inverted_intervals() {
 #[test]
 fn simd_range_supports_exclusive_bounds() {
     let values = Simd::from_array([0_i32, 1, 2, 3, 4]);
+    let min = Simd::splat(1);
+    let max = Simd::splat(4);
 
-    assert_eq!(values.simd_range(1..4).to_array(), [false, false, true, true, false]);
+    assert_eq!(
+        values.simd_range(min..max).to_array(),
+        [false, false, true, true, false],
+    );
 }
 
 #[test]
 fn simd_range_supports_one_sided_bounds() {
     let values = Simd::from_array([0_i32, 1, 2, 3, 4]);
+    let two = Simd::splat(2);
 
-    assert_eq!(values.simd_range(..=2).to_array(), [true, true, true, false, false]);
-    assert_eq!(values.simd_range(2..).to_array(), [false, false, true, true, true]);
+    assert_eq!(
+        values.simd_range(..=two).to_array(),
+        [true, true, true, false, false],
+    );
+    assert_eq!(
+        values.simd_range(two..).to_array(),
+        [false, false, true, true, true],
+    );
 }
 
 #[test]
