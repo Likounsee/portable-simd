@@ -274,6 +274,54 @@ where
         Rotate::<OFFSET>::swizzle(self)
     }
 
+    /// Rotates the vector elements to the left by a runtime amount.
+    ///
+    /// The rotation amount is reduced modulo the number of lanes. Unlike
+    /// [`Self::rotate_elements_left`], the amount does not need to be a constant.
+    /// This uses the array representation as a portable fallback; targets with
+    /// dynamic shuffle support may be able to optimize this operation further.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # use core::simd::u32x4;
+    /// let vector = u32x4::from_array([0, 1, 2, 3]);
+    /// let amount = 2;
+    /// assert_eq!(vector.rotate_elements_left_dyn(amount).to_array(), [2, 3, 0, 1]);
+    /// ```
+    #[inline]
+    #[must_use = "method returns a new vector and does not mutate the original inputs"]
+    pub fn rotate_elements_left_dyn(self, offset: usize) -> Self {
+        let mut array = self.to_array();
+        array.rotate_left(offset % N);
+        Self::from_array(array)
+    }
+
+    /// Rotates the vector elements to the right by a runtime amount.
+    ///
+    /// The rotation amount is reduced modulo the number of lanes. Unlike
+    /// [`Self::rotate_elements_right`], the amount does not need to be a constant.
+    /// This uses the array representation as a portable fallback; targets with
+    /// dynamic shuffle support may be able to optimize this operation further.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # use core::simd::u32x4;
+    /// let vector = u32x4::from_array([0, 1, 2, 3]);
+    /// let amount = 2;
+    /// assert_eq!(vector.rotate_elements_right_dyn(amount).to_array(), [2, 3, 0, 1]);
+    /// ```
+    #[inline]
+    #[must_use = "method returns a new vector and does not mutate the original inputs"]
+    pub fn rotate_elements_right_dyn(self, offset: usize) -> Self {
+        let mut array = self.to_array();
+        array.rotate_right(offset % N);
+        Self::from_array(array)
+    }
+
     /// Shifts the vector elements to the left by `OFFSET`, filling in with
     /// `padding` from the right.
     /// ```
