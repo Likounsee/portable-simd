@@ -1,5 +1,5 @@
 use crate::simd::{
-    Simd, SimdCast, SimdElement,
+    Select, Simd, SimdCast, SimdElement,
     cmp::{SimdOrd, SimdPartialEq},
 };
 
