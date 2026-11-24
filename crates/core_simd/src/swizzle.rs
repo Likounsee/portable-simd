@@ -454,7 +454,8 @@ where
     ///
     /// ```
     /// # #![feature(portable_simd)]
-    /// # use core::simd::Simd;
+    /// # #[cfg(feature = "as_crate")] use core_simd::simd::Simd;
+    /// # #[cfg(not(feature = "as_crate"))] use core::simd::Simd;
     /// let a = Simd::from_array([0, 1, 2, 3]);
     /// let b = Simd::from_array([4, 5, 6, 7]);
     /// assert_eq!(a.align_elements::<2>(b).to_array(), [2, 3, 4, 5]);
