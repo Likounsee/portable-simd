@@ -78,6 +78,31 @@ macro_rules! float_rounding_test {
                     )
                 }
 
+                fn round_fast_ties_even_boundaries<const LANES: usize>() {
+                    let input: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 => 0.5,
+                        1 => 1.5,
+                        2 => 2.5,
+                        3 => 3.5,
+                        4 => -0.5,
+                        5 => -1.5,
+                        6 => -2.5,
+                        _ => -3.5,
+                    });
+                    let expected: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                        0 | 4 => 0.0,
+                        1 | 2 => 2.0,
+                        3 => 4.0,
+                        5 | 6 => -2.0,
+                        _ => -4.0,
+                    });
+
+                    assert_eq!(
+                        Vector::<LANES>::from_array(input).round_fast().to_array(),
+                        expected
+                    );
+                }
+
                 fn fract<const LANES: usize>() {
                     test_helpers::test_unary_elementwise_flush_subnormals(
                         &Vector::<LANES>::fract,
