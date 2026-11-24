@@ -61,6 +61,18 @@ pub impl(self) trait SimdInt: Copy {
     /// remainder of the minimum value by -1.
     unsafe fn unchecked_rem(self, second: Self) -> Self;
 
+    /// Divides each lane, returning fallback where the divisor is zero or the
+    /// signed division would overflow (MIN / -1).
+    ///
+    /// Invalid lanes are made safe before division, so no lane can panic.
+    fn div_or(self, rhs: Self, fallback: Self) -> Self;
+
+    /// Computes each lane's remainder, returning fallback where the divisor is
+    /// zero or the signed remainder would overflow (MIN % -1).
+    ///
+    /// Invalid lanes are made safe before remainder, so no lane can panic.
+    fn rem_or(self, rhs: Self, fallback: Self) -> Self;
+
     /// Shifts each lane left without masking the shift amount.
     ///
     /// Each lane's shift amount is converted to `u32`, matching the scalar
@@ -819,6 +831,24 @@ macro_rules! impl_trait {
             #[inline]
             fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask) {
                 overflowing_pow_impl!($ty, $wide, N, self, exp, $strategy)
+            }
+
+            #[inline]
+            fn div_or(self, rhs: Self, fallback: Self) -> Self {
+                let invalid = rhs.simd_eq(Simd::splat(0))
+                    | (self.simd_eq(Simd::splat(<$ty>::MIN))
+                        & rhs.simd_eq(Simd::splat(-1)));
+                let safe_rhs = invalid.select(Simd::splat(1), rhs);
+                invalid.select(fallback, self / safe_rhs)
+            }
+
+            #[inline]
+            fn rem_or(self, rhs: Self, fallback: Self) -> Self {
+                let invalid = rhs.simd_eq(Simd::splat(0))
+                    | (self.simd_eq(Simd::splat(<$ty>::MIN))
+                        & rhs.simd_eq(Simd::splat(-1)));
+                let safe_rhs = invalid.select(Simd::splat(1), rhs);
+                invalid.select(fallback, self % safe_rhs)
             }
 
             #[inline]
