@@ -74,8 +74,14 @@ macro_rules! check_unsigned_shift_counts {
 
         assert_eq!(left.to_array(), expected_left.map(|result| result.0));
         assert_eq!(right.to_array(), expected_right.map(|result| result.0));
-        assert_eq!(left_overflow.to_array(), expected_left.map(|result| result.1));
-        assert_eq!(right_overflow.to_array(), expected_right.map(|result| result.1));
+        assert_eq!(
+            left_overflow.to_array(),
+            expected_left.map(|result| result.1)
+        );
+        assert_eq!(
+            right_overflow.to_array(),
+            expected_right.map(|result| result.1)
+        );
     }};
 }
 
