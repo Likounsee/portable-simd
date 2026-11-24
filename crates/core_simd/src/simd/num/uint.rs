@@ -109,6 +109,11 @@ pub impl(self) trait SimdUint: Copy {
     /// the element type's maximum value, the result is clamped to that maximum.
     fn saturating_mul(self, second: Self) -> Self;
 
+    /// Raises every lane to the same exponent, wrapping on overflow.
+    ///
+    /// An exponent of zero returns one for every lane, including zero lanes.
+    fn wrapping_pow(self, exp: u32) -> Self;
+
     /// Raises every lane to the same exponent, saturating at the unsigned maximum.
     ///
     /// An exponent of zero returns one for every lane, including zero lanes.
@@ -395,6 +400,13 @@ macro_rules! impl_trait {
             fn saturating_mul(self, second: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     self.as_array()[lane].saturating_mul(second.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn wrapping_pow(self, exp: u32) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane].wrapping_pow(exp)
                 }))
             }
 
