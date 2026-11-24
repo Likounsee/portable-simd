@@ -12,7 +12,7 @@ macro_rules! mul_high_impl {
     (u32, $wide:ident, $lhs:ident, $rhs:ident) => {{
         let lhs: Simd<$wide, N> = $lhs.cast();
         let rhs: Simd<$wide, N> = $rhs.cast();
-        ((lhs * rhs) >> u32::BITS).cast()
+        ((lhs * rhs) >> (u32::BITS as $wide)).cast()
     }};
     ($ty:ident, $wide:ident, $lhs:ident, $rhs:ident) => {
         Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
