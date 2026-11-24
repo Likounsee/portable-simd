@@ -65,3 +65,48 @@ remainder_by_min_tests! {
     i64_remainder_by_min: i64,
     isize_remainder_by_min: isize,
 }
+
+
+macro_rules! signed_division_overflow_tests {
+    ($($name:ident: $ty:ty),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() {
+                let lhs = Simd::<$ty, 3>::from_array([<$ty>::MIN, -1, 17]);
+                let rhs = Simd::<$ty, 3>::from_array([-1, <$ty>::MIN, <$ty>::MIN]);
+
+                assert_eq!((lhs / rhs).to_array(), [<$ty>::MIN, 0, 0]);
+            }
+        )*
+    };
+}
+
+signed_division_overflow_tests! {
+    i8_division_overflow_and_min_divisor: i8,
+    i16_division_overflow_and_min_divisor: i16,
+    i32_division_overflow_and_min_divisor: i32,
+    i64_division_overflow_and_min_divisor: i64,
+    isize_division_overflow_and_min_divisor: isize,
+}
+
+macro_rules! signed_remainder_overflow_tests {
+    ($($name:ident: $ty:ty),* $(,)?) => {
+        $(
+            #[test]
+            fn $name() {
+                let lhs = Simd::<$ty, 3>::splat(<$ty>::MIN);
+                let rhs = Simd::<$ty, 3>::splat(-1);
+
+                assert_eq!((lhs % rhs).to_array(), [0; 3]);
+            }
+        )*
+    };
+}
+
+signed_remainder_overflow_tests! {
+    i8_remainder_overflow: i8,
+    i16_remainder_overflow: i16,
+    i32_remainder_overflow: i32,
+    i64_remainder_overflow: i64,
+    isize_remainder_overflow: isize,
+}
