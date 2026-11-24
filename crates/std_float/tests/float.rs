@@ -163,13 +163,20 @@ macro_rules! impl_tests {
                         .to_array();
                     let expected = input.map(|value| value.powi(3));
 
-                    for (actual, expected) in actual.into_iter().zip(expected) {
-                        assert!(
-                            test_helpers::approxeq::ApproxEq::approxeq(&actual, &expected, 16),
-                            "SIMD powi result {:?} differs from scalar result {:?}",
-                            actual,
-                            expected,
-                        );
+                    if cfg!(miri) {
+                        // Miri's f16 arithmetic can differ by a few ULPs from native execution.
+                        for (actual, expected) in actual.into_iter().zip(expected) {
+                            assert!(
+                                test_helpers::approxeq::ApproxEq::approxeq(
+                                    &actual, &expected, 16
+                                ),
+                                "SIMD powi result {:?} differs from scalar result {:?}",
+                                actual,
+                                expected,
+                            );
+                        }
+                    } else {
+                        assert_eq!(actual, expected);
                     }
                 }
 
