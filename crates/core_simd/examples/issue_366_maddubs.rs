@@ -75,8 +75,12 @@ mod tests {
                 let b = i8x16::splat(signed);
                 let actual = maddubs(a, b).to_array();
                 let expected = (i32::from(unsigned) * i32::from(signed))
-                    .clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
-                assert_eq!(actual, [expected; 8], "unsigned={unsigned}, signed={signed}");
+                    .clamp(i32::from(i16::MIN), i32::from(i16::MAX))
+                    as i16;
+                assert_eq!(
+                    actual, [expected; 8],
+                    "unsigned={unsigned}, signed={signed}"
+                );
             }
         }
     }
