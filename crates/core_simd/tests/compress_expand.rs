@@ -97,3 +97,53 @@ fn prefix_masks_use_contiguous_bounded_copies() {
     assert_eq!(consumed, 2);
     assert_eq!(expanded.to_array(), [7, 8, 92, 93]);
 }
+
+#[test]
+fn compress_expand_cover_every_eight_lane_mask_and_slice_capacity() {
+    let values = Simd::from_array([10_i32, 20, 30, 40, 50, 60, 70, 80]);
+    let fallback = Simd::from_array([-1_i32, -2, -3, -4, -5, -6, -7, -8]);
+
+    for bits in 0_u16..256 {
+        let selected = core::array::from_fn(|lane| bits & (1 << lane) != 0);
+        let mask = Mask::from_array(selected);
+        let selected_count = selected.iter().filter(|&&lane| lane).count();
+
+        for capacity in 0..=8 {
+            let mut packed = [999_i32; 8];
+            let written = values.compress_store(&mut packed[..capacity], mask);
+            let expected_written = selected_count.min(capacity);
+
+            assert_eq!(written, expected_written, "compress mask={bits:08b}, capacity={capacity}");
+            let expected_packed: Vec<i32> = values
+                .to_array()
+                .into_iter()
+                .zip(selected)
+                .filter_map(|(value, is_selected)| is_selected.then_some(value))
+                .take(capacity)
+                .collect();
+            assert_eq!(&packed[..written], expected_packed.as_slice(),
+                "packed values for mask={bits:08b}, capacity={capacity}");
+            assert!(packed[written..].iter().all(|&value| value == 999),
+                "compress_store modified beyond its returned length: mask={bits:08b}, capacity={capacity}");
+
+            let input: Vec<i32> = (0..capacity).map(|index| 100 + index as i32).collect();
+            let (expanded, consumed) =
+                Simd::<i32, 8>::expand_load(&input, mask, fallback);
+            let expected_consumed = selected_count.min(capacity);
+            let mut expected = fallback.to_array();
+            let mut input_index = 0;
+            for lane in 0..8 {
+                if selected[lane] && input_index < expected_consumed {
+                    expected[lane] = input[input_index];
+                    input_index += 1;
+                }
+            }
+
+            assert_eq!(consumed, expected_consumed,
+                "expand_load consumed count for mask={bits:08b}, capacity={capacity}");
+            assert_eq!(expanded.to_array(), expected,
+                "expanded lanes for mask={bits:08b}, capacity={capacity}");
+        }
+    }
+}
+
