@@ -193,15 +193,17 @@ where
     /// Panics during constant evaluation if `HALF_LANES * 2 != N`.
     #[inline]
     #[must_use = "method returns two new vectors and does not mutate the original"]
-    pub fn split<const HALF_LANES: usize>(self) -> [Simd<T, HALF_LANES>; 2]
-    {
+    pub fn split<const HALF_LANES: usize>(self) -> [Simd<T, HALF_LANES>; 2] {
         struct Half<const HIGH: bool, const HALF: usize, const INPUT: usize>;
 
         impl<const HIGH: bool, const HALF: usize, const INPUT: usize> Swizzle<HALF>
             for Half<HIGH, HALF, INPUT>
         {
             const INDEX: [usize; HALF] = const {
-                assert!(HALF * 2 == INPUT, "split requires exactly half the input lanes");
+                assert!(
+                    HALF * 2 == INPUT,
+                    "split requires exactly half the input lanes"
+                );
                 let offset = if HIGH { HALF } else { 0 };
                 let mut indices = [0; HALF];
                 let mut lane = 0;
