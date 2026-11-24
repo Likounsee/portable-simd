@@ -517,6 +517,21 @@ macro_rules! overflowing_neg_abs_impl {
     }};
 }
 
+macro_rules! mul_high_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
+        let lhs: Simd<$wide, $lanes> = $lhs.cast();
+        let rhs: Simd<$wide, $lanes> = $rhs.cast();
+        ((lhs * rhs) >> Simd::<$wide, $lanes>::splat(<$ty>::BITS as $wide)).cast()
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            let product = ($lhs.as_array()[lane] as $wide)
+                .wrapping_mul($rhs.as_array()[lane] as $wide);
+            (product >> <$ty>::BITS) as $ty
+        }))
+    }};
+}
+
 macro_rules! overflowing_mul_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -654,11 +669,7 @@ macro_rules! impl_trait {
 
             #[inline]
             fn mul_high(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let product = (self.as_array()[lane] as $wide)
-                        .wrapping_mul(second.as_array()[lane] as $wide);
-                    (product >> <$ty>::BITS) as $ty
-                }))
+                mul_high_impl!($ty, $wide, N, self, second, $strategy)
             }
 
             #[inline]
