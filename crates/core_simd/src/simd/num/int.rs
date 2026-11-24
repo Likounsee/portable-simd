@@ -494,7 +494,7 @@ macro_rules! impl_trait {
             unsafe fn unchecked_div(self, second: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees nonzero divisors and no MIN / -1 lanes.
-                    unsafe { self.as_array()[lane].unchecked_div(second.as_array()[lane]) }
+                    unsafe { core::intrinsics::unchecked_div(self.as_array()[lane], second.as_array()[lane]) }
                 }))
             }
 
@@ -502,7 +502,7 @@ macro_rules! impl_trait {
             unsafe fn unchecked_rem(self, second: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees nonzero divisors and no MIN % -1 lanes.
-                    unsafe { self.as_array()[lane].unchecked_rem(second.as_array()[lane]) }
+                    unsafe { core::intrinsics::unchecked_rem(self.as_array()[lane], second.as_array()[lane]) }
                 }))
             }
 
