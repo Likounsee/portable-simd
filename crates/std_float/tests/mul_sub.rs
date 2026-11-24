@@ -33,5 +33,5 @@ fn mul_sub_preserves_fused_precision() {
     let fused = a.mul_sub(b, one);
     let scalar_fused = (1.0 + epsilon).mul_add(1.0 - epsilon, -1.0);
     assert_eq!(fused, f64x2::splat(scalar_fused));
-    assert!(fused[0] < 0.0);
+    assert!(fused.to_array()[0] < 0.0);
 }
