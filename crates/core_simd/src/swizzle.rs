@@ -452,13 +452,13 @@ where
     /// This is the portable equivalent of the common SIMD align/align-right
     /// operation, and is useful for constructing a window spanning two vectors.
     ///
-    /// 
+    /// ```
     /// # #![feature(portable_simd)]
     /// # use core::simd::Simd;
     /// let a = Simd::from_array([0, 1, 2, 3]);
     /// let b = Simd::from_array([4, 5, 6, 7]);
     /// assert_eq!(a.align_elements::<2>(b).to_array(), [2, 3, 4, 5]);
-    /// 
+    /// ```
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original inputs"]
     pub fn align_elements<const OFFSET: usize>(self, other: Self) -> Self {
