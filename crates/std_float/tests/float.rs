@@ -167,9 +167,7 @@ macro_rules! impl_tests {
                         // Miri's f16 arithmetic can differ by a few ULPs from native execution.
                         for (actual, expected) in actual.into_iter().zip(expected) {
                             assert!(
-                                test_helpers::approxeq::ApproxEq::approxeq(
-                                    &actual, &expected, 16
-                                ),
+                                test_helpers::approxeq::ApproxEq::approxeq(&actual, &expected, 16),
                                 "SIMD powi result {:?} differs from scalar result {:?}",
                                 actual,
                                 expected,
