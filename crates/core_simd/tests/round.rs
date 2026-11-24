@@ -97,10 +97,15 @@ macro_rules! float_rounding_test {
                         _ => -4.0,
                     });
 
-                    assert_eq!(
-                        Vector::<LANES>::from_array(input).round_fast().to_array(),
-                        expected
-                    );
+                    let actual =
+                        Vector::<LANES>::from_array(input).round_fast().to_array();
+                    for lane in 0..LANES {
+                        assert_eq!(
+                            actual[lane].to_bits(),
+                            expected[lane].to_bits(),
+                            "round_fast: lane={lane}",
+                        );
+                    }
                 }
 
                 fn fract<const LANES: usize>() {
