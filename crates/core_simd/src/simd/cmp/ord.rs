@@ -63,7 +63,8 @@ pub trait SimdPartialOrd: SimdPartialEq {
     fn simd_range<R: core::ops::RangeBounds<Self>>(self, range: R) -> Self::Mask
     where
         Self: Copy + Sized,
-        Self::Mask: core::ops::BitAnd<Output = Self::Mask>
+        Self::Mask: Copy
+            + core::ops::BitAnd<Output = Self::Mask>
             + core::ops::BitOr<Output = Self::Mask>
             + core::ops::Not<Output = Self::Mask>,
     {
