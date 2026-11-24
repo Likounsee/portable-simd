@@ -90,7 +90,8 @@ macro_rules! float_rounding_test {
                         _ => -3.5,
                     });
                     let expected: [Scalar; LANES] = core::array::from_fn(|lane| match lane % 8 {
-                        0 | 4 => 0.0,
+                        0 => 0.0,
+                        4 => -0.0,
                         1 | 2 => 2.0,
                         3 => 4.0,
                         5 | 6 => -2.0,
