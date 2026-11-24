@@ -183,6 +183,100 @@ impl<T, const N: usize> Simd<T, N>
 where
     T: SimdElement,
 {
+    /// Splits a vector into two equal-sized halves.
+    ///
+    /// Specify the output lane count because stable const generics cannot
+    /// express half of the input lane count in the return type.
+    ///
+    /// # Panics
+    ///
+    /// Panics during constant evaluation if `HALF_LANES * 2 != N`.
+    #[inline]
+    #[must_use = "method returns two new vectors and does not mutate the original"]
+    pub fn split<const HALF_LANES: usize>(self) -> [Simd<T, HALF_LANES>; 2]
+    where
+        crate::simd::LaneCount<HALF_LANES>: crate::simd::SupportedLaneCount,
+    {
+        struct Half<const HIGH: bool>;
+
+        impl<const HIGH: bool, const HALF: usize, const N: usize> Swizzle<HALF>
+            for Half<HIGH>
+        {
+            const INDEX: [usize; HALF] = const {
+                assert!(HALF * 2 == N, "split requires exactly half the input lanes");
+                let offset = if HIGH { HALF } else { 0 };
+                let mut indices = [0; HALF];
+                let mut lane = 0;
+                while lane < HALF {
+                    indices[lane] = lane + offset;
+                    lane += 1;
+                }
+                indices
+            };
+        }
+
+        [Half::<false>::swizzle(self), Half::<true>::swizzle(self)]
+    }
+
+    /// Concatenates two vectors with the same number of lanes.
+    ///
+    /// Specify the output lane count explicitly. It must be twice the
+    /// number of lanes in either input vector.
+    #[inline]
+    #[must_use = "method returns a new vector and does not mutate the original inputs"]
+    pub fn concat<const OUTPUT_LANES: usize>(self, other: Self) -> Simd<T, OUTPUT_LANES>
+    where
+        crate::simd::LaneCount<OUTPUT_LANES>: crate::simd::SupportedLaneCount,
+    {
+        struct Concat<const OUTPUT: usize>;
+
+        impl<const OUTPUT: usize, const INPUT: usize> Swizzle<OUTPUT> for Concat<OUTPUT> {
+            const INDEX: [usize; OUTPUT] = const {
+                assert!(
+                    OUTPUT == INPUT * 2,
+                    "concat output must have twice as many lanes as either input"
+                );
+                let mut indices = [0; OUTPUT];
+                let mut lane = 0;
+                while lane < OUTPUT {
+                    indices[lane] = lane;
+                    lane += 1;
+                }
+                indices
+            };
+        }
+
+        Concat::<OUTPUT_LANES>::concat_swizzle(self, other)
+    }
+
+    /// Swaps each lane with the lane whose index is XORed with `SWAP_MASK`.
+    ///
+    /// This operation is useful for butterfly shuffles and horizontal
+    /// reductions. `SWAP_MASK` must not set bits outside the lane index.
+    ///
+    /// # Panics
+    ///
+    /// Panics during constant evaluation if an index is outside the vector.
+    #[inline]
+    #[must_use = "method returns a new vector and does not mutate the original"]
+    pub fn swizzle_to_xor_indices<const SWAP_MASK: usize>(self) -> Self {
+        struct Butterfly<const MASK: usize>;
+
+        impl<const MASK: usize, const N: usize> Swizzle<N> for Butterfly<MASK> {
+            const INDEX: [usize; N] = const {
+                let mut indices = [0; N];
+                let mut lane = 0;
+                while lane < N {
+                    indices[lane] = lane ^ MASK;
+                    lane += 1;
+                }
+                indices
+            };
+        }
+
+        Butterfly::<SWAP_MASK>::swizzle(self)
+    }
+
     /// Reverse the order of the elements in the vector.
     #[inline]
     #[must_use = "method returns a new vector and does not mutate the original inputs"]
