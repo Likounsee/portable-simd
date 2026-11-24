@@ -36,6 +36,16 @@ where
         .expect("exact-length slice must convert");
     assert_eq!(vector.to_array(), values, "exact length, lanes={LANES}");
 
+    // Exercise the raw array-to-vector and vector-to-array copy paths with an
+    // allocation containing exactly LANES elements. This guards the layout
+    // assumptions used by Simd::from_slice and Simd::copy_to_slice.
+    let loaded = core_simd::simd::Simd::<T, LANES>::from_slice(&values);
+    assert_eq!(loaded.to_array(), values, "from_slice, lanes={LANES}");
+
+    let mut copied = [T::from(0); LANES];
+    loaded.copy_to_slice(&mut copied);
+    assert_eq!(copied, values, "copy_to_slice, lanes={LANES}");
+
     assert!(
         core_simd::simd::Simd::<T, LANES>::try_from(&values[..LANES - 1]).is_err(),
         "short slice, lanes={LANES}"
@@ -62,3 +72,13 @@ macro_rules! try_from_slice_lane_coverage {
 try_from_slice_lane_coverage!(try_from_slice_u8_all_lane_counts, u8);
 try_from_slice_lane_coverage!(try_from_slice_i16_all_lane_counts, i16);
 try_from_slice_lane_coverage!(try_from_slice_u32_all_lane_counts, u32);
+
+try_from_slice_lane_coverage!(try_from_slice_i8_all_lane_counts, i8);
+try_from_slice_lane_coverage!(try_from_slice_i32_all_lane_counts, i32);
+try_from_slice_lane_coverage!(try_from_slice_i64_all_lane_counts, i64);
+try_from_slice_lane_coverage!(try_from_slice_isize_all_lane_counts, isize);
+try_from_slice_lane_coverage!(try_from_slice_u16_all_lane_counts, u16);
+try_from_slice_lane_coverage!(try_from_slice_u64_all_lane_counts, u64);
+try_from_slice_lane_coverage!(try_from_slice_usize_all_lane_counts, usize);
+try_from_slice_lane_coverage!(try_from_slice_f32_all_lane_counts, f32);
+try_from_slice_lane_coverage!(try_from_slice_f64_all_lane_counts, f64);
