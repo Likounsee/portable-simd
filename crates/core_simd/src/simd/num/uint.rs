@@ -174,6 +174,22 @@ pub impl(self) trait SimdUint: Copy {
     where
         Self: SimdPartialEq;
 
+    /// Divides each lane, returning the corresponding fallback lane when division is invalid.
+    ///
+    /// For signed integers, invalid lanes include division by zero and MIN / -1.
+    /// For unsigned integers, invalid lanes include division by zero.
+    /// Other lanes are divided normally; an invalid lane does not panic the whole vector.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn div_or(self, rhs: Self, fallback: Self) -> Self;
+
+    /// Computes each lane's remainder, returning the corresponding fallback lane when invalid.
+    ///
+    /// For signed integers, invalid lanes include division by zero and MIN % -1.
+    /// For unsigned integers, invalid lanes include division by zero.
+    /// Other lanes are evaluated normally; an invalid lane does not panic the whole vector.
+    #[must_use = "method returns a new vector and does not mutate the original value"]
+    fn rem_or(self, rhs: Self, fallback: Self) -> Self;
+
     /// Returns the quotient of each lane using Euclidean division.
     ///
     /// Division by zero panics, matching the scalar integer operation.
@@ -577,6 +593,23 @@ macro_rules! impl_trait {
                 (values, overflow)
             }
 
+            #[inline]
+            fn div_or(self, rhs: Self, fallback: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane]
+                        .checked_div(rhs.as_array()[lane])
+                        .unwrap_or(fallback.as_array()[lane])
+                }))
+            }
+
+            #[inline]
+            fn rem_or(self, rhs: Self, fallback: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    self.as_array()[lane]
+                        .checked_rem(rhs.as_array()[lane])
+                        .unwrap_or(fallback.as_array()[lane])
+                }))
+            }
             #[inline]
             fn div_euclid(self, rhs: Self) -> Self {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
