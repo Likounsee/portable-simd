@@ -68,12 +68,16 @@ mod tests {
     }
 
     #[test]
-    fn covers_every_unsigned_and_signed_byte_value() {
-        for base in 0..=u8::MAX {
-            let a = core::array::from_fn(|lane| base.wrapping_add(lane as u8));
-            let b = core::array::from_fn(|lane| (base as i8).wrapping_add(lane as i8));
-            let actual = maddubs(u8x16::from_array(a), i8x16::from_array(b)).to_array();
-            assert_eq!(actual, reference(a, b), "base={base}");
+    fn covers_every_unsigned_signed_byte_pair() {
+        for unsigned in u8::MIN..=u8::MAX {
+            for signed in i8::MIN..=i8::MAX {
+                let a = u8x16::splat(unsigned);
+                let b = i8x16::splat(signed);
+                let actual = maddubs(a, b).to_array();
+                let expected = (i32::from(unsigned) * i32::from(signed))
+                    .clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16;
+                assert_eq!(actual, [expected; 8], "unsigned={unsigned}, signed={signed}");
+            }
         }
     }
 }
