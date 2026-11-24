@@ -1,3 +1,28 @@
+macro_rules! mul_high_impl {
+    (i8, $wide:ident, $lhs:ident, $rhs:ident) => {{
+        let lhs: Simd<$wide, N> = $lhs.cast();
+        let rhs: Simd<$wide, N> = $rhs.cast();
+        ((lhs * rhs) >> i8::BITS).cast()
+    }};
+    (i16, $wide:ident, $lhs:ident, $rhs:ident) => {{
+        let lhs: Simd<$wide, N> = $lhs.cast();
+        let rhs: Simd<$wide, N> = $rhs.cast();
+        ((lhs * rhs) >> i16::BITS).cast()
+    }};
+    (i32, $wide:ident, $lhs:ident, $rhs:ident) => {{
+        let lhs: Simd<$wide, N> = $lhs.cast();
+        let rhs: Simd<$wide, N> = $rhs.cast();
+        ((lhs * rhs) >> i32::BITS).cast()
+    }};
+    ($ty:ident, $wide:ident, $lhs:ident, $rhs:ident) => {
+        Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+            let product = ($lhs.as_array()[lane] as $wide)
+                .wrapping_mul($rhs.as_array()[lane] as $wide);
+            (product >> <$ty>::BITS) as $ty
+        }))
+    };
+}
+
 use crate::simd::{
     Mask, Select, Simd, SimdCast, SimdElement, cmp::SimdOrd, cmp::SimdPartialEq,
     cmp::SimdPartialOrd, num::SimdUint,
@@ -538,11 +563,7 @@ macro_rules! impl_trait {
 
             #[inline]
             fn mul_high(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let product = (self.as_array()[lane] as $wide)
-                        .wrapping_mul(second.as_array()[lane] as $wide);
-                    (product >> <$ty>::BITS) as $ty
-                }))
+                mul_high_impl!($ty, $wide, self, second)
             }
 
             #[inline]
