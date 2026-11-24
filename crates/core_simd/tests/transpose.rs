@@ -43,8 +43,10 @@ fn transpose_one_lane_dimension() {
     let [column] = transpose(rows);
     assert_eq!(column.to_array(), [10, 20, 30]);
 
-    let [row] = transpose([Simd::from_array([7_i16, 8, 9])]);
-    assert_eq!(row.to_array(), [7, 8, 9]);
+    let [first, second, third] = transpose([Simd::from_array([7_i16, 8, 9])]);
+    assert_eq!(first.to_array(), [7]);
+    assert_eq!(second.to_array(), [8]);
+    assert_eq!(third.to_array(), [9]);
 }
 
 #[test]
