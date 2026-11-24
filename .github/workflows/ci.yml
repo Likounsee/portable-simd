@@ -377,6 +377,24 @@ jobs:
 
   # Build the host-side Cross tool once before fanning out the emulated targets.
   # This avoids eight concurrent cargo installs on a cold cache.
+  # Compile the RISC-V Vector extension configuration even though the current
+  # Cross/QEMU setup cannot execute V-enabled binaries reliably yet.
+  riscv-v-check:
+    name: "RISC-V V compile check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install nightly toolchain and target
+        run: |
+          rustup toolchain install nightly --profile minimal
+          rustup target add riscv64gc-unknown-linux-gnu --toolchain nightly
+      - name: Compile all targets with the RISC-V Vector extension
+        run: cargo +nightly check --all-targets --target riscv64gc-unknown-linux-gnu
+        env:
+          RUSTFLAGS: -C target-feature=+v,+zvl128b
+
   cross-tool:
     name: "prepare Cross host tool"
     runs-on: ubuntu-latest
