@@ -635,8 +635,7 @@ macro_rules! overflowing_pow_impl {
                 let (next, did_overflow) =
                     overflowing_mul_impl!($ty, $wide, $lanes, result, base, vectorized);
                 result = next;
-                overflow = overflow
-                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
+                overflow = overflow | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
             }
 
             exponent >>= 1;
@@ -644,8 +643,7 @@ macro_rules! overflowing_pow_impl {
                 let (next, did_overflow) =
                     overflowing_mul_impl!($ty, $wide, $lanes, base, base, vectorized);
                 base = next;
-                overflow = overflow
-                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
+                overflow = overflow | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
             }
         }
 
