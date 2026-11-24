@@ -66,27 +66,21 @@ fn mask_partial_ord_uses_boolean_lane_ordering() {
 
 #[test]
 fn mask_simd_partial_ord_matches_boolean_lane_ordering() {
-    use core_simd::simd::{cmp::SimdPartialOrd, Mask};
+    use core_simd::simd::{Mask, cmp::SimdPartialOrd};
 
     // Exhaust every pair of four-lane masks to guard the boolean ordering
     // semantics independently of the integer representation used by Mask.
     for left_bits in 0_u8..16 {
         for right_bits in 0_u8..16 {
-            let left_lanes: [bool; 4] =
-                core::array::from_fn(|lane| left_bits & (1 << lane) != 0);
-            let right_lanes: [bool; 4] =
-                core::array::from_fn(|lane| right_bits & (1 << lane) != 0);
+            let left_lanes: [bool; 4] = core::array::from_fn(|lane| left_bits & (1 << lane) != 0);
+            let right_lanes: [bool; 4] = core::array::from_fn(|lane| right_bits & (1 << lane) != 0);
             let left = Mask::<i8, 4>::from_array(left_lanes);
             let right = Mask::<i8, 4>::from_array(right_lanes);
 
-            let expected_lt =
-                core::array::from_fn(|lane| left_lanes[lane] < right_lanes[lane]);
-            let expected_le =
-                core::array::from_fn(|lane| left_lanes[lane] <= right_lanes[lane]);
-            let expected_gt =
-                core::array::from_fn(|lane| left_lanes[lane] > right_lanes[lane]);
-            let expected_ge =
-                core::array::from_fn(|lane| left_lanes[lane] >= right_lanes[lane]);
+            let expected_lt = core::array::from_fn(|lane| left_lanes[lane] < right_lanes[lane]);
+            let expected_le = core::array::from_fn(|lane| left_lanes[lane] <= right_lanes[lane]);
+            let expected_gt = core::array::from_fn(|lane| left_lanes[lane] > right_lanes[lane]);
+            let expected_ge = core::array::from_fn(|lane| left_lanes[lane] >= right_lanes[lane]);
 
             assert_eq!(
                 left.simd_lt(right).to_array(),
