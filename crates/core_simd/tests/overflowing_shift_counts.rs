@@ -92,4 +92,95 @@ fn narrow_unsigned_shift_counts_match_scalar_semantics() {
     check_unsigned_shift_counts!(u16);
     check_unsigned_shift_counts!(u32);
 }
+macro_rules! signed_shift_count_lane_tests {
+    ($module:ident, $ty:ty) => {
+        mod $module {
+            use super::*;
 
+            test_helpers::test_lanes! {
+                fn every_supported_lane_count_matches_scalar_semantics<const LANES: usize>() {
+                    let value = Simd::<$ty, LANES>::from_array(core::array::from_fn(|lane| {
+                        match lane % 4 {
+                            0 => 1,
+                            1 => -2,
+                            2 => <$ty>::MIN,
+                            _ => <$ty>::MAX,
+                        }
+                    }));
+                    let amount = Simd::<$ty, LANES>::from_array(core::array::from_fn(|lane| {
+                        match lane % 4 {
+                            0 => 1,
+                            1 => <$ty>::BITS as $ty,
+                            2 => -1,
+                            _ => 0,
+                        }
+                    }));
+
+                    let (left, left_overflow) = value.overflowing_shl(amount);
+                    let (right, right_overflow) = value.overflowing_shr(amount);
+                    let expected_left = core::array::from_fn(|lane| {
+                        value.to_array()[lane].overflowing_shl(amount.to_array()[lane] as u32)
+                    });
+                    let expected_right = core::array::from_fn(|lane| {
+                        value.to_array()[lane].overflowing_shr(amount.to_array()[lane] as u32)
+                    });
+
+                    assert_eq!(left.to_array(), expected_left.map(|result| result.0));
+                    assert_eq!(right.to_array(), expected_right.map(|result| result.0));
+                    assert_eq!(left_overflow.to_array(), expected_left.map(|result| result.1));
+                    assert_eq!(right_overflow.to_array(), expected_right.map(|result| result.1));
+                }
+            }
+        }
+    };
+}
+
+macro_rules! unsigned_shift_count_lane_tests {
+    ($module:ident, $ty:ty) => {
+        mod $module {
+            use super::*;
+
+            test_helpers::test_lanes! {
+                fn every_supported_lane_count_matches_scalar_semantics<const LANES: usize>() {
+                    let value = Simd::<$ty, LANES>::from_array(core::array::from_fn(|lane| {
+                        match lane % 4 {
+                            0 => 1,
+                            1 => 2,
+                            2 => <$ty>::MIN,
+                            _ => <$ty>::MAX,
+                        }
+                    }));
+                    let amount = Simd::<$ty, LANES>::from_array(core::array::from_fn(|lane| {
+                        match lane % 4 {
+                            0 => 1,
+                            1 => <$ty>::BITS as $ty,
+                            2 => <$ty>::MAX,
+                            _ => 0,
+                        }
+                    }));
+
+                    let (left, left_overflow) = value.overflowing_shl(amount);
+                    let (right, right_overflow) = value.overflowing_shr(amount);
+                    let expected_left = core::array::from_fn(|lane| {
+                        value.to_array()[lane].overflowing_shl(amount.to_array()[lane] as u32)
+                    });
+                    let expected_right = core::array::from_fn(|lane| {
+                        value.to_array()[lane].overflowing_shr(amount.to_array()[lane] as u32)
+                    });
+
+                    assert_eq!(left.to_array(), expected_left.map(|result| result.0));
+                    assert_eq!(right.to_array(), expected_right.map(|result| result.0));
+                    assert_eq!(left_overflow.to_array(), expected_left.map(|result| result.1));
+                    assert_eq!(right_overflow.to_array(), expected_right.map(|result| result.1));
+                }
+            }
+        }
+    };
+}
+
+signed_shift_count_lane_tests!(i8_lane_counts, i8);
+signed_shift_count_lane_tests!(i16_lane_counts, i16);
+signed_shift_count_lane_tests!(i32_lane_counts, i32);
+unsigned_shift_count_lane_tests!(u8_lane_counts, u8);
+unsigned_shift_count_lane_tests!(u16_lane_counts, u16);
+unsigned_shift_count_lane_tests!(u32_lane_counts, u32);
