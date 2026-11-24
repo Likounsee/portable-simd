@@ -51,6 +51,9 @@ pub trait SimdPartialOrd: SimdPartialEq {
     ///
     /// ```
     /// # #![feature(portable_simd)]
+    /// # #[cfg(feature = "as_crate")]
+    /// # use core_simd::simd::{Simd, cmp::SimdPartialOrd};
+    /// # #[cfg(not(feature = "as_crate"))]
     /// # use core::simd::{Simd, cmp::SimdPartialOrd};
     /// let values = Simd::from_array([0, 1, 2, 3, 4]);
     /// let min = Simd::splat(1);
