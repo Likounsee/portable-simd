@@ -353,8 +353,8 @@ macro_rules! rotate_impl {
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, vectorized) => {{
         let shift = $rhs & (<$ty>::BITS - 1);
         let left = $value << Simd::<$ty, $lanes>::splat(shift as $ty);
-        let right = $value
-            >> Simd::<$ty, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $ty);
+        let right_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let right = $value >> Simd::<$ty, $lanes>::splat(right_shift as $ty);
         left | right
     }};
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
@@ -368,8 +368,8 @@ macro_rules! rotate_right_impl {
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, vectorized) => {{
         let shift = $rhs & (<$ty>::BITS - 1);
         let right = $value >> Simd::<$ty, $lanes>::splat(shift as $ty);
-        let left = $value
-            << Simd::<$ty, $lanes>::splat(((<$ty>::BITS - shift) & (<$ty>::BITS - 1)) as $ty);
+        let left_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let left = $value << Simd::<$ty, $lanes>::splat(left_shift as $ty);
         left | right
     }};
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
