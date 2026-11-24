@@ -480,7 +480,6 @@ jobs:
         run: |
           echo "CARGO_TARGET_POWERPC_UNKNOWN_LINUX_GNU_RUNNER=qemu-ppc -cpu e600" >> $GITHUB_ENV
           echo "CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_RUNNER=qemu-riscv64 -cpu rv64,zba=true,zbb=true,v=true,vlen=256,vext_spec=v1.0" >> $GITHUB_ENV
-          # echo "CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_RUNNER=qemu-riscv64 -cpu rv64,zba=true,zbb=true,v=true,vlen=256,vext_spec=v1.0" >> $GITHUB_ENV
 
       - name: Configure RUSTFLAGS
         shell: bash
