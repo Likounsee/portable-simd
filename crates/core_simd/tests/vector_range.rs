@@ -41,3 +41,37 @@ fn simd_in_range_rejects_inverted_intervals() {
         [true, false, true, false],
     );
 }
+
+#[test]
+fn simd_range_supports_exclusive_bounds() {
+    let values = Simd::from_array([0_i32, 1, 2, 3, 4]);
+
+    assert_eq!(values.simd_range(1..4).to_array(), [false, false, true, true, false]);
+}
+
+#[test]
+fn simd_range_supports_one_sided_bounds() {
+    let values = Simd::from_array([0_i32, 1, 2, 3, 4]);
+
+    assert_eq!(values.simd_range(..=2).to_array(), [true, true, true, false, false]);
+    assert_eq!(values.simd_range(2..).to_array(), [false, false, true, true, true]);
+}
+
+#[test]
+fn fully_unbounded_simd_range_matches_nan_lanes() {
+    let values = Simd::from_array([f32::NAN, f32::NEG_INFINITY, 0.0, f32::INFINITY]);
+
+    assert_eq!(values.simd_range(..).to_array(), [true; 4]);
+}
+
+#[test]
+fn simd_range_uses_per_lane_bounds() {
+    let values = Simd::from_array([0_i32, 5, 10, 15]);
+    let min = Simd::from_array([0, 4, 11, 10]);
+    let max = Simd::from_array([0, 6, 20, 14]);
+
+    assert_eq!(
+        values.simd_range(min..=max).to_array(),
+        [true, true, false, false],
+    );
+}

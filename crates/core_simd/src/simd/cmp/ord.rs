@@ -40,6 +40,49 @@ pub trait SimdPartialOrd: SimdPartialEq {
     {
         self.simd_ge(min) & self.simd_le(max)
     }
+
+    /// Tests whether each lane is contained in the corresponding range.
+    ///
+    /// Included and excluded bounds are handled independently for every lane.
+    /// Unbounded ends do not restrict the result. A fully unbounded range
+    /// therefore matches every lane, including floating-point NaN values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #![feature(portable_simd)]
+    /// # use core::simd::{Simd, cmp::SimdPartialOrd};
+    /// let values = Simd::from_array([0, 1, 2, 3, 4]);
+    /// let inside = values.simd_range(1..=3);
+    /// assert_eq!(inside.to_array(), [false, true, true, true, false]);
+    /// ```
+    #[must_use = "method returns a new mask and does not mutate the original value"]
+    #[inline]
+    fn simd_range<R: core::ops::RangeBounds<Self>>(self, range: R) -> Self::Mask
+    where
+        Self: Copy + Sized,
+        Self::Mask: core::ops::BitAnd<Output = Self::Mask>
+            + core::ops::BitOr<Output = Self::Mask>,
+    {
+        use core::ops::Bound;
+
+        let start = match range.start_bound() {
+            Bound::Included(start) => Some(self.simd_ge(*start)),
+            Bound::Excluded(start) => Some(self.simd_gt(*start)),
+            Bound::Unbounded => None,
+        };
+        let end = match range.end_bound() {
+            Bound::Included(end) => Some(self.simd_le(*end)),
+            Bound::Excluded(end) => Some(self.simd_lt(*end)),
+            Bound::Unbounded => None,
+        };
+
+        match (start, end) {
+            (Some(start), Some(end)) => start & end,
+            (Some(one), None) | (None, Some(one)) => one,
+            (None, None) => self.simd_eq(self) | self.simd_ne(self),
+        }
+    }
 }
 
 /// Parallel `Ord`.
