@@ -623,6 +623,36 @@ macro_rules! overflowing_mul_impl {
     }};
 }
 
+macro_rules! overflowing_pow_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, $strategy:ident) => {{
+        let mut base = $value;
+        let mut result = Simd::<$ty, $lanes>::splat(1);
+        let mut overflow = Simd::<$ty, $lanes>::splat(0);
+        let mut exponent = $exp;
+
+        while exponent != 0 {
+            if exponent & 1 != 0 {
+                let (next, did_overflow) =
+                    overflowing_mul_impl!($ty, $wide, $lanes, result, base, $strategy);
+                result = next;
+                overflow = overflow
+                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
+            }
+
+            exponent >>= 1;
+            if exponent != 0 {
+                let (next, did_overflow) =
+                    overflowing_mul_impl!($ty, $wide, $lanes, base, base, $strategy);
+                base = next;
+                overflow = overflow
+                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
+            }
+        }
+
+        (result, overflow.to_mask())
+    }};
+}
+
 macro_rules! saturating_mul_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -788,17 +818,7 @@ macro_rules! impl_trait {
 
             #[inline]
             fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask) {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) = self.as_array()[lane].overflowing_pow(exp);
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                overflowing_pow_impl!($ty, $wide, N, self, exp, $strategy)
             }
 
             #[inline]
