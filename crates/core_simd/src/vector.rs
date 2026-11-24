@@ -126,7 +126,8 @@ where
 ///
 /// ```
 /// # #![feature(portable_simd)]
-/// use core::simd::{Simd, transpose};
+/// # #[cfg(feature = "as_crate")] use core_simd::simd::{Simd, transpose};
+/// # #[cfg(not(feature = "as_crate"))] use core::simd::{Simd, transpose};
 ///
 /// let rows = [
 ///     Simd::from_array([1, 2, 3, 4]),
