@@ -726,12 +726,18 @@ macro_rules! impl_trait {
             where
                 Self: SimdPartialEq
             {
-                let shift = rhs & Simd::splat((<$ty>::BITS - 1) as $ty);
-                let overflow = rhs
-                    .cast::<u32>()
-                    .simd_ge(Simd::splat(<$ty>::BITS))
-                    .cast();
-                (self << shift, overflow)
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shl(rhs.as_array()[lane] as u32);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
             }
 
             #[inline]
@@ -739,12 +745,18 @@ macro_rules! impl_trait {
             where
                 Self: SimdPartialEq
             {
-                let shift = rhs & Simd::splat((<$ty>::BITS - 1) as $ty);
-                let overflow = rhs
-                    .cast::<u32>()
-                    .simd_ge(Simd::splat(<$ty>::BITS))
-                    .cast();
-                (self >> shift, overflow)
+                let mut overflow = [false; N];
+                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    let (value, did_overflow) =
+                        self.as_array()[lane].overflowing_shr(rhs.as_array()[lane] as u32);
+                    overflow[lane] = did_overflow;
+                    value
+                }));
+                let overflow = Simd::<$ty, N>::from_array(
+                    overflow.map(|did_overflow| did_overflow as $ty),
+                )
+                .to_mask();
+                (values, overflow)
             }
 
             #[inline]
