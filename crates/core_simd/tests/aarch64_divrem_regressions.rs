@@ -1,5 +1,5 @@
-#![feature(portable_simd)]
 #![cfg(target_arch = "aarch64")]
+#![feature(portable_simd)]
 
 use core_simd::simd::Simd;
 
