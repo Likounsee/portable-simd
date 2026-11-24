@@ -120,8 +120,24 @@ macro_rules! impl_tests {
                         core_simd::simd::Simd::<$scalar, LANES>::from_array(input).sin_cos();
                     let expected_sin = input.map(|value| value.sin_cos().0);
                     let expected_cos = input.map(|value| value.sin_cos().1);
-                    assert_eq!(sin.to_array(), expected_sin);
-                    assert_eq!(cos.to_array(), expected_cos);
+                    // libm may differ from the scalar reference by one ULP
+                    // when optimized, so compare the paired results approximately.
+                    assert!(
+                        test_helpers::approxeq::ApproxEq::approxeq(
+                            &sin.to_array(),
+                            &expected_sin,
+                            1,
+                        ),
+                        "sin_cos sine results differ by more than 1 ULP",
+                    );
+                    assert!(
+                        test_helpers::approxeq::ApproxEq::approxeq(
+                            &cos.to_array(),
+                            &expected_cos,
+                            1,
+                        ),
+                        "sin_cos cosine results differ by more than 1 ULP",
+                    );
                 }
             }
 
