@@ -26,6 +26,49 @@ fn dynamic_get_set() {
     assert_eq!(vector.to_array(), [10, 20, 99, 77]);
 }
 
+fn check_dynamic_get_checked<const N: usize>() {
+    let vector = Simd::from_array(core::array::from_fn(|lane| lane as u32 * 3 + 1));
+
+    for lane in 0..N {
+        assert_eq!(vector.get_checked(lane), Some(lane as u32 * 3 + 1));
+    }
+
+    assert_eq!(vector.get_checked(N), None);
+    assert_eq!(vector.get_checked(usize::MAX), None);
+}
+
+#[test]
+fn dynamic_get_checked_handles_all_supported_lane_widths() {
+    check_dynamic_get_checked::<1>();
+    check_dynamic_get_checked::<2>();
+    check_dynamic_get_checked::<4>();
+    check_dynamic_get_checked::<8>();
+    check_dynamic_get_checked::<16>();
+    check_dynamic_get_checked::<32>();
+    check_dynamic_get_checked::<64>();
+}
+
+fn check_dynamic_get_set<const N: usize>() {
+    let mut vector = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let index = core::hint::black_box(N - 1);
+
+    assert_eq!(vector.get(index), (N - 1) as u32);
+    vector.set(index, 1234);
+    assert_eq!(vector.get(index), 1234);
+    assert_eq!(vector.get_checked(index), Some(1234));
+}
+
+#[test]
+fn dynamic_get_set_handles_all_supported_lane_widths() {
+    check_dynamic_get_set::<1>();
+    check_dynamic_get_set::<2>();
+    check_dynamic_get_set::<4>();
+    check_dynamic_get_set::<8>();
+    check_dynamic_get_set::<16>();
+    check_dynamic_get_set::<32>();
+    check_dynamic_get_set::<64>();
+}
+
 #[test]
 #[should_panic(expected = "index out of bounds")]
 fn dynamic_get_checks_bounds() {
