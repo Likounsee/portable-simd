@@ -253,7 +253,7 @@ fn split_vector_into_equal_halves() {
 fn concatenate_equal_width_vectors() {
     let first = Simd::from_array([0, 1, 2, 3]);
     let second = Simd::from_array([4, 5, 6, 7]);
-    let combined = first.concat::<8>(second);
+    let combined = first.concat::<8, 4>(second);
     assert_eq!(combined.to_array(), [0, 1, 2, 3, 4, 5, 6, 7]);
 }
 
@@ -279,3 +279,12 @@ fn xor_index_swizzles() {
     );
 }
 
+
+#[test]
+#[cfg(feature = "all_lane_counts")]
+fn concatenate_different_width_vectors() {
+    let first = Simd::from_array([0, 1, 2, 3]);
+    let second = Simd::from_array([4, 5]);
+    let combined = first.concat::<6, 2>(second);
+    assert_eq!(combined.to_array(), [0, 1, 2, 3, 4, 5]);
+}
