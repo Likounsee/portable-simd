@@ -233,3 +233,49 @@ fn swizzle_dyn_unchecked_zeroes_high_bit_indices_u8x32() {
         ]
     );
 }
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn split_vector_into_equal_halves() {
+    let vector = Simd::from_array([0, 1, 2, 3, 4, 5, 6, 7]);
+    let [low, high] = vector.split::<4>();
+    assert_eq!(low.to_array(), [0, 1, 2, 3]);
+    assert_eq!(high.to_array(), [4, 5, 6, 7]);
+
+    let vector = Simd::from_array([10, 20, 30, 40]);
+    let [low, high] = vector.split::<2>();
+    assert_eq!(low.to_array(), [10, 20]);
+    assert_eq!(high.to_array(), [30, 40]);
+}
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn concatenate_equal_width_vectors() {
+    let first = Simd::from_array([0, 1, 2, 3]);
+    let second = Simd::from_array([4, 5, 6, 7]);
+    let combined = first.concat::<8>(second);
+    assert_eq!(combined.to_array(), [0, 1, 2, 3, 4, 5, 6, 7]);
+}
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn xor_index_swizzles() {
+    let vector = Simd::from_array([0, 1, 2, 3, 4, 5, 6, 7]);
+    assert_eq!(
+        vector.swizzle_to_xor_indices::<1>().to_array(),
+        [1, 0, 3, 2, 5, 4, 7, 6]
+    );
+    assert_eq!(
+        vector.swizzle_to_xor_indices::<2>().to_array(),
+        [2, 3, 0, 1, 6, 7, 4, 5]
+    );
+    assert_eq!(
+        vector.swizzle_to_xor_indices::<4>().to_array(),
+        [4, 5, 6, 7, 0, 1, 2, 3]
+    );
+    assert_eq!(
+        vector.swizzle_to_xor_indices::<3>().to_array(),
+        [3, 2, 1, 0, 7, 6, 5, 4]
+    );
+}
+
