@@ -276,3 +276,61 @@ fn f16_algebraic_reduce_product_is_correct_for_exact_inputs() {
     let actual = Simd::from_array([2.0_f16, 3.0, 1.0, 2.0]).algebraic_reduce_product();
     assert!((actual - 12.0_f16).abs() <= 0.1_f16);
 }
+
+
+// These operands make the fused and unfused results observably different:
+// (1 + eps) * (1 - eps) rounds to 1 when multiplied separately, while the
+// exact fused result retains the small negative product error.
+#[test]
+fn f32_mul_add_relaxed_exercises_fused_rounding_boundary() {
+    let x = [1.0_f32 + f32::EPSILON, 1.0, 1.0, 1.0];
+    let a = [1.0_f32 - f32::EPSILON, 1.0, 1.0, 1.0];
+    let b = [-1.0_f32; 4];
+
+    let fused = x[0].mul_add(a[0], b[0]);
+    let separate = x[0] * a[0] + b[0];
+    assert_ne!(fused.to_bits(), separate.to_bits());
+
+    let actual = Simd::from_array(x)
+        .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
+        .to_array();
+    for lane in 0..4 {
+        let fused = x[lane].mul_add(a[lane], b[lane]);
+        let separate = x[lane] * a[lane] + b[lane];
+        assert!(
+            actual[lane].to_bits() == fused.to_bits()
+                || actual[lane].to_bits() == separate.to_bits(),
+            "lane {lane}: actual={:?}, fused={:?}, separate={:?}",
+            actual[lane],
+            fused,
+            separate,
+        );
+    }
+}
+
+#[test]
+fn f64_mul_add_relaxed_exercises_fused_rounding_boundary() {
+    let x = [1.0_f64 + f64::EPSILON, 1.0, 1.0, 1.0];
+    let a = [1.0_f64 - f64::EPSILON, 1.0, 1.0, 1.0];
+    let b = [-1.0_f64; 4];
+
+    let fused = x[0].mul_add(a[0], b[0]);
+    let separate = x[0] * a[0] + b[0];
+    assert_ne!(fused.to_bits(), separate.to_bits());
+
+    let actual = Simd::from_array(x)
+        .mul_add_relaxed(Simd::from_array(a), Simd::from_array(b))
+        .to_array();
+    for lane in 0..4 {
+        let fused = x[lane].mul_add(a[lane], b[lane]);
+        let separate = x[lane] * a[lane] + b[lane];
+        assert!(
+            actual[lane].to_bits() == fused.to_bits()
+                || actual[lane].to_bits() == separate.to_bits(),
+            "lane {lane}: actual={:?}, fused={:?}, separate={:?}",
+            actual[lane],
+            fused,
+            separate,
+        );
+    }
+}
