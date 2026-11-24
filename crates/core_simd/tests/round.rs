@@ -153,7 +153,6 @@ macro_rules! float_rounding_test {
 float_rounding_test! { f32, i32 }
 float_rounding_test! { f64, i64 }
 
-
 #[test]
 fn f16_round_fast_matches_round_ties_even() {
     use core_simd::simd::Simd;
