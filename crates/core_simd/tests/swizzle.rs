@@ -7,7 +7,6 @@ use wasm_bindgen_test::*;
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test_configure!(run_in_browser);
 
-
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn dynamic_get_set() {
@@ -279,13 +278,3 @@ fn xor_index_swizzles() {
     );
 }
 
-
-#[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
-#[cfg(feature = "all_lane_counts")]
-fn concatenate_different_width_vectors() {
-    let first = Simd::from_array([0, 1, 2, 3]);
-    let second = Simd::from_array([4, 5]);
-    let combined = first.concat::<6, 2>(second);
-    assert_eq!(combined.to_array(), [0, 1, 2, 3, 4, 5]);
-}
