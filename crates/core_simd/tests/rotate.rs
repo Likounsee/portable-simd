@@ -21,7 +21,14 @@ macro_rules! signed_rotate_tests {
                         });
                         let vector = Simd::<$ty, LANES>::from_array(values);
 
-                        for shift in [0, 1, <$ty>::BITS - 1, <$ty>::BITS, <$ty>::BITS + 1, u32::MAX] {
+                        for shift in [
+                            0,
+                            1,
+                            <$ty>::BITS - 1,
+                            <$ty>::BITS,
+                            <$ty>::BITS + 1,
+                            u32::MAX,
+                        ] {
                             assert_eq!(
                                 vector.rotate_left(shift).to_array(),
                                 values.map(|value| value.rotate_left(shift)),
