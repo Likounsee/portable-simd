@@ -314,6 +314,33 @@ pub impl(self) trait SimdUint: Copy {
     fn trailing_ones(self) -> Self;
 }
 
+macro_rules! overflowing_mul_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
+        let lhs: Simd<$wide, $lanes> = $lhs.cast();
+        let rhs: Simd<$wide, $lanes> = $rhs.cast();
+        let product = lhs * rhs;
+        let overflow_mask = product.simd_gt(Simd::splat(<$ty>::MAX as $wide));
+        let overflow = overflow_mask
+            .select(Simd::<$wide, $lanes>::splat(1), Simd::splat(0))
+            .cast::<$ty>()
+            .to_mask();
+        (product.cast(), overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, scalar) => {{
+        let mut overflow = [false; $lanes];
+        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            let (value, did_overflow) =
+                $lhs.as_array()[lane].overflowing_mul($rhs.as_array()[lane]);
+            overflow[lane] = did_overflow;
+            value
+        }));
+        let overflow = Simd::<$ty, $lanes>::from_array(
+            overflow.map(|did_overflow| did_overflow as $ty),
+        ).to_mask();
+        (values, overflow)
+    }};
+}
+
 macro_rules! saturating_mul_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
         let lhs: Simd<$wide, $lanes> = $lhs.cast();
@@ -517,18 +544,7 @@ macro_rules! impl_trait {
             where
                 Self: SimdPartialEq
             {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) =
-                        self.as_array()[lane].overflowing_mul(second.as_array()[lane]);
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                overflowing_mul_impl!($ty, $wide, N, self, second, $strategy)
             }
 
             #[inline]
