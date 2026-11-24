@@ -7,31 +7,41 @@ use core_simd::simd::Simd;
 // non-power-of-two lane counts and particular divisor values (upstream #427).
 // Keep these regressions on three lanes so they exercise that exact shape.
 
-macro_rules! division_by_zero_tests {
-    ($($name:ident: $ty:ty),* $(,)?) => {
+macro_rules! zero_divisor_tests {
+    ($($name:ident: $ty:ty => $op:tt),* $(,)?) => {
         $(
             #[test]
             #[should_panic(expected = "attempt to divide by zero")]
             fn $name() {
                 let lhs = Simd::<$ty, 3>::splat(12);
                 let rhs = Simd::from_array([3, 0, 4]);
-                let _ = lhs / rhs;
+                let _ = lhs $op rhs;
             }
         )*
     };
 }
 
-division_by_zero_tests! {
-    signed_i8_division_by_zero: i8,
-    signed_i16_division_by_zero: i16,
-    signed_i32_division_by_zero: i32,
-    signed_i64_division_by_zero: i64,
-    signed_isize_division_by_zero: isize,
-    unsigned_u8_division_by_zero: u8,
-    unsigned_u16_division_by_zero: u16,
-    unsigned_u32_division_by_zero: u32,
-    unsigned_u64_division_by_zero: u64,
-    unsigned_usize_division_by_zero: usize,
+zero_divisor_tests! {
+    signed_i8_division_by_zero: i8 => /,
+    signed_i16_division_by_zero: i16 => /,
+    signed_i32_division_by_zero: i32 => /,
+    signed_i64_division_by_zero: i64 => /,
+    signed_isize_division_by_zero: isize => /,
+    unsigned_u8_division_by_zero: u8 => /,
+    unsigned_u16_division_by_zero: u16 => /,
+    unsigned_u32_division_by_zero: u32 => /,
+    unsigned_u64_division_by_zero: u64 => /,
+    unsigned_usize_division_by_zero: usize => /,
+    signed_i8_remainder_by_zero: i8 => %,
+    signed_i16_remainder_by_zero: i16 => %,
+    signed_i32_remainder_by_zero: i32 => %,
+    signed_i64_remainder_by_zero: i64 => %,
+    signed_isize_remainder_by_zero: isize => %,
+    unsigned_u8_remainder_by_zero: u8 => %,
+    unsigned_u16_remainder_by_zero: u16 => %,
+    unsigned_u32_remainder_by_zero: u32 => %,
+    unsigned_u64_remainder_by_zero: u64 => %,
+    unsigned_usize_remainder_by_zero: usize => %,
 }
 
 macro_rules! remainder_by_min_tests {
