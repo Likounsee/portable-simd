@@ -24,13 +24,14 @@ fn try_from_slice() {
     assert!(i32x4::try_from([1, 2, 3].as_slice()).is_err());
 }
 
-fn check_try_from_slice_lane_count<T, const LANES: usize>()
+fn check_try_from_slice_lane_count<T, const LANES: usize, F>(make: F)
 where
-    T: Copy + core::fmt::Debug + PartialEq + From<u8> + core_simd::simd::SimdElement + 'static,
+    T: Copy + core::fmt::Debug + PartialEq + core_simd::simd::SimdElement + 'static,
+    F: Fn(u8) -> T,
     for<'a> core_simd::simd::Simd<T, LANES>: core::convert::TryFrom<&'a [T]>,
 {
     let values: [T; LANES] =
-        core::array::from_fn(|lane| T::from((lane as u8).wrapping_mul(17).wrapping_add(3)));
+        core::array::from_fn(|lane| make((lane as u8).wrapping_mul(17).wrapping_add(3)));
     let vector = core_simd::simd::Simd::<T, LANES>::try_from(&values[..])
         .ok()
         .expect("exact-length slice must convert");
@@ -42,7 +43,7 @@ where
     let loaded = core_simd::simd::Simd::<T, LANES>::from_slice(&values);
     assert_eq!(loaded.to_array(), values, "from_slice, lanes={LANES}");
 
-    let mut copied = [T::from(0); LANES];
+    let mut copied = [make(0); LANES];
     loaded.copy_to_slice(&mut copied);
     assert_eq!(copied, values, "copy_to_slice, lanes={LANES}");
 
@@ -52,7 +53,7 @@ where
     );
 
     let mut longer = values.to_vec();
-    longer.push(T::from(251));
+    longer.push(make(251));
     assert!(
         core_simd::simd::Simd::<T, LANES>::try_from(&longer[..]).is_err(),
         "long slice, lanes={LANES}"
@@ -63,7 +64,7 @@ macro_rules! try_from_slice_lane_coverage {
     ($name:ident, $ty:ty) => {
         test_helpers::test_lanes! {
             fn $name<const LANES: usize>() {
-                check_try_from_slice_lane_count::<$ty, LANES>();
+                check_try_from_slice_lane_count::<$ty, LANES, _>(|value| value as $ty);
             }
         }
     };
