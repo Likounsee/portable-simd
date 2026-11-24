@@ -726,20 +726,12 @@ macro_rules! impl_trait {
             where
                 Self: SimdPartialEq
             {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let shift = rhs.as_array()[lane];
-                    let (value, did_overflow) = self.as_array()[lane].overflowing_shl(shift as u32);
-                    // Match the scalar operation: shift counts are converted to u32
-                    // before the lane-width check, including for 64-bit lane types.
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                let shift = rhs & Simd::splat((<$ty>::BITS - 1) as $ty);
+                let overflow = rhs
+                    .cast::<u32>()
+                    .simd_ge(Simd::splat(<$ty>::BITS))
+                    .cast();
+                (self << shift, overflow)
             }
 
             #[inline]
@@ -747,20 +739,12 @@ macro_rules! impl_trait {
             where
                 Self: SimdPartialEq
             {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let shift = rhs.as_array()[lane];
-                    let (value, did_overflow) = self.as_array()[lane].overflowing_shr(shift as u32);
-                    // Match the scalar operation: shift counts are converted to u32
-                    // before the lane-width check, including for 64-bit lane types.
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
-                (values, overflow)
+                let shift = rhs & Simd::splat((<$ty>::BITS - 1) as $ty);
+                let overflow = rhs
+                    .cast::<u32>()
+                    .simd_ge(Simd::splat(<$ty>::BITS))
+                    .cast();
+                (self >> shift, overflow)
             }
 
             #[inline]
