@@ -107,6 +107,19 @@ fn reverse() {
 
 #[test]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn align_elements() {
+    let a = Simd::from_array([0, 1, 2, 3]);
+    let b = Simd::from_array([4, 5, 6, 7]);
+
+    assert_eq!(a.align_elements::<0>(b).to_array(), [0, 1, 2, 3]);
+    assert_eq!(a.align_elements::<1>(b).to_array(), [1, 2, 3, 4]);
+    assert_eq!(a.align_elements::<2>(b).to_array(), [2, 3, 4, 5]);
+    assert_eq!(a.align_elements::<3>(b).to_array(), [3, 4, 5, 6]);
+    assert_eq!(a.align_elements::<4>(b).to_array(), [4, 5, 6, 7]);
+}
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn rotate() {
     let a = Simd::from_array([1, 2, 3, 4]);
     assert_eq!(a.rotate_elements_left::<0>().to_array(), [1, 2, 3, 4]);
