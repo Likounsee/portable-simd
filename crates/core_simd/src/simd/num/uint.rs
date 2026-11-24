@@ -314,8 +314,23 @@ pub impl(self) trait SimdUint: Copy {
     fn trailing_ones(self) -> Self;
 }
 
+macro_rules! saturating_mul_impl {
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, vectorized) => {{
+        let lhs: Simd<$wide, $lanes> = $lhs.cast();
+        let rhs: Simd<$wide, $lanes> = $rhs.cast();
+        (lhs * rhs)
+            .simd_min(Simd::splat(<$ty>::MAX as $wide))
+            .cast()
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, scalar) => {{
+        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            $lhs.as_array()[lane].saturating_mul($rhs.as_array()[lane])
+        }))
+    }};
+}
+
 macro_rules! impl_trait {
-    { $($ty:ident ($signed:ident, $wide:ident)),* } => {
+    { $($ty:ident ($signed:ident, $wide:ident, $strategy:ident)),* } => {
         $(
         impl<const N: usize> SimdUint for Simd<$ty, N>
         {
@@ -426,9 +441,7 @@ macro_rules! impl_trait {
 
             #[inline]
             fn saturating_mul(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].saturating_mul(second.as_array()[lane])
-                }))
+                saturating_mul_impl!($ty, $wide, N, self, second, $strategy)
             }
 
             #[inline]
@@ -790,4 +803,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { u8 (i8, u16), u16 (i16, u32), u32 (i32, u64), u64 (i64, u128), usize (isize, u128) }
+impl_trait! { u8 (i8, u16, vectorized), u16 (i16, u32, vectorized), u32 (i32, u64, vectorized), u64 (i64, u128, scalar), usize (isize, u128, scalar) }
