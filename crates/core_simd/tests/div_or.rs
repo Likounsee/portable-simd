@@ -1,6 +1,9 @@
 #![feature(portable_simd)]
 
-use core_simd::simd::{Simd, num::{SimdInt, SimdUint}};
+use core_simd::simd::{
+    Simd,
+    num::{SimdInt, SimdUint},
+};
 
 macro_rules! signed_fallback_tests {
     ($module:ident, $ty:ty) => {
@@ -31,14 +34,8 @@ macro_rules! unsigned_fallback_tests {
                 let rhs = Simd::<$ty, 4>::from_array([0, 3, 2, 0]);
                 let fallback = Simd::<$ty, 4>::from_array([91, 92, 93, 94]);
 
-                assert_eq!(
-                    lhs.div_or(rhs, fallback).to_array(),
-                    [91, 4, 4, 94]
-                );
-                assert_eq!(
-                    lhs.rem_or(rhs, fallback).to_array(),
-                    [91, 0, 1, 94]
-                );
+                assert_eq!(lhs.div_or(rhs, fallback).to_array(), [91, 4, 4, 94]);
+                assert_eq!(lhs.rem_or(rhs, fallback).to_array(), [91, 0, 1, 94]);
             }
         }
     };
