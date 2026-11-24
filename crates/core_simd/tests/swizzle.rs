@@ -281,6 +281,7 @@ fn xor_index_swizzles() {
 
 
 #[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 #[cfg(feature = "all_lane_counts")]
 fn concatenate_different_width_vectors() {
     let first = Simd::from_array([0, 1, 2, 3]);
