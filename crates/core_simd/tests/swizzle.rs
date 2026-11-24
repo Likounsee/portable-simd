@@ -335,48 +335,39 @@ fn xor_index_swizzles() {
 }
 
 
-fn check_mask_rotations_all_lane_widths<const LANES: usize>() {
-    let values: [bool; LANES] = core::array::from_fn(|lane| lane % 3 == 1);
-    let mask = Mask::<i32, LANES>::from_array(values);
+test_helpers::test_lanes! {
+    fn mask_rotations_cover_supported_lane_widths<const LANES: usize>() {
+        let values: [bool; LANES] = core::array::from_fn(|lane| lane % 3 == 1);
+        let mask = Mask::<i32, LANES>::from_array(values);
 
-    for offset in [0, 1, LANES, LANES + 1, usize::MAX] {
-        let amount = offset % LANES;
-        let expected_left =
-            core::array::from_fn(|lane| values[(lane + amount) % LANES]);
-        let expected_right =
-            core::array::from_fn(|lane| values[(lane + LANES - amount) % LANES]);
+        for offset in [0, 1, LANES, LANES + 1, usize::MAX] {
+            let amount = offset % LANES;
+            let expected_left =
+                core::array::from_fn(|lane| values[(lane + amount) % LANES]);
+            let expected_right =
+                core::array::from_fn(|lane| values[(lane + LANES - amount) % LANES]);
+
+            assert_eq!(
+                mask.rotate_elements_left_dyn(offset).to_array(),
+                expected_left,
+                "dynamic left rotation: LANES={LANES}, offset={offset}"
+            );
+            assert_eq!(
+                mask.rotate_elements_right_dyn(offset).to_array(),
+                expected_right,
+                "dynamic right rotation: LANES={LANES}, offset={offset}"
+            );
+        }
 
         assert_eq!(
-            mask.rotate_elements_left_dyn(offset).to_array(),
-            expected_left,
-            "dynamic left rotation: LANES={LANES}, offset={offset}"
+            mask.rotate_elements_left::<1>().to_array(),
+            core::array::from_fn(|lane| values[(lane + 1) % LANES]),
+            "const left rotation: LANES={LANES}"
         );
         assert_eq!(
-            mask.rotate_elements_right_dyn(offset).to_array(),
-            expected_right,
-            "dynamic right rotation: LANES={LANES}, offset={offset}"
+            mask.rotate_elements_right::<1>().to_array(),
+            core::array::from_fn(|lane| values[(lane + LANES - 1) % LANES]),
+            "const right rotation: LANES={LANES}"
         );
     }
-
-    assert_eq!(
-        mask.rotate_elements_left::<1>().to_array(),
-        core::array::from_fn(|lane| values[(lane + 1) % LANES]),
-        "const left rotation: LANES={LANES}"
-    );
-    assert_eq!(
-        mask.rotate_elements_right::<1>().to_array(),
-        core::array::from_fn(|lane| values[(lane + LANES - 1) % LANES]),
-        "const right rotation: LANES={LANES}"
-    );
-}
-
-#[test]
-fn mask_rotations_cover_all_supported_lane_widths() {
-    check_mask_rotations_all_lane_widths::<1>();
-    check_mask_rotations_all_lane_widths::<2>();
-    check_mask_rotations_all_lane_widths::<4>();
-    check_mask_rotations_all_lane_widths::<8>();
-    check_mask_rotations_all_lane_widths::<16>();
-    check_mask_rotations_all_lane_widths::<32>();
-    check_mask_rotations_all_lane_widths::<64>();
 }
