@@ -46,6 +46,18 @@ pub impl(self) trait SimdUint: Copy {
     /// Every lane product must be representable by the scalar element type.
     unsafe fn unchecked_mul(self, second: Self) -> Self;
 
+    /// Divides corresponding lanes without checking for division by zero.
+    ///
+    /// # Safety
+    /// Every lane in `second` must be nonzero.
+    unsafe fn unchecked_div(self, second: Self) -> Self;
+
+    /// Computes the remainder of corresponding lanes without checking for division by zero.
+    ///
+    /// # Safety
+    /// Every lane in `second` must be nonzero.
+    unsafe fn unchecked_rem(self, second: Self) -> Self;
+
     /// Shifts each lane left without masking the shift amount.
     ///
     /// Each lane's shift amount is converted to `u32`, matching the scalar
@@ -348,6 +360,22 @@ macro_rules! impl_trait {
                 Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
                     // SAFETY: The caller guarantees that every lane product is representable.
                     unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_div(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees every divisor is nonzero.
+                    unsafe { self.as_array()[lane].unchecked_div(second.as_array()[lane]) }
+                }))
+            }
+
+            #[inline]
+            unsafe fn unchecked_rem(self, second: Self) -> Self {
+                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
+                    // SAFETY: The caller guarantees every divisor is nonzero.
+                    unsafe { self.as_array()[lane].unchecked_rem(second.as_array()[lane]) }
                 }))
             }
 
