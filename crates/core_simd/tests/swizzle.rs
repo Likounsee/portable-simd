@@ -1,5 +1,5 @@
 #![feature(portable_simd)]
-use core_simd::simd::{Simd, Swizzle};
+use core_simd::simd::{Mask, Simd, Swizzle};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_test::*;
@@ -156,6 +156,33 @@ fn rotate_runtime() {
     assert_eq!(
         vector.rotate_elements_left_dyn(usize::MAX).to_array(),
         [3, 0, 1, 2]
+    );
+}
+
+#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn mask_rotate_runtime() {
+    let mask = Mask::<i32, 4>::from_array([true, false, false, true]);
+
+    assert_eq!(
+        mask.rotate_elements_left_dyn(1).to_array(),
+        [false, false, true, true]
+    );
+    assert_eq!(
+        mask.rotate_elements_right_dyn(1).to_array(),
+        [true, true, false, false]
+    );
+    assert_eq!(
+        mask.rotate_elements_left_dyn(4).to_array(),
+        [true, false, false, true]
+    );
+    assert_eq!(
+        mask.rotate_elements_right_dyn(5).to_array(),
+        [false, true, false, true]
+    );
+    assert_eq!(
+        mask.rotate_elements_left_dyn(usize::MAX).to_array(),
+        [false, true, false, true]
     );
 }
 
