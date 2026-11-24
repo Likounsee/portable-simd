@@ -627,7 +627,7 @@ macro_rules! overflowing_pow_impl {
     ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, vectorized) => {{
         let mut base = $value;
         let mut result = Simd::<$ty, $lanes>::splat(1);
-        let mut overflow = Simd::<$ty, $lanes>::splat(0).to_mask();
+        let mut overflow = Simd::<$ty, $lanes>::splat(0);
         let mut exponent = $exp;
 
         while exponent != 0 {
@@ -635,7 +635,8 @@ macro_rules! overflowing_pow_impl {
                 let (next, did_overflow) =
                     overflowing_mul_impl!($ty, $wide, $lanes, result, base, vectorized);
                 result = next;
-                overflow = overflow | did_overflow;
+                overflow = overflow
+                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
             }
 
             exponent >>= 1;
@@ -643,11 +644,12 @@ macro_rules! overflowing_pow_impl {
                 let (next, did_overflow) =
                     overflowing_mul_impl!($ty, $wide, $lanes, base, base, vectorized);
                 base = next;
-                overflow = overflow | did_overflow;
+                overflow = overflow
+                    | did_overflow.select(Simd::<$ty, $lanes>::splat(1), Simd::splat(0));
             }
         }
 
-        (result, overflow)
+        (result, overflow.to_mask())
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, scalar) => {{
         let mut overflow = [false; $lanes];
