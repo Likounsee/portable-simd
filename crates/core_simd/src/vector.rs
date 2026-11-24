@@ -113,7 +113,6 @@ pub struct Simd<T, const N: usize>([T; N])
 where
     T: SimdElement;
 
-
 /// Transposes an array of SIMD vectors.
 ///
 /// Given `M` vectors with `N` lanes each, returns `N` vectors with `M` lanes each.
@@ -143,17 +142,16 @@ where
 /// ]);
 /// ```
 #[inline]
-pub fn transpose<T, const M: usize, const N: usize>(
-    vectors: [Simd<T, N>; M],
-) -> [Simd<T, M>; N]
+pub fn transpose<T, const M: usize, const N: usize>(vectors: [Simd<T, N>; M]) -> [Simd<T, M>; N]
 where
     T: SimdElement,
 {
     core::array::from_fn(|row| {
-        Simd::from_array(core::array::from_fn(|column| vectors[column].as_array()[row]))
+        Simd::from_array(core::array::from_fn(|column| {
+            vectors[column].as_array()[row]
+        }))
     })
 }
-
 
 impl<T, const N: usize> Simd<T, N>
 where
