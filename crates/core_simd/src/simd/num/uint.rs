@@ -644,7 +644,7 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask) {
+            fn overflowing_pow(self, exp: u32) -> (Self, <Self as SimdPartialEq>::Mask) {
                 overflowing_pow_impl!($ty, $wide, N, self, exp, $strategy)
             }
 
