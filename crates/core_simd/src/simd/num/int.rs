@@ -573,17 +573,33 @@ macro_rules! impl_trait {
             }
 
             #[inline]
-            fn wrapping_pow(self, exp: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].wrapping_pow(exp)
-                }))
+            fn wrapping_pow(mut self, mut exp: u32) -> Self {
+                let mut result = Self::splat(1);
+                while exp != 0 {
+                    if exp & 1 != 0 {
+                        result = result * self;
+                    }
+                    exp >>= 1;
+                    if exp != 0 {
+                        self = self * self;
+                    }
+                }
+                result
             }
 
             #[inline]
-            fn saturating_pow(self, exp: u32) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    self.as_array()[lane].saturating_pow(exp)
-                }))
+            fn saturating_pow(mut self, mut exp: u32) -> Self {
+                let mut result = Self::splat(1);
+                while exp != 0 {
+                    if exp & 1 != 0 {
+                        result = result.saturating_mul(self);
+                    }
+                    exp >>= 1;
+                    if exp != 0 {
+                        self = self.saturating_mul(self);
+                    }
+                }
+                result
             }
 
             #[inline]
