@@ -52,13 +52,13 @@ pub trait SimdPartialOrd: SimdPartialEq {
     /// ```
     /// # #![feature(portable_simd)]
     /// # #[cfg(feature = "as_crate")]
-    /// # use core_simd::simd::{Simd, cmp::SimdPartialOrd};
+    /// # use core_simd::simd::{Mask, Simd, cmp::SimdPartialOrd};
     /// # #[cfg(not(feature = "as_crate"))]
-    /// # use core::simd::{Simd, cmp::SimdPartialOrd};
+    /// # use core::simd::{Mask, Simd, cmp::SimdPartialOrd};
     /// let values = Simd::from_array([0, 1, 2, 3, 4]);
     /// let min = Simd::splat(1);
     /// let max = Simd::splat(3);
-    /// let inside = values.simd_range(min..=max);
+    /// let inside: Mask<i32, 5> = values.simd_range(min..=max);
     /// assert_eq!(inside.to_array(), [false, true, true, true, false]);
     /// ```
     #[must_use = "method returns a new mask and does not mutate the original value"]
