@@ -26,7 +26,8 @@ fn dynamic_get_set() {
 }
 
 fn check_dynamic_get_checked<const N: usize>() {
-    let vector = Simd::from_array(core::array::from_fn(|lane| lane as u32 * 3 + 1));
+    let vector: Simd<u32, N> =
+        Simd::from_array(core::array::from_fn(|lane| lane as u32 * 3 + 1));
 
     for lane in 0..N {
         assert_eq!(vector.get_checked(lane), Some(lane as u32 * 3 + 1));
@@ -48,7 +49,8 @@ fn dynamic_get_checked_handles_all_supported_lane_widths() {
 }
 
 fn check_dynamic_get_set<const N: usize>() {
-    let mut vector = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let mut vector: Simd<u32, N> =
+        Simd::from_array(core::array::from_fn(|lane| lane as u32));
     let index = core::hint::black_box(N - 1);
 
     assert_eq!(vector.get(index), (N - 1) as u32);
