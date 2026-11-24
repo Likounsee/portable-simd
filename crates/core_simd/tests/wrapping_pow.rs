@@ -76,7 +76,25 @@ macro_rules! unsigned_wrapping_pow_tests {
                         let actual = vector.wrapping_pow(exponent).to_array();
                         let expected =
                             values.map(|value| value.wrapping_pow(exponent));
-                        assert_eq!(actual, expected, "exponent {exponent}");
+                        assert_eq!(actual, expected, "wrapping exponent {exponent}");
+
+                        let actual = vector.saturating_pow(exponent).to_array();
+                        let expected =
+                            values.map(|value| value.saturating_pow(exponent));
+                        assert_eq!(actual, expected, "saturating exponent {exponent}");
+
+                        let actual = vector.overflowing_pow(exponent);
+                        let expected = values.map(|value| value.overflowing_pow(exponent));
+                        assert_eq!(
+                            actual.0.to_array(),
+                            expected.map(|(value, _)| value),
+                            "overflowing value for exponent {exponent}"
+                        );
+                        assert_eq!(
+                            actual.1.to_array(),
+                            expected.map(|(_, overflow)| overflow),
+                            "overflowing mask for exponent {exponent}"
+                        );
                     }
                 }
             }
