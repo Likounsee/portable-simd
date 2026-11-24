@@ -267,3 +267,27 @@ generic_alias! {
     f32 => f32xN,
     f64 => f64xN,
 }
+
+
+// Generic-lane-count mask aliases complement the fixed-width aliases above.
+macro_rules! generic_mask_alias {
+    ($($element_ty:ty => $alias:ident),* $(,)?) => {
+        $(
+            #[doc = concat!(
+                "A SIMD mask with a const-generic number of elements for ",
+                stringify!($element_ty),
+                " vectors."
+            )]
+            #[allow(non_camel_case_types)]
+            pub type $alias<const N: usize> = $crate::simd::Mask<$element_ty, N>;
+        )*
+    };
+}
+
+generic_mask_alias! {
+    i8 => mask8xN,
+    i16 => mask16xN,
+    i32 => mask32xN,
+    i64 => mask64xN,
+    isize => masksizexN,
+}
