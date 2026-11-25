@@ -51,3 +51,16 @@ fn gather_ptr_preserves_float_lane_bits() {
         [0x7fc1_2345, 0x0000_0001, 0x8000_0000, 0x7f80_0000]
     );
 }
+
+#[test]
+fn gather_or_supports_simd_lookup_tables() {
+    // A small lookup table can be indexed by every lane independently.
+    // Out-of-range indices use the caller-provided fallback value.
+    let table = [10_i32, 20, 30, 40];
+    let indices = Simd::from_array([3_usize, 0, 3, 5]);
+    let fallback = Simd::splat(-1);
+
+    let actual = Simd::gather_or(&table, indices, fallback);
+
+    assert_eq!(actual.to_array(), [40, 10, 40, -1]);
+}
