@@ -346,8 +346,7 @@ where
         if mem::size_of::<Self>() == 16 {
             // SAFETY: a 128-bit SIMD mask is exactly 16 bytes. Each lane is
             // either all-zero or all-one, so byte-wise max preserves any().
-            let bytes: core::arch::arm::uint8x16_t =
-                unsafe { mem::transmute_copy(&self.0) };
+            let bytes: core::arch::arm::uint8x16_t = unsafe { mem::transmute_copy(&self.0) };
             // SAFETY: all values are valid NEON vectors; pairwise max is defined
             // for every byte pattern.
             unsafe {
@@ -381,8 +380,7 @@ where
         if mem::size_of::<Self>() == 16 {
             // SAFETY: a 128-bit SIMD mask is exactly 16 bytes. Each lane is
             // either all-zero or all-one, so byte-wise min preserves all().
-            let bytes: core::arch::arm::uint8x16_t =
-                unsafe { mem::transmute_copy(&self.0) };
+            let bytes: core::arch::arm::uint8x16_t = unsafe { mem::transmute_copy(&self.0) };
             // SAFETY: all values are valid NEON vectors; pairwise min is defined
             // for every byte pattern.
             unsafe {
