@@ -13,6 +13,9 @@ pub use super::{
     num::{SimdFloat, SimdInt, SimdUint},
     ptr::{SimdConstPtr, SimdMutPtr},
     simd_swizzle,
+    f16xN, f32xN, f64xN,
+    i8xN, i16xN, i32xN, i64xN, isizexN,
+    u8xN, u16xN, u32xN, u64xN, usizexN,
 };
 
 #[rustfmt::skip]
