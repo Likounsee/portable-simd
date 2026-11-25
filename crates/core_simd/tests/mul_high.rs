@@ -84,3 +84,39 @@ unsigned_mul_high_tests! { u16_tests, u16, u32 }
 unsigned_mul_high_tests! { u32_tests, u32, u64 }
 unsigned_mul_high_tests! { u64_tests, u64, u128 }
 unsigned_mul_high_tests! { usize_tests, usize, u128 }
+
+
+#[test]
+fn i8_mul_high_exhaustively_matches_full_width_product() {
+    for lhs in i16::from(i8::MIN)..=i16::from(i8::MAX) {
+        let lhs = lhs as i8;
+        let lhs_vector = Simd::<i8, 8>::splat(lhs);
+
+        for rhs_start in (0_u16..=u8::MAX as u16).step_by(8) {
+            let rhs = core::array::from_fn(|lane| (rhs_start + lane as u16) as u8 as i8);
+            let actual = lhs_vector.mul_high(Simd::from_array(rhs)).to_array();
+            let expected = rhs.map(|value| {
+                (((lhs as i16) * (value as i16)) >> i8::BITS) as i8
+            });
+
+            assert_eq!(actual, expected, "lhs={lhs}, rhs={rhs:?}");
+        }
+    }
+}
+
+#[test]
+fn u8_mul_high_exhaustively_matches_full_width_product() {
+    for lhs in u8::MIN..=u8::MAX {
+        let lhs_vector = Simd::<u8, 8>::splat(lhs);
+
+        for rhs_start in (0_u16..=u8::MAX as u16).step_by(8) {
+            let rhs = core::array::from_fn(|lane| (rhs_start + lane as u16) as u8);
+            let actual = lhs_vector.mul_high(Simd::from_array(rhs)).to_array();
+            let expected = rhs.map(|value| {
+                (((lhs as u16) * (value as u16)) >> u8::BITS) as u8
+            });
+
+            assert_eq!(actual, expected, "lhs={lhs}, rhs={rhs:?}");
+        }
+    }
+}
