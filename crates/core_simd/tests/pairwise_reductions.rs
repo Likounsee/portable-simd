@@ -1,4 +1,7 @@
 #![feature(f16, portable_simd)]
+#![expect(internal_features)]
+#![feature(cfg_target_has_reliable_f16_f128)]
+#![allow(unused_features)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -21,6 +24,10 @@ fn pairwise_reductions_f64() {
     assert_eq!(values.pairwise_reduce_product(), 40_320.0);
 }
 
+#[cfg(all(
+    target_has_reliable_f16_math,
+    not(all(target_arch = "wasm32", target_feature = "simd128"))
+))]
 #[test]
 fn pairwise_reductions_f16() {
     let values = Simd::<f16, 4>::from_array([1.0, 2.0, 3.0, 4.0]);
