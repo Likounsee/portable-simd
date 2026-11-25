@@ -149,3 +149,36 @@ fn mask_partial_order_exhaustive_for_8_lanes() {
         }
     }
 }
+
+#[test]
+fn mask_partial_cmp_matches_lexicographic_bool_ordering() {
+    use core::cmp::Ordering;
+
+    fn expected<const N: usize>(a: [bool; N], b: [bool; N]) -> Ordering {
+        for lane in 0..N {
+            if a[lane] != b[lane] {
+                return if a[lane] {
+                    Ordering::Greater
+                } else {
+                    Ordering::Less
+                };
+            }
+        }
+        Ordering::Equal
+    }
+
+    // Exhaustively compare every pair of eight-lane masks. PartialOrd on
+    // Mask is intentionally lexicographic (like [bool; N]), unlike the
+    // elementwise comparisons provided by SimdPartialOrd.
+    for a_bits in 0..=u8::MAX {
+        for b_bits in 0..=u8::MAX {
+            let a = Mask::<i8, 8>::from_bitmask(a_bits as u64);
+            let b = Mask::<i8, 8>::from_bitmask(b_bits as u64);
+            assert_eq!(
+                a.partial_cmp(&b),
+                Some(expected(a.to_array(), b.to_array())),
+                "partial_cmp: {a_bits:08b}, {b_bits:08b}"
+            );
+        }
+    }
+}
