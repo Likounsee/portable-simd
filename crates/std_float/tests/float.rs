@@ -150,7 +150,21 @@ macro_rules! impl_tests {
                     test_helpers::test_binary_elementwise_approx(
                         &core_simd::simd::Simd::<$scalar, LANES>::atan2,
                         &$scalar::atan2,
-                        &|_, _| true,
+                        &|x, y| {
+                            // Miri's atan2 shim can return a signed pi/2 for a NaN
+                            // paired with zero, so its result is not a valid scalar
+                            // reference for those inputs.
+                            #[cfg(miri)]
+                            {
+                                x.iter()
+                                    .chain(y.iter())
+                                    .all(|value| !value.is_nan())
+                            }
+                            #[cfg(not(miri))]
+                            {
+                                true
+                            }
+                        },
                         16,
                     )
                 }
