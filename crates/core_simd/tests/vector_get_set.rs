@@ -35,10 +35,27 @@ fn check_lane_access<const LANES: usize>() {
             expected,
             "set_unchecked, lane={index}"
         );
+
+        let mut updated_checked = vector;
+        assert_eq!(
+            updated_checked.set_checked(index, replacement),
+            Some(()),
+            "set_checked, lane={index}"
+        );
+        assert_eq!(
+            updated_checked.to_array(),
+            expected,
+            "set_checked, lane={index}"
+        );
     }
 
     assert_eq!(vector.get_checked(LANES), None);
     assert_eq!(vector.get_checked(usize::MAX), None);
+
+    let mut unchanged = vector;
+    assert_eq!(unchanged.set_checked(LANES, u32::MAX), None);
+    assert_eq!(unchanged.set_checked(usize::MAX, u32::MAX), None);
+    assert_eq!(unchanged, vector, "out-of-bounds set_checked must not mutate");
 }
 
 test_helpers::test_lanes! {

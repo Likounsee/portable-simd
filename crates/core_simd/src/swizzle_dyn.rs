@@ -239,25 +239,7 @@ fn swizzle_dyn_split<const N: usize, const HALF: usize>(
     let output_high_from_high = table_high.swizzle_dyn(idxs_high - table_high_offset);
     let output_high = output_high_from_low | output_high_from_high;
 
-    // This is simply a concatenation of two native-sized vectors.
-    // The swizzle does nothing - it maps the elements right back where they already are.
-    // There doesn't seem to be a more direct way to do this as of this writing.
-    // TODO: simplify once a plain `concat` is available.
-    use crate::simd::Swizzle;
-    struct CombineHalves;
-    impl<const N: usize> Swizzle<N> for CombineHalves {
-        const INDEX: [usize; N] = const {
-            let mut index = [0; N];
-            let mut i = 0;
-            while i < N {
-                index[i] = i;
-                i += 1;
-            }
-            index
-        };
-    }
-
-    CombineHalves::concat_swizzle(output_low, output_high)
+    output_low.concat::<N, HALF>(output_high)
 }
 
 /// armv7 neon supports swizzling `u8x16` by swizzling two u8x8 blocks

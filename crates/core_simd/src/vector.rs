@@ -301,6 +301,21 @@ where
         unsafe { self.set_unchecked(index, value) }
     }
 
+    /// Sets the element at `index` to `value`, or returns `None` if it is out of bounds.
+    ///
+    /// Unlike [`Self::set`], this method does not panic when `index` is outside the vector.
+    #[inline]
+    #[must_use]
+    pub fn set_checked(&mut self, index: usize, value: T) -> Option<()> {
+        if index < N {
+            // SAFETY: the bounds check above guarantees index < N.
+            unsafe { self.set_unchecked(index, value) };
+            Some(())
+        } else {
+            None
+        }
+    }
+
     /// Sets the element at `index` to `value` without checking bounds.
     ///
     /// # Safety
