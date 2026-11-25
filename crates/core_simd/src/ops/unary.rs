@@ -1,4 +1,4 @@
-use crate::simd::{Simd, SimdElement};
+use crate::simd::{Simd, SimdElement, num::SimdFloat};
 use core::ops::{Neg, Not}; // unary ops
 
 macro_rules! neg {
@@ -49,6 +49,33 @@ macro_rules! not {
                 self ^ (Simd::splat(!(0 as $scalar)))
             }
         })*
+    }
+}
+
+impl<const N: usize> Not for Simd<f16, N> {
+    type Output = Self;
+
+    #[inline]
+    fn not(self) -> Self::Output {
+        <Self as SimdFloat>::from_bits(!<Self as SimdFloat>::to_bits(self))
+    }
+}
+
+impl<const N: usize> Not for Simd<f32, N> {
+    type Output = Self;
+
+    #[inline]
+    fn not(self) -> Self::Output {
+        <Self as SimdFloat>::from_bits(!<Self as SimdFloat>::to_bits(self))
+    }
+}
+
+impl<const N: usize> Not for Simd<f64, N> {
+    type Output = Self;
+
+    #[inline]
+    fn not(self) -> Self::Output {
+        <Self as SimdFloat>::from_bits(!<Self as SimdFloat>::to_bits(self))
     }
 }
 

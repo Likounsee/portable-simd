@@ -1,4 +1,4 @@
-use crate::simd::{Select, Simd, SimdElement, cmp::SimdPartialEq};
+use crate::simd::{Select, Simd, SimdElement, cmp::SimdPartialEq, num::SimdFloat};
 use core::ops::{Add, Mul};
 use core::ops::{BitAnd, BitOr, BitXor};
 use core::ops::{Div, Rem, Sub};
@@ -248,3 +248,44 @@ for_base_ops! {
         unsafe_base { simd_rem }
     }
 }
+
+ // Floating-point bitwise operations act on the raw IEEE-754 representation.
+ // This is useful for sign manipulation and bit masks without scalarizing lanes.
+ macro_rules! float_bitwise_ops {
+     ($($float:ty),* $(,)?) => {$(
+         impl<const N: usize> BitAnd for Simd<$float, N> {
+             type Output = Self;
+
+             #[inline]
+             fn bitand(self, rhs: Self) -> Self {
+                 <Self as SimdFloat>::from_bits(
+                     <Self as SimdFloat>::to_bits(self) & <Self as SimdFloat>::to_bits(rhs),
+                 )
+             }
+         }
+
+         impl<const N: usize> BitOr for Simd<$float, N> {
+             type Output = Self;
+
+             #[inline]
+             fn bitor(self, rhs: Self) -> Self {
+                 <Self as SimdFloat>::from_bits(
+                     <Self as SimdFloat>::to_bits(self) | <Self as SimdFloat>::to_bits(rhs),
+                 )
+             }
+         }
+
+         impl<const N: usize> BitXor for Simd<$float, N> {
+             type Output = Self;
+
+             #[inline]
+             fn bitxor(self, rhs: Self) -> Self {
+                 <Self as SimdFloat>::from_bits(
+                     <Self as SimdFloat>::to_bits(self) ^ <Self as SimdFloat>::to_bits(rhs),
+                 )
+             }
+         }
+     )*};
+ }
+
+ float_bitwise_ops!(f16, f32, f64);
