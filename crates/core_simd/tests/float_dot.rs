@@ -1,4 +1,4 @@
-#![feature(portable_simd)]
+#![feature(f16, portable_simd)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -49,4 +49,20 @@ fn dot3_and_dot4_support_f64() {
     let b = Simd::<f64, 4>::from_array([4.0, 5.0, 6.0, 7.0]);
     assert_eq!(a.dot3(b), 32.0);
     assert_eq!(a.dot4(b), 60.0);
+}
+
+#[test]
+fn dot_f16_four_lanes() {
+    let a = Simd::<f16, 4>::from_array([1.0, 2.0, 3.0, 4.0]);
+    let b = Simd::<f16, 4>::from_array([5.0, 6.0, 7.0, 8.0]);
+    assert_eq!(a.dot(b), 70.0_f16);
+}
+
+#[test]
+fn dot3_and_dot4_f16_ignore_unused_lanes() {
+    let a = Simd::<f16, 4>::from_array([1.0, 2.0, 3.0, 100.0]);
+    let b = Simd::<f16, 4>::from_array([4.0, 5.0, 6.0, 200.0]);
+
+    assert_eq!(a.dot3(b), 32.0_f16);
+    assert_eq!(a.dot4(b), 20_032.0_f16);
 }
