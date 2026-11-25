@@ -106,6 +106,20 @@ macro_rules! test_mask_api {
             }
 
             #[test]
+            #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+            fn checked_lane_access() {
+                let mut mask = Mask::<$type, 4>::splat(false);
+                assert_eq!(mask.test_checked(0), Some(false));
+                assert_eq!(mask.set_checked(2, true), Some(()));
+                assert_eq!(mask.test_checked(2), Some(true));
+                assert_eq!(mask.test_checked(4), None);
+                assert_eq!(mask.test_checked(usize::MAX), None);
+                assert_eq!(mask.set_checked(4, false), None);
+                assert_eq!(mask.set_checked(usize::MAX, false), None);
+                assert_eq!(mask.to_array(), [false, false, true, false]);
+            }
+
+            #[test]
             #[should_panic]
             fn set_invalid_lane() {
                 let mut mask = Mask::<$type, 8>::splat(false);

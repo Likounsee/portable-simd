@@ -308,6 +308,17 @@ where
         T::eq(self.0.get(index), T::TRUE)
     }
 
+    /// Tests the value of the specified element, or returns `None` if the index is out of bounds.
+    ///
+    /// Unlike [`Self::test`], this method does not panic when `index` is outside the mask.
+    #[inline]
+    #[must_use = "method returns a new optional bool and does not mutate the original value"]
+    pub fn test_checked(&self, index: usize) -> Option<bool> {
+        self.0
+            .get_checked(index)
+            .map(|value| T::eq(value, T::TRUE))
+    }
+
     /// Sets the value of the specified element.
     ///
     /// # Safety
@@ -329,6 +340,16 @@ where
     #[track_caller]
     pub fn set(&mut self, index: usize, value: bool) {
         self.0.set(index, if value { T::TRUE } else { T::FALSE });
+    }
+
+    /// Sets the value of the specified element, or returns `None` if the index is out of bounds.
+    ///
+    /// Unlike [`Self::set`], this method does not panic when `index` is outside the mask.
+    #[inline]
+    #[must_use = "method returns an optional result and mutates the mask only when the index is valid"]
+    pub fn set_checked(&mut self, index: usize, value: bool) -> Option<()> {
+        self.0
+            .set_checked(index, if value { T::TRUE } else { T::FALSE })
     }
 
     /// Returns true if any element is set, or false otherwise.
