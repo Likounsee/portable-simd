@@ -209,3 +209,55 @@ fn register_compress_and_expand_preserve_fallback_lanes() {
         [-1, 20, -3, 40, 50, -6]
     );
 }
+
+#[test]
+fn compress_expand_handle_full_width_64_lane_masks() {
+    let values = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let all = Mask::splat(true);
+    let fallback = Simd::splat(u32::MAX);
+    let mut packed = [u32::MAX; 64];
+
+    let written = values.compress_store(&mut packed, all);
+    assert_eq!(written, 64);
+    assert_eq!(packed, values.to_array());
+
+    let (expanded, consumed) = Simd::<u32, 64>::expand_load(&packed, all, fallback);
+    assert_eq!(consumed, 64);
+    assert_eq!(expanded, values);
+
+    assert_eq!(values.compress(all, fallback), values);
+    assert_eq!(values.expand(all, fallback), values);
+}
+
+#[test]
+fn compress_expand_preserve_lane_63_order_and_fallback() {
+    let values = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let selected = core::array::from_fn(|lane| lane == 0 || lane == 63);
+    let mask = Mask::from_array(selected);
+    let fallback = Simd::splat(u32::MAX);
+    let mut packed = [u32::MAX; 64];
+
+    let written = values.compress_store(&mut packed, mask);
+    assert_eq!(written, 2);
+    assert_eq!(&packed[..written], &[0, 63]);
+
+    let (expanded, consumed) =
+        Simd::<u32, 64>::expand_load(&[123, 456], mask, fallback);
+    assert_eq!(consumed, 2);
+    let mut expected = [u32::MAX; 64];
+    expected[0] = 123;
+    expected[63] = 456;
+    assert_eq!(expanded.to_array(), expected);
+
+    let compressed = values.compress(mask, fallback);
+    let mut expected_compressed = [u32::MAX; 64];
+    expected_compressed[0] = 0;
+    expected_compressed[1] = 63;
+    assert_eq!(compressed.to_array(), expected_compressed);
+    assert_eq!(compressed.expand(mask, fallback).to_array(), {
+        let mut round_trip = [u32::MAX; 64];
+        round_trip[0] = 0;
+        round_trip[63] = 63;
+        round_trip
+    });
+}
