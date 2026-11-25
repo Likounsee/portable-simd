@@ -282,6 +282,22 @@ pub impl(self) trait SimdFloat: Copy {
     /// ```
     fn reduce_sum(self) -> Self::Scalar;
 
+    /// Returns the sum of the elements using a deterministic pairwise reduction tree.
+    ///
+    /// Adjacent lanes are added in pairs, then each level is reduced in the same way until
+    /// one value remains. This avoids the long dependency chain of a sequential reduction,
+    /// while keeping the reduction order consistent across targets.
+    #[must_use]
+    fn pairwise_reduce_sum(self) -> Self::Scalar;
+
+    /// Returns the product of the elements using a deterministic pairwise reduction tree.
+    ///
+    /// Adjacent lanes are multiplied in pairs, then each level is reduced in the same way
+    /// until one value remains. The result can differ from the ordered product because
+    /// floating-point multiplication is not associative.
+    #[must_use]
+    fn pairwise_reduce_product(self) -> Self::Scalar;
+
     /// Returns the sum of the elements using relaxed algebraic floating-point semantics.
     ///
     /// Unlike the ordered reduction, this operation permits reassociation and other
@@ -753,6 +769,40 @@ macro_rules! impl_trait {
                     // Safety: `self` is a float vector
                     unsafe { core::intrinsics::simd::simd_reduce_add_ordered(self, -0.) }
                 }
+            }
+
+            #[inline]
+            fn pairwise_reduce_sum(self) -> Self::Scalar {
+                let mut values = *self.as_array();
+                let mut len = N;
+                while len > 1 {
+                    let pairs = len / 2;
+                    for index in 0..pairs {
+                        values[index] = values[index * 2] + values[index * 2 + 1];
+                    }
+                    if len % 2 == 1 {
+                        values[pairs] = values[len - 1];
+                    }
+                    len = pairs + len % 2;
+                }
+                values[0]
+            }
+
+            #[inline]
+            fn pairwise_reduce_product(self) -> Self::Scalar {
+                let mut values = *self.as_array();
+                let mut len = N;
+                while len > 1 {
+                    let pairs = len / 2;
+                    for index in 0..pairs {
+                        values[index] = values[index * 2] * values[index * 2 + 1];
+                    }
+                    if len % 2 == 1 {
+                        values[pairs] = values[len - 1];
+                    }
+                    len = pairs + len % 2;
+                }
+                values[0]
             }
 
             #[inline]
