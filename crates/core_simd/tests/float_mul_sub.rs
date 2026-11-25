@@ -1,4 +1,5 @@
 #![feature(f16, portable_simd)]
+#![feature(cfg_target_has_reliable_f16_f128)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -21,6 +22,7 @@ fn mul_sub_relaxed_f64() {
 }
 
 #[test]
+#[cfg(target_has_reliable_f16_math)]
 fn mul_sub_relaxed_f16() {
     let a = Simd::<f16, 4>::from_array([2.0, -3.0, 0.5, 10.0]);
     let b = Simd::<f16, 4>::from_array([4.0, 2.0, -8.0, 0.25]);

@@ -120,23 +120,27 @@ macro_rules! impl_tests {
                         core_simd::simd::Simd::<$scalar, LANES>::from_array(input).sin_cos();
                     let expected_sin = input.map(|value| value.sin_cos().0);
                     let expected_cos = input.map(|value| value.sin_cos().1);
-                    // libm may differ from the scalar reference by one ULP
-                    // when optimized, so compare the paired results approximately.
+                    // Miri's floating-point math emulation can differ more from
+                    // the scalar reference than the native libm implementation.
+                    #[cfg(miri)]
+                    let ulps = 16;
+                    #[cfg(not(miri))]
+                    let ulps = 1;
                     assert!(
                         test_helpers::approxeq::ApproxEq::approxeq(
                             &sin.to_array(),
                             &expected_sin,
-                            1,
+                            ulps,
                         ),
-                        "sin_cos sine results differ by more than 1 ULP",
+                        "sin_cos sine results differ by more than {ulps} ULP",
                     );
                     assert!(
                         test_helpers::approxeq::ApproxEq::approxeq(
                             &cos.to_array(),
                             &expected_cos,
-                            1,
+                            ulps,
                         ),
-                        "sin_cos cosine results differ by more than 1 ULP",
+                        "sin_cos cosine results differ by more than {ulps} ULP",
                     );
                 }
             }
