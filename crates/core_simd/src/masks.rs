@@ -314,9 +314,7 @@ where
     #[inline]
     #[must_use = "method returns a new optional bool and does not mutate the original value"]
     pub fn test_checked(&self, index: usize) -> Option<bool> {
-        self.0
-            .get_checked(index)
-            .map(|value| T::eq(value, T::TRUE))
+        self.0.get_checked(index).map(|value| T::eq(value, T::TRUE))
     }
 
     /// Sets the value of the specified element.

@@ -55,7 +55,10 @@ fn check_lane_access<const LANES: usize>() {
     let mut unchanged = vector;
     assert_eq!(unchanged.set_checked(LANES, u32::MAX), None);
     assert_eq!(unchanged.set_checked(usize::MAX, u32::MAX), None);
-    assert_eq!(unchanged, vector, "out-of-bounds set_checked must not mutate");
+    assert_eq!(
+        unchanged, vector,
+        "out-of-bounds set_checked must not mutate"
+    );
 }
 
 test_helpers::test_lanes! {
