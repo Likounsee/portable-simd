@@ -127,6 +127,14 @@ macro_rules! test_mask_api {
                 let mut v = Mask::<$type, 8>::splat(false);
                 v.set(2, true);
                 assert!(v.any());
+
+                // Exercise a full 128-bit vector, including its final byte/lane.
+                const LANES: usize = 16 / core::mem::size_of::<$type>();
+                let mut wide = Mask::<$type, LANES>::splat(false);
+                wide.set(LANES - 1, true);
+                assert!(wide.any());
+                wide.set(LANES - 1, false);
+                assert!(!wide.any());
             }
 
             #[test]
@@ -136,6 +144,14 @@ macro_rules! test_mask_api {
                 let mut v = Mask::<$type, 8>::splat(false);
                 v.set(2, true);
                 assert!(!v.all());
+
+                // Exercise a full 128-bit vector, including its final byte/lane.
+                const LANES: usize = 16 / core::mem::size_of::<$type>();
+                let mut wide = Mask::<$type, LANES>::splat(true);
+                wide.set(LANES - 1, false);
+                assert!(!wide.all());
+                wide.set(LANES - 1, true);
+                assert!(wide.all());
             }
 
             #[test]

@@ -335,6 +335,33 @@ where
     #[inline]
     #[must_use = "method returns a new bool and does not mutate the original value"]
     pub fn any(self) -> bool {
+        // LLVM may scalarize 128-bit NEON mask reductions on 32-bit ARM.
+        // Reduce the bytes pairwise in NEON before extracting one scalar.
+        #[cfg(all(
+            target_arch = "arm",
+            target_endian = "little",
+            target_feature = "neon",
+            target_feature = "v7"
+        ))]
+        if mem::size_of::<Self>() == 16 {
+            // SAFETY: a 128-bit SIMD mask is exactly 16 bytes. Each lane is
+            // either all-zero or all-one, so byte-wise max preserves any().
+            let bytes: core::arch::arm::uint8x16_t =
+                unsafe { mem::transmute_copy(&self.0) };
+            // SAFETY: all values are valid NEON vectors; pairwise max is defined
+            // for every byte pattern.
+            unsafe {
+                let mut reduced = core::arch::arm::vpmax_u8(
+                    core::arch::arm::vget_low_u8(bytes),
+                    core::arch::arm::vget_high_u8(bytes),
+                );
+                reduced = core::arch::arm::vpmax_u8(reduced, reduced);
+                reduced = core::arch::arm::vpmax_u8(reduced, reduced);
+                reduced = core::arch::arm::vpmax_u8(reduced, reduced);
+                return core::arch::arm::vget_lane_u8::<0>(reduced) != 0;
+            }
+        }
+
         // Safety: `self` is a mask vector
         unsafe { core::intrinsics::simd::simd_reduce_any(self.0) }
     }
@@ -343,6 +370,33 @@ where
     #[inline]
     #[must_use = "method returns a new bool and does not mutate the original value"]
     pub fn all(self) -> bool {
+        // LLVM may scalarize 128-bit NEON mask reductions on 32-bit ARM.
+        // Reduce the bytes pairwise in NEON before extracting one scalar.
+        #[cfg(all(
+            target_arch = "arm",
+            target_endian = "little",
+            target_feature = "neon",
+            target_feature = "v7"
+        ))]
+        if mem::size_of::<Self>() == 16 {
+            // SAFETY: a 128-bit SIMD mask is exactly 16 bytes. Each lane is
+            // either all-zero or all-one, so byte-wise min preserves all().
+            let bytes: core::arch::arm::uint8x16_t =
+                unsafe { mem::transmute_copy(&self.0) };
+            // SAFETY: all values are valid NEON vectors; pairwise min is defined
+            // for every byte pattern.
+            unsafe {
+                let mut reduced = core::arch::arm::vpmin_u8(
+                    core::arch::arm::vget_low_u8(bytes),
+                    core::arch::arm::vget_high_u8(bytes),
+                );
+                reduced = core::arch::arm::vpmin_u8(reduced, reduced);
+                reduced = core::arch::arm::vpmin_u8(reduced, reduced);
+                reduced = core::arch::arm::vpmin_u8(reduced, reduced);
+                return core::arch::arm::vget_lane_u8::<0>(reduced) == u8::MAX;
+            }
+        }
+
         // Safety: `self` is a mask vector
         unsafe { core::intrinsics::simd::simd_reduce_all(self.0) }
     }
