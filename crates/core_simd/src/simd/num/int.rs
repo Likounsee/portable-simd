@@ -785,6 +785,14 @@ macro_rules! impl_trait {
 
             #[inline]
             fn wrapping_pow(mut self, mut exp: u32) -> Self {
+                // wasm32 currently miscompiles the scalar-shaped i8x1 multiply
+                // used by exponentiation. Keep this narrow case on scalar ops.
+                if cfg!(target_arch = "wasm32") && N == 1 && <$ty>::BITS == 8 {
+                    return Self::from_array(core::array::from_fn(|lane| {
+                        self.as_array()[lane].wrapping_pow(exp)
+                    }));
+                }
+
                 let mut result = Self::splat(1);
                 while exp != 0 {
                     if exp & 1 != 0 {
@@ -800,6 +808,13 @@ macro_rules! impl_trait {
 
             #[inline]
             fn saturating_pow(mut self, mut exp: u32) -> Self {
+                // Match the wasm32 i8x1 workaround in wrapping_pow.
+                if cfg!(target_arch = "wasm32") && N == 1 && <$ty>::BITS == 8 {
+                    return Self::from_array(core::array::from_fn(|lane| {
+                        self.as_array()[lane].saturating_pow(exp)
+                    }));
+                }
+
                 let mut result = Self::splat(1);
                 while exp != 0 {
                     if exp & 1 != 0 {
@@ -830,6 +845,21 @@ macro_rules! impl_trait {
 
             #[inline]
             fn overflowing_pow(self, exp: u32) -> (Self, Self::Mask) {
+                if cfg!(target_arch = "wasm32") && N == 1 && <$ty>::BITS == 8 {
+                    let mut overflow = [false; N];
+                    let values = Self::from_array(core::array::from_fn(|lane| {
+                        let (value, did_overflow) =
+                            self.as_array()[lane].overflowing_pow(exp);
+                        overflow[lane] = did_overflow;
+                        value
+                    }));
+                    let overflow = Self::from_array(
+                        overflow.map(|did_overflow| did_overflow as $ty),
+                    )
+                    .to_mask();
+                    return (values, overflow);
+                }
+
                 overflowing_pow_impl!($ty, $wide, N, self, exp, $strategy)
             }
 
