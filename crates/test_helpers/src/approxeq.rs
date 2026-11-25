@@ -129,10 +129,15 @@ impl<T: ApproxEq> core::fmt::Debug for ApproxEqWrapper<'_, T> {
 macro_rules! prop_assert_approxeq {
     { $a:expr, $b:expr, $ulps:expr $(,)? } => {
         {
-            use $crate::approxeq::ApproxEqWrapper;
             let a = $a;
             let b = $b;
-            proptest::prop_assert_eq!(ApproxEqWrapper(&a, $ulps), b);
+            let ulps = $ulps;
+            proptest::prop_assert!(
+                $crate::approxeq::ApproxEq::approxeq(&a, &b, ulps),
+                "values are not approximately equal within {ulps} ULPs: left={:?}, right={:?}",
+                a,
+                b
+            );
         }
     };
 }
@@ -171,5 +176,12 @@ mod tests {
     #[test]
     fn negative_ulp_allowance_rejects_unequal_values() {
         assert!(!1.0_f32.approxeq(&1.0_f32.next_up(), -1));
+    }
+
+    #[test]
+    fn arrays_accept_nan_values_with_different_payloads() {
+        let actual = [f32::from_bits(0x7ffd_7364), 1.0];
+        let expected = [f32::NAN, 1.0];
+        assert!(actual.approxeq(&expected, 16));
     }
 }

@@ -241,8 +241,7 @@ fn compress_expand_preserve_lane_63_order_and_fallback() {
     assert_eq!(written, 2);
     assert_eq!(&packed[..written], &[0, 63]);
 
-    let (expanded, consumed) =
-        Simd::<u32, 64>::expand_load(&[123, 456], mask, fallback);
+    let (expanded, consumed) = Simd::<u32, 64>::expand_load(&[123, 456], mask, fallback);
     assert_eq!(consumed, 2);
     let mut expected = [u32::MAX; 64];
     expected[0] = 123;
