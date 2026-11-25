@@ -212,7 +212,7 @@ fn register_compress_and_expand_preserve_fallback_lanes() {
 
 #[test]
 fn compress_expand_handle_full_width_64_lane_masks() {
-    let values = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let values: Simd<u32, 64> = Simd::from_array(core::array::from_fn(|lane| lane as u32));
     let all = Mask::splat(true);
     let fallback = Simd::splat(u32::MAX);
     let mut packed = [u32::MAX; 64];
@@ -231,7 +231,7 @@ fn compress_expand_handle_full_width_64_lane_masks() {
 
 #[test]
 fn compress_expand_preserve_lane_63_order_and_fallback() {
-    let values = Simd::from_array(core::array::from_fn(|lane| lane as u32));
+    let values: Simd<u32, 64> = Simd::from_array(core::array::from_fn(|lane| lane as u32));
     let selected = core::array::from_fn(|lane| lane == 0 || lane == 63);
     let mask = Mask::from_array(selected);
     let fallback = Simd::splat(u32::MAX);
