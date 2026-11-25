@@ -34,3 +34,23 @@ fn pairwise_reductions_single_lane() {
     assert_eq!(values.pairwise_reduce_sum(), 7.0);
     assert_eq!(values.pairwise_reduce_product(), 7.0);
 }
+
+#[test]
+fn pairwise_reductions_odd_lane_counts() {
+    let three = Simd::<f32, 3>::from_array([1.0, 2.0, 3.0]);
+    assert_eq!(three.pairwise_reduce_sum(), 6.0);
+    assert_eq!(three.pairwise_reduce_product(), 6.0);
+
+    let five = Simd::<f32, 5>::from_array([1.0, 2.0, 3.0, 4.0, 5.0]);
+    assert_eq!(five.pairwise_reduce_sum(), 15.0);
+    assert_eq!(five.pairwise_reduce_product(), 120.0);
+}
+
+#[test]
+fn pairwise_sum_uses_the_documented_tree_order() {
+    // Pairwise grouping rounds the two pairs to 1e20 and -1e20, then sums to zero.
+    // A sequential left fold instead produces 1.0.
+    let values = Simd::<f32, 4>::from_array([1.0e20, 1.0, -1.0e20, 1.0]);
+    assert_eq!(values.pairwise_reduce_sum(), 0.0);
+    assert_eq!(values.reduce_sum(), 1.0);
+}
