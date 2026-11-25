@@ -9,7 +9,10 @@ fn signed_narrowing_cast_saturates_at_destination_bounds() {
         .simd_clamp(Simd::splat(i8::MIN as i16), Simd::splat(i8::MAX as i16))
         .cast();
 
-    assert_eq!(narrowed.to_array(), [i8::MIN, i8::MIN, i8::MIN, -1, 0, i8::MAX, i8::MAX, i8::MAX]);
+    assert_eq!(
+        narrowed.to_array(),
+        [i8::MIN, i8::MIN, i8::MIN, -1, 0, i8::MAX, i8::MAX, i8::MAX]
+    );
 }
 
 #[test]
@@ -19,7 +22,10 @@ fn signed_to_unsigned_narrowing_cast_saturates_at_zero_and_maximum() {
         .simd_clamp(Simd::splat(u8::MIN as i16), Simd::splat(u8::MAX as i16))
         .cast();
 
-    assert_eq!(narrowed.to_array(), [0, 0, 0, 1, u8::MAX, u8::MAX, u8::MAX, u8::MAX]);
+    assert_eq!(
+        narrowed.to_array(),
+        [0, 0, 0, 1, u8::MAX, u8::MAX, u8::MAX, u8::MAX]
+    );
 }
 
 #[test]
@@ -29,5 +35,8 @@ fn unsigned_narrowing_cast_saturates_at_destination_maximum() {
         .simd_clamp(Simd::splat(u8::MIN as u16), Simd::splat(u8::MAX as u16))
         .cast();
 
-    assert_eq!(narrowed.to_array(), [0, 1, 254, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX]);
+    assert_eq!(
+        narrowed.to_array(),
+        [0, 1, 254, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX]
+    );
 }

@@ -9,13 +9,11 @@
 pub use super::{
     Mask, Select, Simd, SimdSelect, ToBytes,
     cmp::{SimdOrd, SimdPartialEq, SimdPartialOrd},
-    mask8xN, mask16xN, mask32xN, mask64xN, masksizexN,
+    f16xN, f32xN, f64xN, i8xN, i16xN, i32xN, i64xN, isizexN, mask8xN, mask16xN, mask32xN, mask64xN,
+    masksizexN,
     num::{SimdFloat, SimdInt, SimdUint},
     ptr::{SimdConstPtr, SimdMutPtr},
-    simd_swizzle,
-    f16xN, f32xN, f64xN,
-    i8xN, i16xN, i32xN, i64xN, isizexN,
-    u8xN, u16xN, u32xN, u64xN, usizexN,
+    simd_swizzle, u8xN, u16xN, u32xN, u64xN, usizexN,
 };
 
 #[rustfmt::skip]
