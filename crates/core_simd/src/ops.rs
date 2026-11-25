@@ -249,8 +249,8 @@ for_base_ops! {
     }
 }
 
- // Floating-point bitwise operations act on the raw IEEE-754 representation.
- // This is useful for sign manipulation and bit masks without scalarizing lanes.
+// Floating-point bitwise operations act on the raw IEEE-754 representation.
+// This is useful for sign manipulation and bit masks without scalarizing lanes.
 macro_rules! float_bitwise_ops {
     ($($float:ty),* $(,)?) => {$(
         impl<const N: usize> BitAnd for Simd<$float, N> {
