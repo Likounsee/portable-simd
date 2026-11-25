@@ -192,10 +192,7 @@ fn f16_round_fast_matches_round_ties_even() {
                 actual[lane],
             );
         } else {
-            assert_eq!(
-                actual[lane], expected[lane],
-                "round_fast: lane={lane}",
-            );
+            assert_eq!(actual[lane], expected[lane], "round_fast: lane={lane}",);
         }
     }
 }

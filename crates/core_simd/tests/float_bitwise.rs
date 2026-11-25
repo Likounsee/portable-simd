@@ -1,4 +1,4 @@
-#![feature(portable_simd)]
+#![feature(f16, portable_simd)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
