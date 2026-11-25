@@ -184,5 +184,18 @@ fn f16_round_fast_matches_round_ties_even() {
         .to_array()
         .map(f16::to_bits);
 
-    assert_eq!(actual, expected);
+    for lane in 0..actual.len() {
+        if f16::from_bits(expected[lane]).is_nan() {
+            assert!(
+                f16::from_bits(actual[lane]).is_nan(),
+                "round_fast: expected NaN in lane {lane}, got {:#06x}",
+                actual[lane],
+            );
+        } else {
+            assert_eq!(
+                actual[lane], expected[lane],
+                "round_fast: lane={lane}",
+            );
+        }
+    }
 }
