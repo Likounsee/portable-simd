@@ -7,6 +7,7 @@ Run the example regression tests with:
 ```sh
 cargo test -p core_simd --example dot_product
 cargo test -p core_simd --example mandelbrot
+cargo test -p core_simd --example stencil
 ```
 
 The `mandelbrot` example renders the escape-time fractal four pixels at a time

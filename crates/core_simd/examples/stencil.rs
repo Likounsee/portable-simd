@@ -14,7 +14,9 @@ const LANES: usize = 4;
 pub fn stencil_2d(input: &[f32], width: usize, height: usize) -> Vec<f32> {
     assert_eq!(
         input.len(),
-        width.checked_mul(height).expect("image dimensions overflow"),
+        width
+            .checked_mul(height)
+            .expect("image dimensions overflow"),
         "input length must match image dimensions",
     );
 
@@ -50,6 +52,7 @@ pub fn stencil_2d(input: &[f32], width: usize, height: usize) -> Vec<f32> {
     output
 }
 
+#[cfg(test)]
 fn stencil_2d_scalar(input: &[f32], width: usize, height: usize) -> Vec<f32> {
     let mut output = input.to_vec();
     if width < 3 || height < 3 {
@@ -107,7 +110,10 @@ mod tests {
 
         for row in 0..height {
             assert_eq!(output[row * width], input[row * width]);
-            assert_eq!(output[row * width + width - 1], input[row * width + width - 1]);
+            assert_eq!(
+                output[row * width + width - 1],
+                input[row * width + width - 1]
+            );
         }
         for column in 0..width {
             assert_eq!(output[column], input[column]);
