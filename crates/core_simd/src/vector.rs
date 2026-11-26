@@ -818,9 +818,8 @@ where
         let converted = idxs
             .to_array()
             .map(|index| core::convert::TryInto::<usize>::try_into(index).ok());
-        let in_bounds = Mask::from_array(
-            converted.map(|index| index.is_some_and(|index| index < slice.len())),
-        );
+        let in_bounds =
+            Mask::from_array(converted.map(|index| index.is_some_and(|index| index < slice.len())));
         let safe_indices = Simd::from_array(converted.map(|index| index.unwrap_or(0)));
         Self::gather_select(slice, enable & in_bounds, safe_indices, or)
     }
@@ -862,9 +861,8 @@ where
         let converted = idxs
             .to_array()
             .map(|index| core::convert::TryInto::<usize>::try_into(index).ok());
-        let in_bounds = Mask::from_array(converted.map(|index| {
-            index.is_some_and(|index| index < slice.len())
-        }));
+        let in_bounds =
+            Mask::from_array(converted.map(|index| index.is_some_and(|index| index < slice.len())));
         let safe_indices = Simd::from_array(converted.map(|index| index.unwrap_or(0)));
         Self::gather_select(slice, enable & in_bounds, safe_indices, or)
     }
