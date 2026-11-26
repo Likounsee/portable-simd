@@ -38,3 +38,41 @@ test_helpers::test_lanes! {
 fn runtime_element_rotations_preserve_single_lane_vectors() {
     check_runtime_rotations::<1>();
 }
+
+fn check_static_shuffle_helpers<const LANES: usize>() {
+    let values: [u32; LANES] = core::array::from_fn(|lane| lane as u32 * 3 + 1);
+    let other: [u32; LANES] = core::array::from_fn(|lane| lane as u32 * 5 + 101);
+    let padding = u32::MAX - 7;
+    let vector = Simd::<u32, LANES>::from_array(values);
+    let other_vector = Simd::<u32, LANES>::from_array(other);
+
+    assert_eq!(vector.reverse().to_array(), core::array::from_fn(|lane| values[LANES - lane - 1]));
+    assert_eq!(vector.align_elements::<0>(other_vector).to_array(), values);
+    assert_eq!(vector.align_elements::<LANES>(other_vector).to_array(), other);
+
+    let align_one: [u32; LANES] = core::array::from_fn(|lane| {
+        if lane + 1 < LANES {
+            values[lane + 1]
+        } else {
+            other[0]
+        }
+    });
+    assert_eq!(vector.align_elements::<1>(other_vector).to_array(), align_one);
+
+    let shift_left_one: [u32; LANES] = core::array::from_fn(|lane| {
+        if lane + 1 < LANES { values[lane + 1] } else { padding }
+    });
+    let shift_right_one: [u32; LANES] = core::array::from_fn(|lane| {
+        if lane == 0 { padding } else { values[lane - 1] }
+    });
+    assert_eq!(vector.shift_elements_left::<1>(padding).to_array(), shift_left_one);
+    assert_eq!(vector.shift_elements_right::<1>(padding).to_array(), shift_right_one);
+    assert_eq!(vector.shift_elements_left::<LANES>(padding).to_array(), [padding; LANES]);
+    assert_eq!(vector.shift_elements_right::<LANES>(padding).to_array(), [padding; LANES]);
+}
+
+test_helpers::test_lanes! {
+    fn static_shuffle_helpers_match_array<const LANES: usize>() {
+        check_static_shuffle_helpers::<LANES>();
+    }
+}
