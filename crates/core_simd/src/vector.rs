@@ -731,6 +731,57 @@ where
         Self::gather_select(slice, Mask::splat(true), idxs, or)
     }
 
+    /// Reads from integer indices in `slice`, converting each index to `usize`.
+    ///
+    /// This accepts any SIMD element type that can be fallibly converted to
+    /// `usize` (including signed and unsigned integer widths). Negative values,
+    /// values too large for `usize`, and out-of-bounds indices select the
+    /// corresponding value from `or`.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_index<I>(slice: &[T], idxs: Simd<I, N>, or: Self) -> Self
+    where
+        I: SimdElement + core::convert::TryInto<usize>,
+    {
+        Self::gather_select_index(slice, Mask::splat(true), idxs, or)
+    }
+
+    /// Reads from integer indices in `slice`, using `T::default()` for
+    /// negative, unrepresentable, or out-of-bounds indices.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_default_index<I>(slice: &[T], idxs: Simd<I, N>) -> Self
+    where
+        T: Default,
+        I: SimdElement + core::convert::TryInto<usize>,
+    {
+        Self::gather_or_index(slice, idxs, Self::splat(T::default()))
+    }
+
+    /// Reads from fallibly convertible integer indices in `slice` under a mask.
+    ///
+    /// Disabled lanes, negative indices, values too large for `usize`, and
+    /// out-of-bounds indices select the corresponding value from `or`.
+    #[must_use]
+    #[inline]
+    pub fn gather_select_index<I>(
+        slice: &[T],
+        enable: Mask<isize, N>,
+        idxs: Simd<I, N>,
+        or: Self,
+    ) -> Self
+    where
+        I: SimdElement + core::convert::TryInto<usize>,
+    {
+        let converted = idxs
+            .to_array()
+            .map(|index| core::convert::TryInto::<usize>::try_into(index).ok());
+        let in_bounds =
+            Mask::from_array(converted.map(|index| index.is_some_and(|index| index < slice.len())));
+        let safe_indices = Simd::from_array(converted.map(|index| index.unwrap_or(0)));
+        Self::gather_select(slice, enable & in_bounds, safe_indices, or)
+    }
+
     /// Reads from potentially discontiguous signed 32-bit indices in `slice`.
     ///
     /// Negative indices and indices greater than or equal to `slice.len()` select
