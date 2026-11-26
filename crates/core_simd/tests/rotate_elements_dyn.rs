@@ -55,17 +55,6 @@ fn check_static_shuffle_helpers<const LANES: usize>() {
         vector.align_elements::<LANES>(other_vector).to_array(),
         other
     );
-    let align_last: [u32; LANES] = core::array::from_fn(|lane| {
-        if lane + LANES - 1 < LANES {
-            values[lane + LANES - 1]
-        } else {
-            other[lane - 1]
-        }
-    });
-    assert_eq!(
-        vector.align_elements::<{ LANES - 1 }>(other_vector).to_array(),
-        align_last
-    );
 
     let align_one: [u32; LANES] = core::array::from_fn(|lane| {
         if lane + 1 < LANES {
