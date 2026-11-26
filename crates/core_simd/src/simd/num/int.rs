@@ -636,7 +636,22 @@ macro_rules! overflowing_mul_impl {
 }
 
 macro_rules! overflowing_pow_impl {
-    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, $strategy:ident) => {{
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, scalar) => {{
+        // Keep the scalar fallback semantically identical to the scalar
+        // primitive. Besides avoiding unnecessary intermediate squarings,
+        // this prevents lane-shape-dependent behavior for wide integer vectors.
+        let mut overflow = [false; $lanes];
+        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
+            let (value, did_overflow) = $value.as_array()[lane].overflowing_pow($exp);
+            overflow[lane] = did_overflow;
+            value
+        }));
+        let overflow =
+            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
+                .to_mask();
+        (values, overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $value:ident, $exp:ident, vectorized) => {{
         let mut base = $value;
         let mut result = Simd::<$ty, $lanes>::splat(1);
         let mut overflow = Simd::<$ty, $lanes>::splat(0);
