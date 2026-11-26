@@ -21,6 +21,10 @@ pub fn escape_counts_simd(points_x: [f32; LANES], point_y: f32) -> [u32; LANES] 
     let mut active = Mask::<i32, LANES>::splat(true);
 
     for _ in 0..MAX_ITERATIONS {
+        // Count every iteration entered by a live lane, including the one
+        // which first crosses the escape radius.
+        counts += active.select(u32x4::splat(1), u32x4::splat(0));
+
         let next_zx = zx * zx - zy * zy + x;
         let next_zy = f32x4::splat(2.0) * zx * zy + y;
         let magnitude_squared = next_zx * next_zx + next_zy * next_zy;
@@ -29,7 +33,6 @@ pub fn escape_counts_simd(points_x: [f32; LANES], point_y: f32) -> [u32; LANES] 
 
         zx = active.select(next_zx, zx);
         zy = active.select(next_zy, zy);
-        counts += active.select(u32x4::splat(1), u32x4::splat(0));
     }
 
     // Lanes which never escaped are represented by MAX_ITERATIONS.
@@ -51,10 +54,10 @@ pub fn render(width: usize, height: usize) -> Vec<u8> {
                 -2.0 + 3.0 * column as f32 / width.saturating_sub(1).max(1) as f32
             });
             let counts = escape_counts_simd(xs, y);
-            for lane in 0..LANES {
+            for (lane, count) in counts.iter().copied().enumerate() {
                 let column = start + lane;
                 if column < width {
-                    let shade = 255 - (counts[lane] * 255 / MAX_ITERATIONS) as u8;
+                    let shade = 255 - (count * 255 / MAX_ITERATIONS) as u8;
                     pixels[row * width + column] = shade;
                 }
             }
@@ -112,6 +115,6 @@ mod tests {
         assert_eq!(counts[0], MAX_ITERATIONS);
         assert_eq!(counts[1], MAX_ITERATIONS);
         assert!(counts[2] < MAX_ITERATIONS);
-        assert_eq!(counts[3], 1);
+        assert_eq!(counts[3], 2);
     }
 }
