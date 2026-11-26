@@ -869,6 +869,51 @@ where
         Self::gather_select(slice, enable & in_bounds, safe_indices, or)
     }
 
+    /// Reads from signed 64-bit indices in `slice`.
+    ///
+    /// Negative indices, indices that do not fit in `usize`, and indices
+    /// greater than or equal to `slice.len()` select the corresponding
+    /// value from `or`.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_i64(slice: &[T], idxs: Simd<i64, N>, or: Self) -> Self {
+        Self::gather_select_i64(slice, Mask::splat(true), idxs, or)
+    }
+
+    /// Reads from signed 64-bit indices in `slice`, using `T::default()`
+    /// for negative or out-of-bounds indices.
+    #[must_use]
+    #[inline]
+    pub fn gather_or_default_i64(slice: &[T], idxs: Simd<i64, N>) -> Self
+    where
+        T: Default,
+    {
+        Self::gather_or_i64(slice, idxs, Self::splat(T::default()))
+    }
+
+    /// Reads from signed 64-bit indices in `slice` under a mask.
+    ///
+    /// Disabled lanes, negative indices, indices that do not fit in `usize`,
+    /// and indices greater than or equal to `slice.len()` select the
+    /// corresponding value from `or`.
+    #[must_use]
+    #[inline]
+    pub fn gather_select_i64(
+        slice: &[T],
+        enable: Mask<isize, N>,
+        idxs: Simd<i64, N>,
+        or: Self,
+    ) -> Self {
+        let converted = idxs
+            .to_array()
+            .map(|index| core::convert::TryInto::<usize>::try_into(index).ok());
+        let in_bounds = Mask::from_array(
+            converted.map(|index| index.is_some_and(|index| index < slice.len())),
+        );
+        let safe_indices = Simd::from_array(converted.map(|index| index.unwrap_or(0)));
+        Self::gather_select(slice, enable & in_bounds, safe_indices, or)
+    }
+
     /// Reads from indices in `slice` to construct a SIMD vector.
     /// If an index is out-of-bounds, the element is set to the default given by `T: Default`.
     ///
