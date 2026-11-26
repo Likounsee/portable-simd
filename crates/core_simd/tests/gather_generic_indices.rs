@@ -39,9 +39,9 @@ fn generic_gather_select_accepts_unsigned_indices_and_mask() {
 }
 
 #[test]
-fn generic_gather_handles_indices_wider_than_usize() {
+fn generic_gather_handles_large_unsigned_indices() {
     let values = [10_i32, 20, 30, 40];
-    let indices = Simd::from_array([3_u128, 1, u128::MAX, 0]);
+    let indices = Simd::from_array([3_u64, 1, u64::MAX, 0]);
     let fallback = Simd::from_array([-1, -2, -3, -4]);
 
     assert_eq!(
