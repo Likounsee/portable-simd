@@ -175,3 +175,86 @@ fn non_power_of_two_i8_division_and_remainder_three_lanes() {
 fn non_power_of_two_i8_division_and_remainder_five_lanes() {
     assert_non_power_of_two_i8_division::<5>();
 }
+
+// The raw unchecked APIs are a separate path from div_or/rem_or. Exercise
+// their scalar-lane fallback on the same non-power-of-two shapes, using only
+// divisors for which the unchecked preconditions hold.
+fn assert_unchecked_non_power_of_two_division_i32<const LANES: usize>() {
+    let lhs: [i32; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => i32::MIN,
+        1 => 12,
+        2 => -9,
+        3 => 17,
+        _ => i32::MAX,
+    });
+    let rhs: [i32; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => -2,
+        1 => 3,
+        2 => 3,
+        3 => -5,
+        _ => 7,
+    });
+    let expected_div = core::array::from_fn(|lane| lhs[lane] / rhs[lane]);
+    let expected_rem = core::array::from_fn(|lane| lhs[lane] % rhs[lane]);
+
+    let lhs = Simd::<i32, LANES>::from_array(lhs);
+    let rhs = Simd::<i32, LANES>::from_array(rhs);
+
+    // SAFETY: Every divisor is nonzero and no lane divides MIN by -1.
+    let actual_div = unsafe { lhs.unchecked_div(rhs) };
+    // SAFETY: Every divisor is nonzero and no lane computes MIN % -1.
+    let actual_rem = unsafe { lhs.unchecked_rem(rhs) };
+
+    assert_eq!(actual_div.to_array(), expected_div);
+    assert_eq!(actual_rem.to_array(), expected_rem);
+}
+
+fn assert_unchecked_non_power_of_two_division_i8<const LANES: usize>() {
+    let lhs: [i8; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => i8::MIN,
+        1 => 12,
+        2 => -9,
+        3 => 17,
+        _ => i8::MAX,
+    });
+    let rhs: [i8; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => -2,
+        1 => 3,
+        2 => 3,
+        3 => -5,
+        _ => 7,
+    });
+    let expected_div = core::array::from_fn(|lane| lhs[lane] / rhs[lane]);
+    let expected_rem = core::array::from_fn(|lane| lhs[lane] % rhs[lane]);
+
+    let lhs = Simd::<i8, LANES>::from_array(lhs);
+    let rhs = Simd::<i8, LANES>::from_array(rhs);
+
+    // SAFETY: Every divisor is nonzero and no lane divides MIN by -1.
+    let actual_div = unsafe { lhs.unchecked_div(rhs) };
+    // SAFETY: Every divisor is nonzero and no lane computes MIN % -1.
+    let actual_rem = unsafe { lhs.unchecked_rem(rhs) };
+
+    assert_eq!(actual_div.to_array(), expected_div);
+    assert_eq!(actual_rem.to_array(), expected_rem);
+}
+
+#[test]
+fn unchecked_non_power_of_two_i32_division_and_remainder_three_lanes() {
+    assert_unchecked_non_power_of_two_division_i32::<3>();
+}
+
+#[test]
+fn unchecked_non_power_of_two_i32_division_and_remainder_five_lanes() {
+    assert_unchecked_non_power_of_two_division_i32::<5>();
+}
+
+#[test]
+fn unchecked_non_power_of_two_i8_division_and_remainder_three_lanes() {
+    assert_unchecked_non_power_of_two_division_i8::<3>();
+}
+
+#[test]
+fn unchecked_non_power_of_two_i8_division_and_remainder_five_lanes() {
+    assert_unchecked_non_power_of_two_division_i8::<5>();
+}
