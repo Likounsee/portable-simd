@@ -1,5 +1,6 @@
 #![feature(portable_simd)]
 #![feature(f16)]
+#![feature(cfg_target_has_reliable_f16_f128)]
 #![expect(internal_features)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
