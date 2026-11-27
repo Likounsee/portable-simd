@@ -257,3 +257,58 @@ fn unchecked_non_power_of_two_i8_division_and_remainder_three_lanes() {
 fn unchecked_non_power_of_two_i8_division_and_remainder_five_lanes() {
     assert_unchecked_non_power_of_two_division_i8::<5>();
 }
+
+// Cover the remaining signed integer widths on the same non-power-of-two
+// unchecked scalar-lane fallback. These cases are deliberately valid: the
+// purpose is to keep the AArch64 lowering path exercised without invoking
+// undefined behavior in the unchecked operations.
+macro_rules! unchecked_non_power_of_two_signed_tests {
+    ($module:ident, $ty:ty) => {
+        mod $module {
+            use super::*;
+
+            fn assert_division<const LANES: usize>() {
+                let lhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                    0 => <$ty>::MIN,
+                    1 => 12,
+                    2 => -9,
+                    3 => 17,
+                    _ => <$ty>::MAX,
+                });
+                let rhs: [$ty; LANES] = core::array::from_fn(|lane| match lane % 5 {
+                    0 => -2,
+                    1 => 3,
+                    2 => 3,
+                    3 => -5,
+                    _ => 7,
+                });
+                let expected_div = core::array::from_fn(|lane| lhs[lane] / rhs[lane]);
+                let expected_rem = core::array::from_fn(|lane| lhs[lane] % rhs[lane]);
+                let lhs = Simd::<$ty, LANES>::from_array(lhs);
+                let rhs = Simd::<$ty, LANES>::from_array(rhs);
+
+                // SAFETY: divisors are nonzero and no lane is MIN / -1.
+                let actual_div = unsafe { lhs.unchecked_div(rhs) };
+                // SAFETY: divisors are nonzero and no lane is MIN % -1.
+                let actual_rem = unsafe { lhs.unchecked_rem(rhs) };
+
+                assert_eq!(actual_div.to_array(), expected_div);
+                assert_eq!(actual_rem.to_array(), expected_rem);
+            }
+
+            #[test]
+            fn three_lanes() {
+                assert_division::<3>();
+            }
+
+            #[test]
+            fn five_lanes() {
+                assert_division::<5>();
+            }
+        }
+    };
+}
+
+unchecked_non_power_of_two_signed_tests!(unchecked_i16, i16);
+unchecked_non_power_of_two_signed_tests!(unchecked_i64, i64);
+unchecked_non_power_of_two_signed_tests!(unchecked_isize, isize);
