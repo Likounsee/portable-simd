@@ -1,5 +1,5 @@
 #![feature(portable_simd)]
-#![feature(f16)]
+#![cfg_attr(target_has_reliable_f16_math, feature(f16))]
 #![feature(cfg_target_has_reliable_f16_f128)]
 #![expect(internal_features)]
 
