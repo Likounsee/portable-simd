@@ -1,7 +1,7 @@
 # Portable SIMD issue status
 
 > Audit date: 2026-11-27  
-> Code audited: `Likounsee/portable-simd` on `main`, commit `bcc00e5db03f87fc00c709401d343e4001c3ede4`.  
+> Code audited: `Likounsee/portable-simd` on `main`, commit `b6dfce1522237c73179e7b16e408d3903eec58d9`.  
 > Issue source: open issues in `rust-lang/portable-simd` (91 issues returned by the GitHub issues API, excluding pull requests).  
 >
 > This is a **fork implementation audit**, not a claim that upstream issues have been closed. An upstream issue can remain open while the corresponding implementation already exists here. “Done” means the relevant API/implementation is present in this fork; it does not imply upstream acceptance or a passing CI run for every target.
@@ -146,4 +146,4 @@ Do not implement these as ad-hoc public API changes. Prepare separate proposals 
 - This inventory covers the **91 issues currently open upstream** at audit time, not every historical closed issue in the upstream repository.
 - The GitHub issue state and the fork implementation state are different things; this file records both rather than closing upstream issues.
 - A source-level method or test does not prove good machine code on every target. All **EXTERNAL / INVESTIGATE** items require current CI, compiler reproductions or benchmarks.
-- The last inspected fork commit for this audit was `6d4ab722507c6c39840293c91534a64e02c3e9b8`. Re-audit this file after substantial changes so statuses do not become stale.
+- The audit was refreshed against fork commit `b6dfce1522237c73179e7b16e408d3903eec58d9`. Re-audit this file after substantial changes so statuses do not become stale.

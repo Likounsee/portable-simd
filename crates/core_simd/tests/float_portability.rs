@@ -3,7 +3,7 @@
 use core_simd::simd::{Simd, num::SimdFloat};
 
 macro_rules! float_portability_tests {
-    ($module:ident, $float:ty, $bits:ty, $sign_mask:expr, $exp_mask:expr, $min_normal:expr) => {
+    ($module:ident, $float:ty, $bits:ty, $sign_mask:expr, $exp_mask:expr, $min_normal:expr $(,)?) => {
         mod $module {
             use super::*;
 
@@ -63,14 +63,7 @@ macro_rules! float_portability_tests {
     };
 }
 
-float_portability_tests!(
-    f32_cases,
-    f32,
-    u32,
-    0x8000_0000,
-    0x7f80_0000,
-    0x0080_0000,
-);
+float_portability_tests!(f32_cases, f32, u32, 0x8000_0000, 0x7f80_0000, 0x0080_0000);
 float_portability_tests!(
     f64_cases,
     f64,
