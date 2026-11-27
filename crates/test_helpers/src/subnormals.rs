@@ -56,7 +56,7 @@ pub fn flush<T: FlushSubnormals>(x: T) -> T {
 
 #[cfg(test)]
 mod tests {
-    use super::{FlushSubnormals, flush, flush_in};
+    use super::{flush, flush_in, FlushSubnormals};
 
     const TARGET_FLUSHES_F32_SUBNORMALS: bool = cfg!(any(
         all(target_arch = "arm", target_feature = "neon"),

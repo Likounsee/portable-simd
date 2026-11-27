@@ -91,7 +91,6 @@ unsigned_tests!(u32, u32);
 unsigned_tests!(u64, u64);
 unsigned_tests!(usize, usize);
 
-
 // AArch64 LLVM has historically ICE'd while lowering integer SIMD division and
 // remainder for non-power-of-two lane counts when invalid divisors are present.
 // Keep these concrete shapes in the target test matrix so the safe wrappers
