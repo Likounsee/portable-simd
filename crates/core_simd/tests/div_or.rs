@@ -134,7 +134,6 @@ fn non_power_of_two_division_and_remainder_five_lanes() {
     assert_non_power_of_two_division::<5>();
 }
 
-
 // Keep the narrow signed lane type from the original AArch64 ICE discussion
 // covered as well: the historical report specifically mentioned i8.
 fn assert_non_power_of_two_i8_division<const LANES: usize>() {
