@@ -35,6 +35,10 @@ macro_rules! float_portability_tests {
                         bits.map(|x| x & $sign_mask != 0),
                     );
                     assert_eq!(
+                        values.is_sign_positive().to_array(),
+                        bits.map(|x| x & $sign_mask == 0),
+                    );
+                    assert_eq!(
                         values.abs().to_bits().to_array(),
                         bits.map(|x| x & !$sign_mask),
                     );

@@ -1,7 +1,7 @@
 # Portable SIMD issue status
 
-> Audit date: 2026-11-25  
-> Code audited: `Likounsee/portable-simd` on `main`, commit `769ea832343fdd81a2712f56446b1859b4187534`.  
+> Audit date: 2026-11-27  
+> Code audited: `Likounsee/portable-simd` on `main`, commit `bcc00e5db03f87fc00c709401d343e4001c3ede4`.  
 > Issue source: open issues in `rust-lang/portable-simd` (91 issues returned by the GitHub issues API, excluding pull requests).  
 >
 > This is a **fork implementation audit**, not a claim that upstream issues have been closed. An upstream issue can remain open while the corresponding implementation already exists here. “Done” means the relevant API/implementation is present in this fork; it does not imply upstream acceptance or a passing CI run for every target.
@@ -103,7 +103,7 @@ The clearest already-addressed issue threads are **#537, #505, #481, #475, #479,
 | [#50](https://github.com/rust-lang/portable-simd/issues/50) | Bound const-generic bitmasks | **EXTERNAL** | Depends on const-generic/compiler representation constraints and mask layout. The fork supports lane counts up to 64 but cannot remove the compiler limitation alone. |
 | [#46](https://github.com/rust-lang/portable-simd/issues/46) | Missing compiler intrinsics | **EXTERNAL / PARTIAL** | Many operations have since been added to the compiler and library. The old checklist must be reconciled item-by-item with current rustc intrinsics; do not implement compiler intrinsics in this repository. |
 | [#40](https://github.com/rust-lang/portable-simd/issues/40) | Cranelift backend support | **EXTERNAL** | Requires Cranelift/codegen backend support for SIMD intrinsics. |
-| [#39](https://github.com/rust-lang/portable-simd/issues/39) | Floating-point portability hazards | **PARTIAL** | Added lane-count-generated f32/f64 classification and sign-bit regression tests in `float_portability.rs`, deliberately avoiding arithmetic on NaNs so WebAssembly canonicalization does not create false failures. CI includes ARMv7, thumbv7neon, AArch64 and WASM test targets; MIPS remains unavailable in the current stable matrix, and x87/MIPS-specific behavior plus target-run evidence still need investigation. |
+| [#39](https://github.com/rust-lang/portable-simd/issues/39) | Floating-point portability hazards | **PARTIAL** | Added lane-count-generated f32/f64 classification, positive/negative sign predicates, absolute-value and sign-copy regression tests in `float_portability.rs`, deliberately avoiding arithmetic on NaNs so WebAssembly canonicalization does not create false failures. CI includes ARMv7, thumbv7neon, AArch64 and WASM test targets; MIPS remains unavailable in the current stable matrix, and x87/MIPS-specific behavior plus target-run evidence still need investigation. |
 | [#29](https://github.com/rust-lang/portable-simd/issues/29) | SIMD guide | **PARTIAL** | `beginners-guide.md` exists, but the original checklist includes multiversioning, target features, CPU SIMD vs GPU SIMT and wider-vector architectures. Audit and fill the missing sections. |
 | [#28](https://github.com/rust-lang/portable-simd/issues/28) | AVX-512 support status | **PARTIAL / EXTERNAL** | Source contains AVX-512-specific paths, but this does not establish full AVX-512 coverage or runtime dispatch. Add target-specific CI/codegen coverage where available. |
 | [#26](https://github.com/rust-lang/portable-simd/issues/26) | Safety of simd_insert/simd_extract intrinsics | **EXTERNAL / SAFETY REVIEW** | Intrinsic safety is compiler-level. Review the exact current intrinsic contracts and ensure unsafe call sites document their invariants. |
