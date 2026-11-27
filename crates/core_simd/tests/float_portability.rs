@@ -12,14 +12,18 @@ macro_rules! float_portability_tests {
                     // Exercise IEEE-754 classes without performing arithmetic on NaNs.
                     // This keeps the test meaningful on targets that canonicalize NaNs
                     // during arithmetic (notably WebAssembly).
-                    let bits: [$bits; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                    let bits: [$bits; LANES] = core::array::from_fn(|lane| match lane % 12 {
                         0 => 0,
                         1 => $sign_mask,
                         2 => 1,
                         3 => $sign_mask | 1,
                         4 => $min_normal,
                         5 => $sign_mask | $min_normal,
-                        6 => $exp_mask,
+                        6 => $exp_mask - 1,
+                        7 => $sign_mask | ($exp_mask - 1),
+                        8 => $exp_mask,
+                        9 => $sign_mask | $exp_mask,
+                        10 => $exp_mask | 1,
                         _ => $sign_mask | $exp_mask | 1,
                     });
                     let values = Simd::<$float, LANES>::from_bits(Simd::from_array(bits));
