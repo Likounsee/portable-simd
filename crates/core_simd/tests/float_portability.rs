@@ -1,4 +1,6 @@
 #![feature(portable_simd)]
+#![feature(f16)]
+#![expect(internal_features)]
 
 use core_simd::simd::{Simd, num::SimdFloat};
 
@@ -64,6 +66,9 @@ macro_rules! float_portability_tests {
 }
 
 float_portability_tests!(f32_cases, f32, u32, 0x8000_0000, 0x7f80_0000, 0x0080_0000);
+#[cfg(target_has_reliable_f16_math)]
+float_portability_tests!(f16_cases, f16, u16, 0x8000, 0x7c00, 0x0400);
+
 float_portability_tests!(
     f64_cases,
     f64,
