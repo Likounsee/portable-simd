@@ -60,3 +60,28 @@ fn generic_gather_on_empty_slice_returns_fallback() {
         fallback
     );
 }
+
+#[test]
+fn generic_gather_accepts_pointer_sized_signed_indices_at_extremes() {
+    let values = [10_i32, 20, 30, 40];
+    let indices = Simd::from_array([0_isize, 3, isize::MIN, isize::MAX]);
+    let fallback = Simd::from_array([-1, -2, -3, -4]);
+
+    assert_eq!(
+        Simd::gather_or_index(&values, indices, fallback),
+        Simd::from_array([10, 40, -3, -4])
+    );
+}
+
+#[test]
+fn generic_gather_select_masks_invalid_pointer_sized_indices() {
+    let values = [10_i32, 20, 30, 40];
+    let indices = Simd::from_array([isize::MIN, 1, isize::MAX, 2]);
+    let enable = Mask::from_array([false, true, true, false]);
+    let fallback = Simd::from_array([-1, -2, -3, -4]);
+
+    assert_eq!(
+        Simd::gather_select_index(&values, enable, indices, fallback),
+        Simd::from_array([-1, 20, -3, -4])
+    );
+}
