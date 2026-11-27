@@ -229,8 +229,10 @@ where
 {
     // LoongArch LLVM code generation miscompiles bitwise operations on
     // four-lane byte masks. Rebuild the result from their scalar lane values.
-    let lhs = core::array::from_fn::<_, N, _>(|lane| T::eq(lhs.to_simd().as_array()[lane], T::TRUE));
-    let rhs = core::array::from_fn::<_, N, _>(|lane| T::eq(rhs.to_simd().as_array()[lane], T::TRUE));
+    let lhs =
+        core::array::from_fn::<_, N, _>(|lane| T::eq(lhs.to_simd().as_array()[lane], T::TRUE));
+    let rhs =
+        core::array::from_fn::<_, N, _>(|lane| T::eq(rhs.to_simd().as_array()[lane], T::TRUE));
     let values = core::array::from_fn(|lane| match OP {
         0 => !lhs[lane] && rhs[lane],
         1 => !lhs[lane] || rhs[lane],

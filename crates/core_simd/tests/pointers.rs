@@ -154,6 +154,33 @@ mod const_ptr {
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
         }
 
+        fn cast_and_offset_project_struct_field<const LANES: usize>() {
+            #[repr(C)]
+            struct Record {
+                prefix: u32,
+                value: u64,
+            }
+
+            let records = core::array::from_fn::<_, LANES, _>(|lane| Record {
+                prefix: lane as u32,
+                value: lane as u64 + 100,
+            });
+            let pointers = Simd::<*const Record, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of!(records[lane])),
+            );
+            let fields = pointers
+                .cast::<u8>()
+                .wrapping_add(Simd::splat(core::mem::offset_of!(Record, value)))
+                .cast::<u64>()
+                .to_array();
+
+            // SAFETY: repr(C) gives the field a stable byte offset; each
+            // projected pointer is aligned and points to an initialized field.
+            let actual = unsafe { fields.map(|pointer| *pointer) };
+            let expected = core::array::from_fn(|lane| lane as u64 + 100);
+            assert_eq!(actual, expected);
+        }
+
         fn cast_mut_preserves_provenance_for_writes<const LANES: usize>() {
             let mut storage = [0u32; LANES];
             let base = storage.as_mut_ptr();
@@ -292,6 +319,38 @@ mod mut_ptr {
             );
             let cast = pointers.cast::<u8>();
             assert_eq!(cast.addr().to_array(), pointers.addr().to_array());
+        }
+
+        fn cast_and_offset_project_struct_field_for_writes<const LANES: usize>() {
+            #[repr(C)]
+            struct Record {
+                prefix: u32,
+                value: u64,
+            }
+
+            let mut records = core::array::from_fn::<_, LANES, _>(|lane| Record {
+                prefix: lane as u32,
+                value: 0,
+            });
+            let pointers = Simd::<*mut Record, LANES>::from_array(
+                core::array::from_fn(|lane| core::ptr::addr_of_mut!(records[lane])),
+            );
+            let fields = pointers
+                .cast::<u8>()
+                .wrapping_add(Simd::splat(core::mem::offset_of!(Record, value)))
+                .cast::<u64>()
+                .to_array();
+
+            // SAFETY: each pointer addresses the distinct, properly aligned
+            // value field of one live record.
+            unsafe {
+                for (lane, pointer) in fields.into_iter().enumerate() {
+                    pointer.write(lane as u64 + 200);
+                }
+            }
+            let actual = records.map(|record| record.value);
+            let expected = core::array::from_fn(|lane| lane as u64 + 200);
+            assert_eq!(actual, expected);
         }
 
         fn cast_const_preserves_provenance_for_dereference<const LANES: usize>() {
