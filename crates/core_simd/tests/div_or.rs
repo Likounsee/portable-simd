@@ -90,3 +90,47 @@ unsigned_tests!(u16, u16);
 unsigned_tests!(u32, u32);
 unsigned_tests!(u64, u64);
 unsigned_tests!(usize, usize);
+
+
+// AArch64 LLVM has historically ICE'd while lowering integer SIMD division and
+// remainder for non-power-of-two lane counts when invalid divisors are present.
+// Keep these concrete shapes in the target test matrix so the safe wrappers
+// continue to replace zero and MIN / -1 divisors before reaching the operation.
+fn assert_non_power_of_two_division<const LANES: usize>() {
+    let lhs: [i32; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => i32::MIN,
+        1 => 12,
+        2 => -9,
+        3 => 17,
+        _ => i32::MAX,
+    });
+    let rhs: [i32; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => -1,
+        1 => 0,
+        2 => 3,
+        3 => -5,
+        _ => 7,
+    });
+    let fallback = 123_i32;
+    let expected_div =
+        core::array::from_fn(|lane| lhs[lane].checked_div(rhs[lane]).unwrap_or(fallback));
+    let expected_rem =
+        core::array::from_fn(|lane| lhs[lane].checked_rem(rhs[lane]).unwrap_or(fallback));
+
+    let lhs = Simd::<i32, LANES>::from_array(lhs);
+    let rhs = Simd::<i32, LANES>::from_array(rhs);
+    let fallback = Simd::splat(fallback);
+
+    assert_eq!(lhs.div_or(rhs, fallback).to_array(), expected_div);
+    assert_eq!(lhs.rem_or(rhs, fallback).to_array(), expected_rem);
+}
+
+#[test]
+fn non_power_of_two_division_and_remainder_three_lanes() {
+    assert_non_power_of_two_division::<3>();
+}
+
+#[test]
+fn non_power_of_two_division_and_remainder_five_lanes() {
+    assert_non_power_of_two_division::<5>();
+}
