@@ -56,7 +56,7 @@
 <a href=#56 id=56 data-nosnippet>56</a>
 <a href=#57 id=57 data-nosnippet>57</a><span class="attr">#[cfg(test)]
 <a href=#58 id=58 data-nosnippet>58</a></span><span class="kw">mod </span>tests {
-<a href=#59 id=59 data-nosnippet>59</a>    <span class="kw">use super</span>::{FlushSubnormals, flush, flush_in};
+<a href=#59 id=59 data-nosnippet>59</a>    <span class="kw">use super</span>::{flush, flush_in, FlushSubnormals};
 <a href=#60 id=60 data-nosnippet>60</a>
 <a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">const </span>TARGET_FLUSHES_F32_SUBNORMALS: bool = <span class="macro">cfg!</span>(any(
 <a href=#62 id=62 data-nosnippet>62</a>        all(target_arch = <span class="string">"arm"</span>, target_feature = <span class="string">"neon"</span>),
