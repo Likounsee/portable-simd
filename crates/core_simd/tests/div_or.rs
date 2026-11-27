@@ -134,3 +134,45 @@ fn non_power_of_two_division_and_remainder_three_lanes() {
 fn non_power_of_two_division_and_remainder_five_lanes() {
     assert_non_power_of_two_division::<5>();
 }
+
+
+// Keep the narrow signed lane type from the original AArch64 ICE discussion
+// covered as well: the historical report specifically mentioned i8.
+fn assert_non_power_of_two_i8_division<const LANES: usize>() {
+    let lhs: [i8; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => i8::MIN,
+        1 => 12,
+        2 => -9,
+        3 => 17,
+        _ => i8::MAX,
+    });
+    let rhs: [i8; LANES] = core::array::from_fn(|lane| match lane % 5 {
+        0 => -1,
+        1 => 0,
+        2 => 3,
+        3 => -5,
+        _ => 7,
+    });
+    let fallback = 123_i8;
+    let expected_div =
+        core::array::from_fn(|lane| lhs[lane].checked_div(rhs[lane]).unwrap_or(fallback));
+    let expected_rem =
+        core::array::from_fn(|lane| lhs[lane].checked_rem(rhs[lane]).unwrap_or(fallback));
+
+    let lhs = Simd::<i8, LANES>::from_array(lhs);
+    let rhs = Simd::<i8, LANES>::from_array(rhs);
+    let fallback = Simd::splat(fallback);
+
+    assert_eq!(lhs.div_or(rhs, fallback).to_array(), expected_div);
+    assert_eq!(lhs.rem_or(rhs, fallback).to_array(), expected_rem);
+}
+
+#[test]
+fn non_power_of_two_i8_division_and_remainder_three_lanes() {
+    assert_non_power_of_two_i8_division::<3>();
+}
+
+#[test]
+fn non_power_of_two_i8_division_and_remainder_five_lanes() {
+    assert_non_power_of_two_i8_division::<5>();
+}
