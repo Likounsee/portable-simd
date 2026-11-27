@@ -78,9 +78,8 @@ fn four_lane_unsigned_narrowing_cast_saturates_at_maximum() {
 #[test]
 fn exhaustive_i16_saturating_narrowing_matches_scalar_reference() {
     for base in (i16::MIN as i32..=i16::MAX as i32).step_by(8) {
-        let input = Simd::<i16, 8>::from_array(core::array::from_fn(|lane| {
-            (base + lane as i32) as i16
-        }));
+        let input =
+            Simd::<i16, 8>::from_array(core::array::from_fn(|lane| (base + lane as i32) as i16));
         let values = input.to_array();
 
         let signed: Simd<i8, 8> = input
@@ -101,9 +100,8 @@ fn exhaustive_i16_saturating_narrowing_matches_scalar_reference() {
 #[test]
 fn exhaustive_u16_saturating_narrowing_matches_scalar_reference() {
     for base in (0_u32..=u16::MAX as u32).step_by(8) {
-        let input = Simd::<u16, 8>::from_array(core::array::from_fn(|lane| {
-            (base + lane as u32) as u16
-        }));
+        let input =
+            Simd::<u16, 8>::from_array(core::array::from_fn(|lane| (base + lane as u32) as u16));
         let values = input.to_array();
 
         let narrowed: Simd<u8, 8> = input
