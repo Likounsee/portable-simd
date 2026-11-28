@@ -483,31 +483,18 @@ macro_rules! overflowing_add_sub_impl {
             .to_mask();
         (result.cast(), overflow)
     }};
+    // The scalar strategy is used for i64/isize, where no wider SIMD lane
+    // type is available. Detect signed overflow from the wrapped vector result
+    // instead of scalarizing every lane.
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, add, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) =
-                $lhs.as_array()[lane].overflowing_add($rhs.as_array()[lane]);
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        let result = $lhs + $rhs;
+        let overflow = (($lhs ^ result) & ($rhs ^ result)).simd_lt(Simd::splat(0));
+        (result, overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, sub, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) =
-                $lhs.as_array()[lane].overflowing_sub($rhs.as_array()[lane]);
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        let result = $lhs - $rhs;
+        let overflow = (($lhs ^ $rhs) & ($lhs ^ result)).simd_lt(Simd::splat(0));
+        (result, overflow)
     }};
 }
 
@@ -535,28 +522,16 @@ macro_rules! overflowing_neg_abs_impl {
         (result.cast(), overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $value:ident, neg, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) = $value.as_array()[lane].overflowing_neg();
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        let overflow = $value.simd_eq(Simd::splat(<$ty>::MIN));
+        let result = Simd::<$ty, $lanes>::splat(0) - $value;
+        (result, overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $value:ident, abs, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) = $value.as_array()[lane].overflowing_abs();
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        let overflow = $value.simd_eq(Simd::splat(<$ty>::MIN));
+        let result = $value
+            .simd_lt(Simd::splat(0))
+            .select(Simd::<$ty, $lanes>::splat(0) - $value, $value);
+        (result, overflow)
     }};
 }
 
@@ -718,26 +693,23 @@ macro_rules! impl_trait {
 
             #[inline]
             unsafe fn unchecked_add(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane addition is representable.
-                    unsafe { self.as_array()[lane].unchecked_add(second.as_array()[lane]) }
-                }))
+                // The safety precondition excludes overflow, so the wrapping SIMD
+                // addition has the same result and lets LLVM keep the operation vectorized.
+                self + second
             }
 
             #[inline]
             unsafe fn unchecked_sub(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane subtraction is representable.
-                    unsafe { self.as_array()[lane].unchecked_sub(second.as_array()[lane]) }
-                }))
+                // The safety precondition excludes overflow, so the wrapping SIMD
+                // subtraction has the same result and lets LLVM keep the operation vectorized.
+                self - second
             }
 
             #[inline]
             unsafe fn unchecked_mul(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane product is representable.
-                    unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
-                }))
+                // The safety precondition excludes overflow, so the wrapping SIMD
+                // multiplication has the same result and lets LLVM keep the operation vectorized.
+                self * second
             }
 
             #[inline]

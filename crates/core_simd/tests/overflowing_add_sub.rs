@@ -9,17 +9,25 @@ macro_rules! signed_tests {
             use super::*;
             test_helpers::test_lanes! {
                 fn overflowing_add_sub_matches_scalar<const LANES: usize>() {
-                    let lhs: [$ty; LANES] = core::array::from_fn(|i| match i % 4 {
+                    let lhs: [$ty; LANES] = core::array::from_fn(|i| match i % 8 {
                         0 => <$ty>::MAX,
                         1 => <$ty>::MIN,
                         2 => <$ty>::MAX / 2,
-                        _ => -1,
+                        3 => -1,
+                        4 => <$ty>::MAX,
+                        5 => <$ty>::MIN,
+                        6 => 1,
+                        _ => <$ty>::MIN,
                     });
-                    let rhs: [$ty; LANES] = core::array::from_fn(|i| match i % 4 {
+                    let rhs: [$ty; LANES] = core::array::from_fn(|i| match i % 8 {
                         0 => 1,
                         1 => -1,
                         2 => <$ty>::MAX / 2,
-                        _ => <$ty>::MIN,
+                        3 => <$ty>::MIN,
+                        4 => -1,
+                        5 => 1,
+                        6 => <$ty>::MIN,
+                        _ => -1,
                     });
                     let (add, add_mask) = Simd::<$ty, LANES>::from_array(lhs)
                         .overflowing_add(Simd::from_array(rhs));
