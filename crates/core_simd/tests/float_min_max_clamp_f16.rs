@@ -92,4 +92,55 @@ mod tests {
         assert_eq!(left.simd_min(right).to_array(), [0.0_f16; 4]);
         assert_eq!(left.simd_max(right).to_array(), [0.0_f16; 4]);
     }
+    test_helpers::test_lanes! {
+        fn f16_min_max_and_clamp_cover_supported_lane_counts<const LANES: usize>() {
+            let left_array: [f16; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                0 => f16::from_bits(0x7e11),
+                1 => -0.0,
+                2 => f16::NEG_INFINITY,
+                3 => -3.0,
+                4 => 0.5,
+                5 => 3.0,
+                6 => f16::INFINITY,
+                _ => f16::from_bits(0xfe22),
+            });
+            let right_array: [f16; LANES] = core::array::from_fn(|lane| match lane % 8 {
+                0 => 1.0,
+                1 => 0.0,
+                2 => -1.0,
+                3 => f16::NAN,
+                4 => -0.5,
+                5 => 2.0,
+                6 => f16::NEG_INFINITY,
+                _ => f16::from_bits(0x7e33),
+            });
+            let left = Simd::from_array(left_array);
+            let right = Simd::from_array(right_array);
+            let actual_min = left.simd_min(right).to_bits().to_array();
+            let actual_max = left.simd_max(right).to_bits().to_array();
+            let expected_min = core::array::from_fn(|lane| {
+                left_array[lane].min(right_array[lane]).to_bits()
+            });
+            let expected_max = core::array::from_fn(|lane| {
+                left_array[lane].max(right_array[lane]).to_bits()
+            });
+            assert_eq!(actual_min, expected_min, "f16 min, lanes={LANES}");
+            assert_eq!(actual_max, expected_max, "f16 max, lanes={LANES}");
+
+            let values: [f16; LANES] = core::array::from_fn(|lane| left_array[lane]);
+            let lower: [f16; LANES] =
+                core::array::from_fn(|lane| if lane % 2 == 0 { -2.0 } else { -1.0 });
+            let upper: [f16; LANES] =
+                core::array::from_fn(|lane| if lane % 2 == 0 { 2.0 } else { 1.0 });
+            let actual = Simd::from_array(values)
+                .simd_clamp(Simd::from_array(lower), Simd::from_array(upper))
+                .to_bits()
+                .to_array();
+            let expected = core::array::from_fn(|lane| {
+                values[lane].clamp(lower[lane], upper[lane]).to_bits()
+            });
+            assert_eq!(actual, expected, "f16 clamp, lanes={LANES}");
+        }
+    }
+
 }
