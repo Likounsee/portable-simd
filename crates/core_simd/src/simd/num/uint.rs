@@ -523,26 +523,23 @@ macro_rules! impl_trait {
 
             #[inline]
             unsafe fn unchecked_add(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane addition is representable.
-                    unsafe { self.as_array()[lane].unchecked_add(second.as_array()[lane]) }
-                }))
+                // The safety precondition guarantees that wrapping SIMD addition
+                // is identical to the mathematical lane-wise sum.
+                self + second
             }
 
             #[inline]
             unsafe fn unchecked_sub(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane subtraction cannot underflow.
-                    unsafe { self.as_array()[lane].unchecked_sub(second.as_array()[lane]) }
-                }))
+                // The safety precondition guarantees that wrapping SIMD subtraction
+                // is identical to the mathematical lane-wise difference.
+                self - second
             }
 
             #[inline]
             unsafe fn unchecked_mul(self, second: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: The caller guarantees that every lane product is representable.
-                    unsafe { self.as_array()[lane].unchecked_mul(second.as_array()[lane]) }
-                }))
+                // The safety precondition guarantees that wrapping SIMD multiplication
+                // is identical to the mathematical lane-wise product.
+                self * second
             }
 
             #[inline]
