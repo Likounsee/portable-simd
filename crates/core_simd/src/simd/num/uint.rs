@@ -360,6 +360,16 @@ macro_rules! overflowing_add_sub_impl {
         let result = $lhs - $rhs;
         (result, overflow)
     }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, add, wide64) => {{
+        let result = $lhs + $rhs;
+        let overflow = result.simd_lt($lhs);
+        (result, overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, sub, wide64) => {{
+        let overflow = $lhs.simd_lt($rhs);
+        let result = $lhs - $rhs;
+        (result, overflow)
+    }};
 }
 
 macro_rules! rotate_impl {
@@ -371,6 +381,13 @@ macro_rules! rotate_impl {
         left | right
     }};
     ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let left = $value << Simd::<$ty, $lanes>::splat(shift as $ty);
+        let right_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let right = $value >> Simd::<$ty, $lanes>::splat(right_shift as $ty);
+        left | right
+    }};
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, wide64) => {{
         let shift = $rhs & (<$ty>::BITS - 1);
         let left = $value << Simd::<$ty, $lanes>::splat(shift as $ty);
         let right_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
@@ -394,6 +411,13 @@ macro_rules! rotate_right_impl {
         let left = $value << Simd::<$ty, $lanes>::splat(left_shift as $ty);
         left | right
     }};
+    ($ty:ty, $lanes:ident, $value:ident, $rhs:ident, wide64) => {{
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let right = $value >> Simd::<$ty, $lanes>::splat(shift as $ty);
+        let left_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let left = $value << Simd::<$ty, $lanes>::splat(left_shift as $ty);
+        left | right
+    }};
 }
 
 macro_rules! mul_high_impl {
@@ -408,6 +432,29 @@ macro_rules! mul_high_impl {
                 ($lhs.as_array()[lane] as $wide).wrapping_mul($rhs.as_array()[lane] as $wide);
             (product >> <$ty>::BITS) as $ty
         }))
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, wide64) => {{
+        // Split each u64 into 32-bit limbs. Every partial product fits in u64;
+        // the carry from the three middle limbs completes the high half.
+        let mask = Simd::<$ty, $lanes>::splat(0xffff_ffff);
+        let shift = Simd::<$ty, $lanes>::splat(32);
+        let lhs_low = $lhs & mask;
+        let lhs_high = $lhs >> shift;
+        let rhs_low = $rhs & mask;
+        let rhs_high = $rhs >> shift;
+
+        let low_product = lhs_low * rhs_low;
+        let cross_left = lhs_low * rhs_high;
+        let cross_right = lhs_high * rhs_low;
+        let high_product = lhs_high * rhs_high;
+
+        let middle = (low_product >> shift)
+            + (cross_left & mask)
+            + (cross_right & mask);
+        high_product
+            + (cross_left >> shift)
+            + (cross_right >> shift)
+            + (middle >> shift)
     }};
 }
 
@@ -435,6 +482,11 @@ macro_rules! overflowing_mul_impl {
             Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
                 .to_mask();
         (values, overflow)
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, wide64) => {{
+        let low = $lhs * $rhs;
+        let high = mul_high_impl!($ty, $wide, $lanes, $lhs, $rhs, wide64);
+        (low, high.simd_ne(Simd::splat(0)))
     }};
 }
 
@@ -480,6 +532,12 @@ macro_rules! saturating_mul_impl {
         Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
             $lhs.as_array()[lane].saturating_mul($rhs.as_array()[lane])
         }))
+    }};
+    ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, wide64) => {{
+        let low = $lhs * $rhs;
+        let high = mul_high_impl!($ty, $wide, $lanes, $lhs, $rhs, wide64);
+        high.simd_ne(Simd::splat(0))
+            .select(Simd::splat(<$ty>::MAX), low)
     }};
 }
 
@@ -930,4 +988,4 @@ macro_rules! impl_trait {
     }
 }
 
-impl_trait! { u8 (i8, u16, vectorized), u16 (i16, u32, vectorized), u32 (i32, u64, vectorized), u64 (i64, u128, scalar), usize (isize, u128, scalar) }
+impl_trait! { u8 (i8, u16, vectorized), u16 (i16, u32, vectorized), u32 (i32, u64, vectorized), u64 (i64, u128, wide64), usize (isize, u128, scalar) }

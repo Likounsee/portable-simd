@@ -89,8 +89,20 @@ mod tests {
     fn simd_min_and_max_allow_either_signed_zero_for_f16() {
         let left = Simd::from_array([-0.0_f16, 0.0, -0.0, 0.0]);
         let right = Simd::from_array([0.0_f16, -0.0, -0.0, 0.0]);
-        assert_eq!(left.simd_min(right).to_array(), [0.0_f16; 4]);
-        assert_eq!(left.simd_max(right).to_array(), [0.0_f16; 4]);
+        for result in [
+            left.simd_min(right).to_bits().to_array(),
+            left.simd_max(right).to_bits().to_array(),
+        ] {
+            assert!(result.into_iter().all(|bits| bits & 0x7fff == 0));
+        }
+    }
+
+    #[test]
+    fn simd_min_and_max_keep_both_nan_lanes_nan_for_f16() {
+        let left = Simd::from_array([f16::from_bits(0x7e11); 4]);
+        let right = Simd::from_array([f16::from_bits(0xfe22); 4]);
+        assert!(left.simd_min(right).to_array().into_iter().all(f16::is_nan));
+        assert!(left.simd_max(right).to_array().into_iter().all(f16::is_nan));
     }
     test_helpers::test_lanes! {
         fn f16_min_max_and_clamp_cover_supported_lane_counts<const LANES: usize>() {

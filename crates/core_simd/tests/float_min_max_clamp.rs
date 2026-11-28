@@ -154,11 +154,34 @@ fn simd_clamp_matches_scalar_behavior_for_f64() {
 fn simd_min_and_max_allow_either_signed_zero_for_f32_and_f64() {
     let f32_left = Simd::from_array([-0.0_f32, 0.0, -0.0, 0.0]);
     let f32_right = Simd::from_array([0.0_f32, -0.0, -0.0, 0.0]);
-    assert_eq!(f32_left.simd_min(f32_right).to_array(), [0.0; 4]);
-    assert_eq!(f32_left.simd_max(f32_right).to_array(), [0.0; 4]);
+    for result in [
+        f32_left.simd_min(f32_right).to_bits().to_array(),
+        f32_left.simd_max(f32_right).to_bits().to_array(),
+    ] {
+        assert!(result.into_iter().all(|bits| bits & 0x7fff_ffff == 0));
+    }
 
     let f64_left = Simd::from_array([-0.0_f64, 0.0, -0.0, 0.0]);
     let f64_right = Simd::from_array([0.0_f64, -0.0, -0.0, 0.0]);
-    assert_eq!(f64_left.simd_min(f64_right).to_array(), [0.0; 4]);
-    assert_eq!(f64_left.simd_max(f64_right).to_array(), [0.0; 4]);
+    for result in [
+        f64_left.simd_min(f64_right).to_bits().to_array(),
+        f64_left.simd_max(f64_right).to_bits().to_array(),
+    ] {
+        assert!(result
+            .into_iter()
+            .all(|bits| bits & 0x7fff_ffff_ffff_ffff == 0));
+    }
+}
+
+#[test]
+fn simd_min_and_max_keep_both_nan_lanes_nan() {
+    let f32_left = Simd::from_array([f32::from_bits(0x7fc1_2345); 4]);
+    let f32_right = Simd::from_array([f32::from_bits(0xffc5_4321); 4]);
+    assert!(f32_left.simd_min(f32_right).to_array().into_iter().all(f32::is_nan));
+    assert!(f32_left.simd_max(f32_right).to_array().into_iter().all(f32::is_nan));
+
+    let f64_left = Simd::from_array([f64::from_bits(0x7ff8_1234_5678_9abc); 4]);
+    let f64_right = Simd::from_array([f64::from_bits(0xfff8_4321_8765_cba9); 4]);
+    assert!(f64_left.simd_min(f64_right).to_array().into_iter().all(f64::is_nan));
+    assert!(f64_left.simd_max(f64_right).to_array().into_iter().all(f64::is_nan));
 }

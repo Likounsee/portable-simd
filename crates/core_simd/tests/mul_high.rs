@@ -115,3 +115,36 @@ fn u8_mul_high_exhaustively_matches_full_width_product() {
         }
     }
 }
+
+// The u64 implementation uses a 32-bit-limb decomposition rather than a
+// scalar lane loop. Compare it against a u128 reference for random bit patterns.
+mod u64_randomized {
+    use super::*;
+
+    test_helpers::test_lanes! {
+        fn randomized_u64_mul_high_matches_u128<const LANES: usize>() {
+            let mut lhs_state = 0x9e37_79b9_7f4a_7c15_u64;
+            let mut rhs_state = 0xd1b5_4a32_d192_ed03_u64;
+            let lhs: [u64; LANES] = core::array::from_fn(|_| {
+                lhs_state = lhs_state
+                    .wrapping_mul(6_364_136_223_846_793_005)
+                    .wrapping_add(1_442_695_040_888_963_407);
+                lhs_state
+            });
+            let rhs: [u64; LANES] = core::array::from_fn(|_| {
+                rhs_state = rhs_state
+                    .wrapping_mul(2_862_933_555_777_941_757)
+                    .wrapping_add(3_037_000_493);
+                rhs_state
+            });
+
+            let actual = Simd::<u64, LANES>::from_array(lhs)
+                .mul_high(Simd::from_array(rhs))
+                .to_array();
+            let expected: [u64; LANES] = core::array::from_fn(|lane| {
+                (((lhs[lane] as u128) * (rhs[lane] as u128)) >> 64) as u64
+            });
+            assert_eq!(actual, expected);
+        }
+    }
+}
