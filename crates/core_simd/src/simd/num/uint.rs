@@ -777,7 +777,8 @@ macro_rules! impl_trait {
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self << shift;
                 // Rebuild the mask using the destination integer lane type.
-                let overflow = Mask::<$ty, N>::from_array(overflow_mask.to_array());
+                let overflow: <Self as SimdPartialEq>::Mask =
+                    Mask::from_array(overflow_mask.to_array());
                 (values, overflow)
             }
 
@@ -793,7 +794,8 @@ macro_rules! impl_trait {
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self >> shift;
                 // Rebuild the mask using the destination integer lane type.
-                let overflow = Mask::<$ty, N>::from_array(overflow_mask.to_array());
+                let overflow: <Self as SimdPartialEq>::Mask =
+                    Mask::from_array(overflow_mask.to_array());
                 (values, overflow)
             }
 
