@@ -448,13 +448,8 @@ macro_rules! mul_high_impl {
         let cross_right = lhs_high * rhs_low;
         let high_product = lhs_high * rhs_high;
 
-        let middle = (low_product >> shift)
-            + (cross_left & mask)
-            + (cross_right & mask);
-        high_product
-            + (cross_left >> shift)
-            + (cross_right >> shift)
-            + (middle >> shift)
+        let middle = (low_product >> shift) + (cross_left & mask) + (cross_right & mask);
+        high_product + (cross_left >> shift) + (cross_right >> shift) + (middle >> shift)
     }};
 }
 
