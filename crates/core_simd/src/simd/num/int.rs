@@ -545,9 +545,12 @@ macro_rules! rotate_impl {
         (left | right).cast()
     }};
     ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
-        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            $value.as_array()[lane].rotate_left($rhs)
-        }))
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let value: Simd<$unsigned, $lanes> = $value.cast();
+        let left = value << Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
+        let right_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let right = value >> Simd::<$unsigned, $lanes>::splat(right_shift as $unsigned);
+        (left | right).cast()
     }};
 }
 
@@ -561,9 +564,12 @@ macro_rules! rotate_right_impl {
         (left | right).cast()
     }};
     ($ty:ty, $unsigned:ty, $lanes:ident, $value:ident, $rhs:ident, scalar) => {{
-        Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            $value.as_array()[lane].rotate_right($rhs)
-        }))
+        let shift = $rhs & (<$ty>::BITS - 1);
+        let value: Simd<$unsigned, $lanes> = $value.cast();
+        let right = value >> Simd::<$unsigned, $lanes>::splat(shift as $unsigned);
+        let left_shift = (<$ty>::BITS - shift) & (<$ty>::BITS - 1);
+        let left = value << Simd::<$unsigned, $lanes>::splat(left_shift as $unsigned);
+        (left | right).cast()
     }};
 }
 
@@ -730,18 +736,20 @@ macro_rules! impl_trait {
 
             #[inline]
             unsafe fn unchecked_shl(self, rhs: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: After conversion to u32, the caller guarantees the shift amount is less than the lane width.
-                    unsafe { self.as_array()[lane].unchecked_shl(rhs.as_array()[lane] as u32) }
-                }))
+                // Preserve scalar `as u32` shift-count semantics before using
+                // the vector shift. The safety contract guarantees every converted
+                // count is in range, so no lane can produce an invalid shift.
+                let shift = rhs.cast::<u32>().cast::<$ty>();
+                self << shift
             }
 
             #[inline]
             unsafe fn unchecked_shr(self, rhs: Self) -> Self {
-                Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    // SAFETY: After conversion to u32, the caller guarantees the shift amount is less than the lane width.
-                    unsafe { self.as_array()[lane].unchecked_shr(rhs.as_array()[lane] as u32) }
-                }))
+                // Preserve scalar `as u32` shift-count semantics before using
+                // the vector shift. The safety contract guarantees every converted
+                // count is in range, so no lane can produce an invalid shift.
+                let shift = rhs.cast::<u32>().cast::<$ty>();
+                self >> shift
             }
 
             #[inline]
@@ -958,33 +966,31 @@ macro_rules! impl_trait {
 
             #[inline]
             fn overflowing_shl(self, rhs: Self) -> (Self, Self::Mask) {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) =
-                        self.as_array()[lane].overflowing_shl(rhs.as_array()[lane] as u32);
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
+                // Scalar overflowing_shl first converts each count to u32, then
+                // masks it for the result and reports whether it exceeded the lane width.
+                let count = rhs.cast::<u32>();
+                let overflow_mask = count.simd_ge(Simd::splat(<$ty>::BITS));
+                let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
+                let values = self << shift;
+                let overflow = overflow_mask
+                    .select(Simd::<u32, N>::splat(1), Simd::splat(0))
+                    .cast::<$ty>()
+                    .to_mask();
                 (values, overflow)
             }
 
             #[inline]
             fn overflowing_shr(self, rhs: Self) -> (Self, Self::Mask) {
-                let mut overflow = [false; N];
-                let values = Simd::<$ty, N>::from_array(core::array::from_fn(|lane| {
-                    let (value, did_overflow) =
-                        self.as_array()[lane].overflowing_shr(rhs.as_array()[lane] as u32);
-                    overflow[lane] = did_overflow;
-                    value
-                }));
-                let overflow = Simd::<$ty, N>::from_array(
-                    overflow.map(|did_overflow| did_overflow as $ty),
-                )
-                .to_mask();
+                // Scalar overflowing_shr first converts each count to u32, then
+                // masks it for the result and reports whether it exceeded the lane width.
+                let count = rhs.cast::<u32>();
+                let overflow_mask = count.simd_ge(Simd::splat(<$ty>::BITS));
+                let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
+                let values = self >> shift;
+                let overflow = overflow_mask
+                    .select(Simd::<u32, N>::splat(1), Simd::splat(0))
+                    .cast::<$ty>()
+                    .to_mask();
                 (values, overflow)
             }
 
