@@ -1,0 +1,60 @@
+#![feature(portable_simd)]
+
+use core_simd::simd::{Mask, Simd};
+
+#[test]
+fn generic_scatter_accepts_narrow_signed_indices() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([3_i8, -1, 0, i8::MAX]);
+    Simd::from_array([10, 20, 30, 40]).scatter_index(&mut values, indices);
+    assert_eq!(values, [30, 0, 0, 10]);
+}
+
+#[test]
+fn generic_scatter_select_accepts_unsigned_indices_and_mask() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([2_u16, 1, u16::MAX, 3]);
+    let enable = Mask::from_array([true, false, true, true]);
+    Simd::from_array([10, 20, 30, 40]).scatter_select_index(&mut values, enable, indices);
+    assert_eq!(values, [0, 0, 10, 40]);
+}
+
+#[test]
+fn generic_scatter_ignores_large_and_unrepresentable_indices() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([3_u64, 1, u64::MAX, 0]);
+    Simd::from_array([10, 20, 30, 40]).scatter_index(&mut values, indices);
+    assert_eq!(values, [40, 20, 0, 10]);
+}
+
+#[test]
+fn generic_scatter_handles_pointer_sized_signed_extremes() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([0_isize, 3, isize::MIN, isize::MAX]);
+    Simd::from_array([10, 20, 30, 40]).scatter_index(&mut values, indices);
+    assert_eq!(values, [10, 0, 0, 20]);
+}
+
+#[test]
+fn generic_scatter_select_masks_invalid_pointer_sized_indices() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([isize::MIN, 1, isize::MAX, 2]);
+    let enable = Mask::from_array([false, true, true, false]);
+    Simd::from_array([10, 20, 30, 40]).scatter_select_index(&mut values, enable, indices);
+    assert_eq!(values, [0, 20, 0, 0]);
+}
+
+#[test]
+fn generic_scatter_on_empty_slice_is_a_noop() {
+    let indices = Simd::from_array([0_i16, -1, 1, i16::MAX]);
+    Simd::from_array([10_i32, 20, 30, 40]).scatter_index(&mut [], indices);
+}
+
+#[test]
+fn generic_scatter_duplicate_indices_follow_existing_scatter_contract() {
+    let mut values = [0_i32; 4];
+    let indices = Simd::from_array([1_i16, 1, 2, 3]);
+    Simd::from_array([10, 20, 30, 40]).scatter_index(&mut values, indices);
+    assert!(values[1] == 10 || values[1] == 20);
+    assert_eq!(values[2..], [30, 40]);
+}

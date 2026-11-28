@@ -1321,6 +1321,46 @@ where
         self.scatter_select(slice, Mask::splat(true), idxs)
     }
 
+    /// Writes values using fallibly convertible integer indices.
+    ///
+    /// Negative signed indices, indices that cannot be represented as usize, and
+    /// out-of-bounds indices are ignored. If enabled lanes contain duplicate indices,
+    /// only the last element is guaranteed to be written.
+    ///
+    /// This is the scatter counterpart to gather_or_index.
+    #[inline]
+    pub fn scatter_index<I>(self, slice: &mut [T], idxs: Simd<I, N>)
+    where
+        I: SimdElement + core::convert::TryInto<usize>,
+    {
+        self.scatter_select_index(slice, Mask::splat(true), idxs);
+    }
+
+    /// Conditionally writes values using fallibly convertible integer indices.
+    ///
+    /// Disabled lanes, negative signed indices, indices that cannot be represented
+    /// as usize, and out-of-bounds indices are ignored. If enabled lanes contain
+    /// duplicate indices, only the last element is guaranteed to be written.
+    ///
+    /// This is the masked scatter counterpart to gather_select_index.
+    #[inline]
+    pub fn scatter_select_index<I>(
+        self,
+        slice: &mut [T],
+        enable: Mask<isize, N>,
+        idxs: Simd<I, N>,
+    )
+    where
+        I: SimdElement + core::convert::TryInto<usize>,
+    {
+        let converted = idxs
+            .to_array()
+            .map(|index| core::convert::TryInto::<usize>::try_into(index).ok());
+        let convertible = Mask::from_array(converted.map(|index| index.is_some()));
+        let safe_indices = Simd::from_array(converted.map(|index| index.unwrap_or(0)));
+        self.scatter_select(slice, enable & convertible, safe_indices);
+    }
+
     /// Writes values from a SIMD vector to multiple potentially discontiguous indices in `slice`.
     /// The mask `enable`s all `true` indices and disables all `false` indices.
     /// If an enabled index is out-of-bounds, the write is suppressed without panicking.
