@@ -972,8 +972,8 @@ macro_rules! impl_trait {
                 let overflow_mask = count.simd_ge(Simd::splat(<$ty>::BITS));
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self << shift;
-                // Convert the comparison mask to this integer vector's mask lane type.
-                let overflow = overflow_mask.into();
+                // Rebuild the mask using the destination integer lane type.
+                let overflow = Mask::<$ty, N>::from_array(overflow_mask.to_array());
                 (values, overflow)
             }
 
@@ -985,8 +985,8 @@ macro_rules! impl_trait {
                 let overflow_mask = count.simd_ge(Simd::splat(<$ty>::BITS));
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self >> shift;
-                // Convert the comparison mask to this integer vector's mask lane type.
-                let overflow = overflow_mask.into();
+                // Rebuild the mask using the destination integer lane type.
+                let overflow = Mask::<$ty, N>::from_array(overflow_mask.to_array());
                 (values, overflow)
             }
 
