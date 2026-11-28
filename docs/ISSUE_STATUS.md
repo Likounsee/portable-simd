@@ -1,7 +1,7 @@
 # Portable SIMD issue status
 
-> Audit date: 2026-11-27  
-> Code audited: `Likounsee/portable-simd` on `main`, commit `6615469f3537b1d78f763510ea7de657a9e3ab2a`.  
+> Audit date: 2026-11-28  
+> Code audited: `Likounsee/portable-simd` on `main`.  
 > Issue source: open issues in `rust-lang/portable-simd` (91 issues returned by the GitHub issues API, excluding pull requests).  
 >
 > This is a **fork implementation audit**, not a claim that upstream issues have been closed. An upstream issue can remain open while the corresponding implementation already exists here. “Done” means the relevant API/implementation is present in this fork; it does not imply upstream acceptance or a passing CI run for every target.
@@ -71,7 +71,7 @@ The clearest already-addressed issue threads are **#537, #505, #481, #475, #479,
 | [#275](https://github.com/rust-lang/portable-simd/issues/275) | Range-check operations | **DONE — in fork** | Range helpers/operations are present in the vector API and `vector_range.rs` covers the behavior. Recheck naming against upstream request before treating every proposed convenience variant as covered. |
 | [#264](https://github.com/rust-lang/portable-simd/issues/264) | `mask8x8::from_bitmask` scalar fallback | **EXTERNAL / INVESTIGATE** | Mask conversion exists; issue discussion identifies target-specific LLVM lowering gaps (notably narrow masks/WASM). Measure current x86 and WASM codegen. |
 | [#242](https://github.com/rust-lang/portable-simd/issues/242) | Dynamic swizzling in LLVM/Rust intrinsics | **PARTIAL / EXTERNAL** | Byte-level `swizzle_dyn` is implemented with architecture-specific paths and scalar fallback. A truly target-independent LLVM dynamic shuffle intrinsic remains external. |
-| [#240](https://github.com/rust-lang/portable-simd/issues/240) | Compress-store / expand-load and register compress/expand | **DONE — API in fork; backend review remains** | `compress_store`, `expand_load`, `compress`, and `expand` exist with tests, including 64-lane boundaries. Confirm whether register operations lower to LLVM's newer vector-compress intrinsic on supported toolchains. |
+| [#240](https://github.com/rust-lang/portable-simd/issues/240) | Compress-store / expand-load and register compress/expand | **DONE — API in fork; backend review remains** | `compress_store`, `expand_load`, `compress`, and `expand` exist; the new `compress_expand_lane_counts.rs` suite exercises representative lane counts, mask patterns, every destination capacity, fallback preservation and ordering. LLVM added `llvm.experimental.vector.compress` in 20.1, but the current Rust nightly `core::intrinsics::simd` API does not expose a corresponding `simd_compress` intrinsic. Native lowering therefore remains a rustc/LLVM integration task; do not claim it is enabled merely because LLVM has the IR intrinsic. |
 | [#235](https://github.com/rust-lang/portable-simd/issues/235) | Pairwise sum/product reductions | **DONE — in fork** | Pairwise reduction methods and `pairwise_reductions.rs` tests cover f32/f64/f16, odd lane counts and documented tree order. |
 | [#216](https://github.com/rust-lang/portable-simd/issues/216) | Rotation by runtime value | **PARTIAL / API PROPOSAL** | `rotate_left`/`rotate_right` currently take a scalar runtime count shared by lanes. A per-lane vector rotation count is a different API and needs a decision. |
 | [#215](https://github.com/rust-lang/portable-simd/issues/215) | Benchmark comparison | **INVESTIGATE** | Benchmarks exist for selected operations, but this issue asks for comparative performance evidence. Build a repeatable baseline against scalar and architecture intrinsics. |
