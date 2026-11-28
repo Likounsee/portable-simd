@@ -187,6 +187,10 @@ macro_rules! unsigned_shift_count_lane_tests {
 signed_shift_count_lane_tests!(i8_lane_counts, i8);
 signed_shift_count_lane_tests!(i16_lane_counts, i16);
 signed_shift_count_lane_tests!(i32_lane_counts, i32);
+signed_shift_count_lane_tests!(i64_lane_counts, i64);
+signed_shift_count_lane_tests!(isize_lane_counts, isize);
 unsigned_shift_count_lane_tests!(u8_lane_counts, u8);
 unsigned_shift_count_lane_tests!(u16_lane_counts, u16);
 unsigned_shift_count_lane_tests!(u32_lane_counts, u32);
+unsigned_shift_count_lane_tests!(u64_lane_counts, u64);
+unsigned_shift_count_lane_tests!(usize_lane_counts, usize);
