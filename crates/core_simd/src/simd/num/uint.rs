@@ -1,5 +1,5 @@
 use crate::simd::{
-    Mask, Select, Simd, SimdCast, SimdElement,
+    Select, Simd, SimdCast, SimdElement,
     cmp::{SimdOrd, SimdPartialEq, SimdPartialOrd},
 };
 
@@ -348,30 +348,17 @@ macro_rules! overflowing_add_sub_impl {
         (result.cast(), overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, add, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) =
-                $lhs.as_array()[lane].overflowing_add($rhs.as_array()[lane]);
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        // Unsigned addition wraps in the SIMD lane; overflow is exactly the
+        // condition that the wrapped result is smaller than the left operand.
+        let result = $lhs + $rhs;
+        let overflow = result.simd_lt($lhs);
+        (result, overflow)
     }};
     ($ty:ty, $wide:ty, $lanes:ident, $lhs:ident, $rhs:ident, sub, scalar) => {{
-        let mut overflow = [false; $lanes];
-        let values = Simd::<$ty, $lanes>::from_array(core::array::from_fn(|lane| {
-            let (value, did_overflow) =
-                $lhs.as_array()[lane].overflowing_sub($rhs.as_array()[lane]);
-            overflow[lane] = did_overflow;
-            value
-        }));
-        let overflow =
-            Simd::<$ty, $lanes>::from_array(overflow.map(|did_overflow| did_overflow as $ty))
-                .to_mask();
-        (values, overflow)
+        // Unsigned subtraction underflows exactly when lhs is smaller than rhs.
+        let overflow = $lhs.simd_lt($rhs);
+        let result = $lhs - $rhs;
+        (result, overflow)
     }};
 }
 
@@ -773,9 +760,12 @@ macro_rules! impl_trait {
                 // Scalar overflowing_shl first converts each count to u32, then
                 // masks it for the result and reports whether it exceeded the lane width.
                 let count = rhs.cast::<u32>();
-                let overflow = Mask::<$signed, N>::from_array(
-                    count.to_array().map(|count| count >= <$ty>::BITS),
-                );
+                let overflow = Simd::<$ty, N>::from_array(
+                    count
+                        .to_array()
+                        .map(|count| (count >= <$ty>::BITS) as $ty),
+                )
+                .to_mask();
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self << shift;
 
@@ -790,9 +780,12 @@ macro_rules! impl_trait {
                 // Scalar overflowing_shr first converts each count to u32, then
                 // masks it for the result and reports whether it exceeded the lane width.
                 let count = rhs.cast::<u32>();
-                let overflow = Mask::<$signed, N>::from_array(
-                    count.to_array().map(|count| count >= <$ty>::BITS),
-                );
+                let overflow = Simd::<$ty, N>::from_array(
+                    count
+                        .to_array()
+                        .map(|count| (count >= <$ty>::BITS) as $ty),
+                )
+                .to_mask();
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self >> shift;
 
