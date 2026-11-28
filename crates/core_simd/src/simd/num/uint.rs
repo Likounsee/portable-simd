@@ -1,5 +1,5 @@
 use crate::simd::{
-    Mask, Select, Simd, SimdCast, SimdElement,
+    Select, Simd, SimdCast, SimdElement,
     cmp::{SimdOrd, SimdPartialEq, SimdPartialOrd},
 };
 
@@ -773,13 +773,12 @@ macro_rules! impl_trait {
                 // Scalar overflowing_shl first converts each count to u32, then
                 // masks it for the result and reports whether it exceeded the lane width.
                 let count = rhs.cast::<u32>();
-                let overflow_mask: Mask<i32, N> = count.simd_ge(Simd::splat(<$ty>::BITS));
+                let overflow = Mask::<$signed, N>::from_array(
+                    count.to_array().map(|count| count >= <$ty>::BITS),
+                );
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self << shift;
-                // Rebuild the mask using the destination integer lane type.
-                let overflow = overflow_mask
-                    .select(Simd::<$ty, N>::splat(1), Simd::splat(0))
-                    .to_mask();
+
                 (values, overflow)
             }
 
@@ -791,13 +790,12 @@ macro_rules! impl_trait {
                 // Scalar overflowing_shr first converts each count to u32, then
                 // masks it for the result and reports whether it exceeded the lane width.
                 let count = rhs.cast::<u32>();
-                let overflow_mask: Mask<i32, N> = count.simd_ge(Simd::splat(<$ty>::BITS));
+                let overflow = Mask::<$signed, N>::from_array(
+                    count.to_array().map(|count| count >= <$ty>::BITS),
+                );
                 let shift = (count & Simd::splat(<$ty>::BITS - 1)).cast::<$ty>();
                 let values = self >> shift;
-                // Rebuild the mask using the destination integer lane type.
-                let overflow = overflow_mask
-                    .select(Simd::<$ty, N>::splat(1), Simd::splat(0))
-                    .to_mask();
+
                 (values, overflow)
             }
 
