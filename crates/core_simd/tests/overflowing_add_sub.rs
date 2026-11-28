@@ -99,3 +99,52 @@ signed_tests! {
 unsigned_tests! {
     u8_cases: u8, u16_cases: u16, u32_cases: u32, u64_cases: u64, usize_cases: usize,
 }
+
+// The i64/isize implementation uses sign-bit identities rather than widening
+// to a larger SIMD lane. Exercise a broad deterministic set of bit patterns
+// at every supported lane count against the scalar primitive reference.
+macro_rules! randomized_signed_overflow_tests {
+    ($module:ident, $ty:ty) => {
+        mod $module {
+            use super::*;
+
+            test_helpers::test_lanes! {
+                fn randomized_overflowing_add_sub<const LANES: usize>() {
+                    let mut lhs_state = 0x9e37_79b9_7f4a_7c15_u64;
+                    let mut rhs_state = 0xd1b5_4a32_d192_ed03_u64;
+                    let lhs: [$ty; LANES] = core::array::from_fn(|_| {
+                        lhs_state = lhs_state
+                            .wrapping_mul(6_364_136_223_846_793_005)
+                            .wrapping_add(1_442_695_040_888_963_407);
+                        lhs_state as $ty
+                    });
+                    let rhs: [$ty; LANES] = core::array::from_fn(|_| {
+                        rhs_state = rhs_state
+                            .wrapping_mul(2_862_933_555_777_941_757)
+                            .wrapping_add(3_037_000_493);
+                        rhs_state as $ty
+                    });
+
+                    let (actual_add, actual_add_overflow) =
+                        Simd::<$ty, LANES>::from_array(lhs)
+                            .overflowing_add(Simd::from_array(rhs));
+                    let (actual_sub, actual_sub_overflow) =
+                        Simd::<$ty, LANES>::from_array(lhs)
+                            .overflowing_sub(Simd::from_array(rhs));
+                    let expected_add: [($ty, bool); LANES] =
+                        core::array::from_fn(|lane| lhs[lane].overflowing_add(rhs[lane]));
+                    let expected_sub: [($ty, bool); LANES] =
+                        core::array::from_fn(|lane| lhs[lane].overflowing_sub(rhs[lane]));
+
+                    assert_eq!(actual_add.to_array(), expected_add.map(|item| item.0));
+                    assert_eq!(actual_add_overflow.to_array(), expected_add.map(|item| item.1));
+                    assert_eq!(actual_sub.to_array(), expected_sub.map(|item| item.0));
+                    assert_eq!(actual_sub_overflow.to_array(), expected_sub.map(|item| item.1));
+                }
+            }
+        }
+    };
+}
+
+randomized_signed_overflow_tests!(i64_randomized, i64);
+randomized_signed_overflow_tests!(isize_randomized, isize);
