@@ -15,7 +15,10 @@ fn f64x8_scatter_select_writes_the_selected_element() {
     scatter_f64x8(&mut values);
 
     assert_eq!(values[1], 1.0);
-    assert!(values.iter().enumerate().all(|(index, value)| {
-        index == 1 || *value == 0.0
-    }));
+    assert!(
+        values
+            .iter()
+            .enumerate()
+            .all(|(index, value)| { index == 1 || *value == 0.0 })
+    );
 }
