@@ -142,5 +142,4 @@ mod tests {
             assert_eq!(actual, expected, "f16 clamp, lanes={LANES}");
         }
     }
-
 }

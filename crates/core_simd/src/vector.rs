@@ -1344,12 +1344,7 @@ where
     ///
     /// This is the masked scatter counterpart to gather_select_index.
     #[inline]
-    pub fn scatter_select_index<I>(
-        self,
-        slice: &mut [T],
-        enable: Mask<isize, N>,
-        idxs: Simd<I, N>,
-    )
+    pub fn scatter_select_index<I>(self, slice: &mut [T], enable: Mask<isize, N>, idxs: Simd<I, N>)
     where
         I: SimdElement + core::convert::TryInto<usize>,
     {

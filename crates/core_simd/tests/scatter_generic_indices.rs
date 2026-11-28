@@ -62,8 +62,8 @@ fn generic_scatter_duplicate_indices_follow_existing_scatter_contract() {
 test_helpers::test_lanes! {
     fn generic_scatter_signed_indices_cover_supported_lane_counts<const LANES: usize>() {
         let mut destination = [0_i32; 3];
-        let values = Simd::from_array(core::array::from_fn(|lane| lane as i32 + 100));
-        let indices = Simd::from_array(core::array::from_fn(|lane| {
+        let values: Simd<i32, LANES> = Simd::from_array(core::array::from_fn(|lane| lane as i32 + 100));
+        let indices: Simd<i8, LANES> = Simd::from_array(core::array::from_fn(|lane| {
             if lane < destination.len() { lane as i8 } else { -1_i8 }
         }));
         values.scatter_index(&mut destination, indices);
@@ -76,11 +76,11 @@ test_helpers::test_lanes! {
 
     fn generic_scatter_unsigned_indices_cover_supported_lane_counts<const LANES: usize>() {
         let mut destination = [0_i32; 3];
-        let values = Simd::from_array(core::array::from_fn(|lane| lane as i32 + 200));
-        let indices = Simd::from_array(core::array::from_fn(|lane| {
+        let values: Simd<i32, LANES> = Simd::from_array(core::array::from_fn(|lane| lane as i32 + 200));
+        let indices: Simd<u64, LANES> = Simd::from_array(core::array::from_fn(|lane| {
             if lane < destination.len() { lane as u64 } else { u64::MAX }
         }));
-        let enable = Mask::from_array(core::array::from_fn(|lane| lane % 2 == 0));
+        let enable: Mask<isize, LANES> = Mask::from_array(core::array::from_fn(|lane| lane % 2 == 0));
         values.scatter_select_index(&mut destination, enable, indices);
 
         let expected = core::array::from_fn(|index| {
