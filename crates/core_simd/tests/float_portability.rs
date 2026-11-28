@@ -37,6 +37,11 @@ macro_rules! float_portability_tests {
                     assert_eq!(values.is_infinite().to_array(), scalars.map(|x| x.is_infinite()));
                     assert_eq!(values.is_normal().to_array(), scalars.map(|x| x.is_normal()));
                     assert_eq!(values.is_subnormal().to_array(), scalars.map(|x| x.is_subnormal()));
+                    // to_mask treats both signed zeros as false and every nonzero
+                    // bit pattern (including subnormals and NaNs) as true. This is
+                    // especially important on ARMv7, where SIMD comparisons may flush
+                    // subnormal values to zero.
+                    assert_eq!(values.to_mask().to_array(), scalars.map(|x| x != 0.0));
                     assert_eq!(
                         values.is_sign_negative().to_array(),
                         bits.map(|x| x & $sign_mask != 0),
