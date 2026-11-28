@@ -95,7 +95,6 @@ unsigned_overflowing_mul_tests! {
     usize_cases: usize,
 }
 
-
 // Exercise a broad deterministic distribution, not just hand-picked overflow
 // boundaries. This covers both widened vector implementations and the scalar
 // 64-bit fallback for every supported lane count.
